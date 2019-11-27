@@ -311,3 +311,31 @@ Error:
     return FALSE;
 }
 
+cmsBool CMSEXPORT cmsMD5computeIDExt(const void* buf, unsigned long size, unsigned char ProfileID[16])
+{
+	cmsHANDLE  MD5;
+	cmsUInt8Number* Mem;
+
+	if (buf == NULL)
+		return FALSE;
+    MD5 = NULL;
+	Mem = (cmsUInt8Number*)_cmsMalloc(NULL,size);
+	memmove(Mem,buf,size);
+	// Create MD5 object
+    MD5 = cmsMD5alloc(NULL);
+    if (MD5 == NULL) goto Error;
+
+	// Add all bytes
+    cmsMD5add(MD5, Mem, size);
+
+	// Temp storage is no longer needed
+    _cmsFree(NULL, Mem);
+
+	// And store the ID
+    cmsMD5finish((cmsProfileID*)ProfileID,  MD5);
+	return TRUE;
+Error:
+	if (MD5 != NULL) _cmsFree(NULL, MD5);
+	return FALSE;
+}
+

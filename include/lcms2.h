@@ -1538,6 +1538,7 @@ CMSAPI cmsBool           CMSEXPORT cmsCloseIOhandler(cmsIOHANDLER* io);
 // MD5 message digest --------------------------------------------------------------------------------------------------
 
 CMSAPI cmsBool           CMSEXPORT cmsMD5computeID(cmsHPROFILE hProfile);
+CMSAPI cmsBool			 CMSEXPORT cmsMD5computeIDExt(const void* buf, unsigned long size, unsigned char ProfileID[16]);
 
 // Profile high level functions ------------------------------------------------------------------------------------------
 
