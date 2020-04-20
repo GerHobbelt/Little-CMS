@@ -286,8 +286,8 @@ cmsBool PreOptimize(cmsContext ContextID, cmsPipeline* Lut)
 
 static
 void Eval16nop1D(cmsContext ContextID, register const cmsUInt16Number Input[],
-                 register cmsUInt16Number Output[],
-                 register const struct _cms_interp_struc* p)
+                 CMSREGISTER cmsUInt16Number Output[],
+                 CMSREGISTER const struct _cms_interp_struc* p)
 {
     cmsUNUSED_PARAMETER(ContextID);
     Output[0] = Input[0];
@@ -297,8 +297,8 @@ void Eval16nop1D(cmsContext ContextID, register const cmsUInt16Number Input[],
 
 static
 void PrelinEval16(cmsContext ContextID, register const cmsUInt16Number Input[],
-                  register cmsUInt16Number Output[],
-                  register const void* D)
+                  CMSREGISTER cmsUInt16Number Output[],
+                  CMSREGISTER const void* D)
 {
     Prelin16Data* p16 = (Prelin16Data*) D;
     cmsUInt16Number  StageABC[MAX_INPUT_DIMENSIONS];
@@ -908,16 +908,16 @@ void* Prelin8dup(cmsContext ContextID, const void* ptr)
 #define DENS(i,j,k) (LutTable[(i)+(j)+(k)+OutChan])
 static CMS_NO_SANITIZE
 void PrelinEval8(cmsContext ContextID, register const cmsUInt16Number Input[],
-                  register cmsUInt16Number Output[],
-                  register const void* D)
+                  CMSREGISTER cmsUInt16Number Output[],
+                  CMSREGISTER const void* D)
 {
     cmsUInt8Number         r, g, b;
     cmsS15Fixed16Number    rx, ry, rz;
     cmsS15Fixed16Number    c0, c1, c2, c3, Rest;
     int                    OutChan;
-    register cmsS15Fixed16Number X0, X1, Y0, Y1, Z0, Z1;
+    CMSREGISTER cmsS15Fixed16Number X0, X1, Y0, Y1, Z0, Z1;
     Prelin8Data* p8 = (Prelin8Data*) D;
-    register const cmsInterpParams* p = p8 ->p;
+    CMSREGISTER const cmsInterpParams* p = p8 ->p;
     int                    TotalOut = (int) p -> nOutputs;
     const cmsUInt16Number* LutTable = (const cmsUInt16Number*) p->Table;
     cmsUNUSED_PARAMETER(ContextID);
@@ -1329,8 +1329,8 @@ Curves16Data* CurvesAlloc(cmsContext ContextID, cmsUInt32Number nCurves, cmsUInt
 
 static
 void FastEvaluateCurves8(cmsContext ContextID, register const cmsUInt16Number In[],
-                          register cmsUInt16Number Out[],
-                          register const void* D)
+                          CMSREGISTER cmsUInt16Number Out[],
+                          CMSREGISTER const void* D)
 {
     Curves16Data* Data = (Curves16Data*) D;
     int x;
@@ -1347,8 +1347,8 @@ void FastEvaluateCurves8(cmsContext ContextID, register const cmsUInt16Number In
 
 static
 void FastEvaluateCurves16(cmsContext ContextID, register const cmsUInt16Number In[],
-                          register cmsUInt16Number Out[],
-                          register const void* D)
+                          CMSREGISTER cmsUInt16Number Out[],
+                          CMSREGISTER const void* D)
 {
     Curves16Data* Data = (Curves16Data*) D;
     cmsUInt32Number i;
@@ -1362,8 +1362,8 @@ void FastEvaluateCurves16(cmsContext ContextID, register const cmsUInt16Number I
 
 static
 void FastIdentity16(cmsContext ContextID, register const cmsUInt16Number In[],
-                    register cmsUInt16Number Out[],
-                    register const void* D)
+                    CMSREGISTER cmsUInt16Number Out[],
+                    CMSREGISTER const void* D)
 {
     cmsPipeline* Lut = (cmsPipeline*) D;
     cmsUInt32Number i;
@@ -1523,8 +1523,8 @@ void* DupMatShaper(cmsContext ContextID, const void* Data)
 // in total about 50K, and the performance boost is huge!
 static
 void MatShaperEval16(cmsContext ContextID, register const cmsUInt16Number In[],
-                     register cmsUInt16Number Out[],
-                     register const void* D)
+                     CMSREGISTER cmsUInt16Number Out[],
+                     CMSREGISTER const void* D)
 {
     MatShaper8Data* p = (MatShaper8Data*) D;
     cmsS1Fixed14Number l1, l2, l3, r, g, b;

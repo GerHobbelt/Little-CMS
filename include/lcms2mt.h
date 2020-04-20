@@ -23,7 +23,7 @@
 //
 //---------------------------------------------------------------------------------
 //
-// Version 2.9rc3
+// Version 2.10alpha
 //
 
 #ifndef _lcms2mt_H
@@ -61,6 +61,9 @@
 // Uncomment this for special windows mutex initialization (see lcms2_internal.h)
 // #define CMS_RELY_ON_WINDOWS_STATIC_MUTEX_INIT
 
+// Uncomment this to remove the "CMSREGISTER" storage class
+// #define CMS_NO_REGISTER_KEYWORD 1
+
 // ********** End of configuration toggles ******************************
 
 // Needed for streams
@@ -81,9 +84,9 @@ extern "C" {
 // Vanilla LCMS2 uses values from 2000-2090. This is
 // used as an unsigned number. We want any attempt to
 // use OUR numbers with a mainline LCMS to fail, so
-// we have to go under 2000-2090. Let's subtract
+// we have to go under 2000-2100. Let's subtract
 // 2000 from the mainline release.
-#define LCMS_VERSION              (2090 - 2000)
+#define LCMS_VERSION              (2100 - 2000)
 
 // We expect any LCMS2MT release to fall within the
 // following rance.
@@ -156,6 +159,13 @@ typedef double               cmsFloat64Number;
 #     define CMS_DONT_USE_INT64 1
 #  endif
 #endif
+#endif
+
+// Handle "register" keyword
+#if defined(CMS_NO_REGISTER_KEYWORD) && !defined(CMS_DLL) && !defined(CMS_DLL_BUILD) 
+#  define CMSREGISTER
+#else
+#  define CMSREGISTER register
 #endif
 
 // In the case 64 bit numbers are not supported by the compiler
@@ -1250,12 +1260,12 @@ CMSAPI void*             CMSEXPORT cmsStageData(cmsContext ContextID, const cmsS
 
 // Sampling
 typedef cmsInt32Number (* cmsSAMPLER16)   (cmsContext ContextID, register const cmsUInt16Number In[],
-                                            register cmsUInt16Number Out[],
-                                            register void * Cargo);
+                                           CMSREGISTER cmsUInt16Number Out[],
+                                           CMSREGISTER void * Cargo);
 
 typedef cmsInt32Number (* cmsSAMPLERFLOAT)(cmsContext ContextID, register const cmsFloat32Number In[],
-                                            register cmsFloat32Number Out[],
-                                            register void * Cargo);
+                                           CMSREGISTER cmsFloat32Number Out[],
+                                           CMSREGISTER void * Cargo);
 
 // Use this flag to prevent changes being written to destination
 #define SAMPLER_INSPECT     0x01000000

@@ -191,8 +191,8 @@ cmsINLINE CMS_NO_SANITIZE cmsUInt16Number LinearInterp(cmsS15Fixed16Number a, cm
 //  Linear interpolation (Fixed-point optimized)
 static
 void LinLerp1D(cmsContext ContextID, register const cmsUInt16Number Value[],
-               register cmsUInt16Number Output[],
-               register const cmsInterpParams* p)
+               CMSREGISTER cmsUInt16Number Output[],
+               CMSREGISTER const cmsInterpParams* p)
 {
     cmsUInt16Number y1, y0;
     int cell0, rest;
@@ -266,8 +266,8 @@ void LinLerp1Dfloat(cmsContext ContextID, const cmsFloat32Number Value[],
 // Eval gray LUT having only one input channel
 static CMS_NO_SANITIZE
 void Eval1Input(cmsContext ContextID, register const cmsUInt16Number Input[],
-                register cmsUInt16Number Output[],
-                register const cmsInterpParams* p16)
+                CMSREGISTER cmsUInt16Number Output[],
+                CMSREGISTER const cmsInterpParams* p16)
 {
        cmsS15Fixed16Number fk;
        cmsS15Fixed16Number k0, k1, rk, K0, K1;
@@ -399,8 +399,8 @@ void BilinearInterpFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 // Bilinear interpolation (16 bits) - optimized version
 static CMS_NO_SANITIZE
 void BilinearInterp16(cmsContext ContextID, register const cmsUInt16Number Input[],
-                      register cmsUInt16Number Output[],
-                      register const cmsInterpParams* p)
+                      CMSREGISTER cmsUInt16Number Output[],
+                      CMSREGISTER const cmsInterpParams* p)
 
 {
 #define DENS(i,j) (LutTable[(i)+(j)+OutChan])
@@ -409,9 +409,9 @@ void BilinearInterp16(cmsContext ContextID, register const cmsUInt16Number Input
            const cmsUInt16Number* LutTable = (cmsUInt16Number*) p ->Table;
            int        OutChan, TotalOut;
            cmsS15Fixed16Number    fx, fy;
-  register int        rx, ry;
+  CMSREGISTER int        rx, ry;
            int        x0, y0;
-  register int        X0, X1, Y0, Y1;
+  CMSREGISTER int        X0, X1, Y0, Y1;
            int        d00, d01, d10, d11,
                       dx0, dx1,
                       dxy;
@@ -532,8 +532,8 @@ void TrilinearInterpFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 // Trilinear interpolation (16 bits) - optimized version
 static CMS_NO_SANITIZE
 void TrilinearInterp16(cmsContext ContextID, register const cmsUInt16Number Input[],
-                       register cmsUInt16Number Output[],
-                       register const cmsInterpParams* p)
+                       CMSREGISTER cmsUInt16Number Output[],
+                       CMSREGISTER const cmsInterpParams* p)
 
 {
 #define DENS(i,j,k) (LutTable[(i)+(j)+(k)+OutChan])
@@ -542,9 +542,9 @@ void TrilinearInterp16(cmsContext ContextID, register const cmsUInt16Number Inpu
            const cmsUInt16Number* LutTable = (cmsUInt16Number*) p ->Table;
            int        OutChan, TotalOut;
            cmsS15Fixed16Number    fx, fy, fz;
-  register int        rx, ry, rz;
+  CMSREGISTER int        rx, ry, rz;
            int        x0, y0, z0;
-  register int        X0, X1, Y0, Y1, Z0, Z1;
+  CMSREGISTER int        X0, X1, Y0, Y1, Z0, Z1;
            int        d000, d001, d010, d011,
                       d100, d101, d110, d111,
                       dx00, dx01, dx10, dx11,
@@ -714,8 +714,8 @@ void TetrahedralInterpFloat(cmsContext ContextID, const cmsFloat32Number Input[]
 
 static CMS_NO_SANITIZE
 void TetrahedralInterp16(cmsContext ContextID, register const cmsUInt16Number Input[],
-                         register cmsUInt16Number Output[],
-                         register const cmsInterpParams* p)
+                         CMSREGISTER cmsUInt16Number Output[],
+                         CMSREGISTER const cmsInterpParams* p)
 {
     const cmsUInt16Number* LutTable = (cmsUInt16Number*) p -> Table;
     cmsS15Fixed16Number fx, fy, fz;
@@ -849,8 +849,8 @@ void TetrahedralInterp16(cmsContext ContextID, register const cmsUInt16Number In
 #define DENS(i,j,k) (LutTable[(i)+(j)+(k)+OutChan])
 static CMS_NO_SANITIZE
 void Eval4Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
-                     register cmsUInt16Number Output[],
-                     register const cmsInterpParams* p16)
+                     CMSREGISTER cmsUInt16Number Output[],
+                     CMSREGISTER const cmsInterpParams* p16)
 {
     const cmsUInt16Number* LutTable;
     cmsS15Fixed16Number fk;
@@ -1079,8 +1079,8 @@ void Eval4InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 
 static CMS_NO_SANITIZE
 void Eval5Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
-                 register cmsUInt16Number Output[],
-                 register const cmsInterpParams* p16)
+                 CMSREGISTER cmsUInt16Number Output[],
+                 CMSREGISTER const cmsInterpParams* p16)
 {
        const cmsUInt16Number* LutTable = (cmsUInt16Number*) p16 -> Table;
        cmsS15Fixed16Number fk;
@@ -1167,8 +1167,8 @@ void Eval5InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 
 static CMS_NO_SANITIZE
 void Eval6Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
-                 register cmsUInt16Number Output[],
-                 register const cmsInterpParams* p16)
+                 CMSREGISTER cmsUInt16Number Output[],
+                 CMSREGISTER const cmsInterpParams* p16)
 {
        const cmsUInt16Number* LutTable = (cmsUInt16Number*) p16 -> Table;
        cmsS15Fixed16Number fk;
@@ -1253,8 +1253,8 @@ void Eval6InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 
 static CMS_NO_SANITIZE
 void Eval7Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
-                 register cmsUInt16Number Output[],
-                 register const cmsInterpParams* p16)
+                 CMSREGISTER cmsUInt16Number Output[],
+                 CMSREGISTER const cmsInterpParams* p16)
 {
        const cmsUInt16Number* LutTable = (cmsUInt16Number*) p16 -> Table;
        cmsS15Fixed16Number fk;
@@ -1339,8 +1339,8 @@ void Eval7InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 
 static CMS_NO_SANITIZE
 void Eval8Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
-                 register cmsUInt16Number Output[],
-                 register const cmsInterpParams* p16)
+                 CMSREGISTER cmsUInt16Number Output[],
+                 CMSREGISTER const cmsInterpParams* p16)
 {
        const cmsUInt16Number* LutTable = (cmsUInt16Number*) p16 -> Table;
        cmsS15Fixed16Number fk;
