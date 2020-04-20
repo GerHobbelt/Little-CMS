@@ -540,8 +540,9 @@ cmsNAMEDCOLORLIST* CMSEXPORT cmsAllocNamedColorList(cmsContext ContextID, cmsUIn
     v ->nColors   = 0;
 
     while (v -> Allocated < n) {
-        if (!GrowNamedColorList(ContextID, v)) {
-            cmsFreeNamedColorList(v);
+        if (!GrowNamedColorList(ContextID, v))
+		{
+            cmsFreeNamedColorList(ContextID, v);
             return NULL;
         }
     }
@@ -576,7 +577,7 @@ cmsNAMEDCOLORLIST* CMSEXPORT cmsDupNamedColorList(cmsContext ContextID, const cm
     while (NewNC ->Allocated < v ->Allocated){
         if (!GrowNamedColorList(ContextID, NewNC))
         {
-            cmsFreeNamedColorList(NewNC);
+            cmsFreeNamedColorList(ContextID, NewNC);
             return NULL;
         }
     }
