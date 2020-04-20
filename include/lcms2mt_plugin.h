@@ -98,7 +98,7 @@ CMSAPI void               CMSEXPORT _cmsMAT3eval(cmsContext ContextID, cmsVEC3* 
 
 CMSAPI cmsHANDLE          CMSEXPORT cmsMD5alloc(cmsContext ContextID);
 CMSAPI void               CMSEXPORT cmsMD5add(cmsHANDLE Handle, const cmsUInt8Number* buf, cmsUInt32Number len);
-CMSAPI void               CMSEXPORT cmsMD5finish(cmsProfileID* ProfileID, cmsHANDLE Handle);
+CMSAPI void               CMSEXPORT cmsMD5finish(cmsContext ContextID, cmsProfileID* ProfileID, cmsHANDLE Handle);
 
 // Error logging  -------------------------------------------------------------------------------------
 
@@ -260,7 +260,7 @@ struct _cms_interp_struc;
 // 16 bits forward interpolation. This function performs precision-limited linear interpolation
 // and is supposed to be quite fast. Implementation may be tetrahedral or trilinear, and plug-ins may
 // choose to implement any other interpolation algorithm.
-typedef void (* _cmsInterpFn16)(cmsContext ContextID, register const cmsUInt16Number Input[],
+typedef void (* _cmsInterpFn16)(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[],
                                 CMSREGISTER cmsUInt16Number Output[],
                                 CMSREGISTER const struct _cms_interp_struc* p);
 
@@ -343,7 +343,7 @@ typedef struct {
 
 struct _cmstransform_struct;
 
-typedef cmsUInt8Number* (* cmsFormatter16)(cmsContext ContextID, register struct _cmstransform_struct* CMMcargo,
+typedef cmsUInt8Number* (* cmsFormatter16)(cmsContext ContextID, CMSREGISTER struct _cmstransform_struct* CMMcargo,
                                            CMSREGISTER cmsUInt16Number Values[],
                                            CMSREGISTER cmsUInt8Number* Buffer,
                                            CMSREGISTER cmsUInt32Number Stride);
@@ -543,7 +543,7 @@ typedef struct {
 // the optimization  search. Or FALSE if it is unable to optimize and want to give a chance
 // to the rest of optimizers.
 
-typedef void     (* _cmsOPTeval16Fn)(cmsContext ContextID, register const cmsUInt16Number In[],
+typedef void     (* _cmsOPTeval16Fn)(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
                                      CMSREGISTER cmsUInt16Number Out[],
                                      CMSREGISTER const void* Data);
 

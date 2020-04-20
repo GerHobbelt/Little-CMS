@@ -1259,11 +1259,11 @@ CMSAPI cmsStageSignature CMSEXPORT cmsStageType(cmsContext ContextID, const cmsS
 CMSAPI void*             CMSEXPORT cmsStageData(cmsContext ContextID, const cmsStage* mpe);
 
 // Sampling
-typedef cmsInt32Number (* cmsSAMPLER16)   (cmsContext ContextID, register const cmsUInt16Number In[],
+typedef cmsInt32Number (* cmsSAMPLER16)   (cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
                                            CMSREGISTER cmsUInt16Number Out[],
                                            CMSREGISTER void * Cargo);
 
-typedef cmsInt32Number (* cmsSAMPLERFLOAT)(cmsContext ContextID, register const cmsFloat32Number In[],
+typedef cmsInt32Number (* cmsSAMPLERFLOAT)(cmsContext ContextID, CMSREGISTER const cmsFloat32Number In[],
                                            CMSREGISTER cmsFloat32Number Out[],
                                            CMSREGISTER void * Cargo);
 
@@ -1406,7 +1406,7 @@ typedef struct {
 typedef struct {
 
     cmsUInt32Number n;
-    cmsContext      ContextIDContextID;
+    cmsContext      ContextID;
     cmsPSEQDESC*    seq;
 
 } cmsSEQ;
