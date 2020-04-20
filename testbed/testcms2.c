@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2017 Marti Maria Saguer
+//  Copyright (c) 1998-2020 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -26,12 +26,6 @@
 
 
 #include "testcms2.h"
-
-// On Visual Studio, use debug CRT
-#ifdef _MSC_VER
-#     include "crtdbg.h"
-#     include <io.h>
-#endif
 
 // A single check. Returns 1 if success, 0 if failed
 typedef cmsInt32Number (*TestFn)(void);

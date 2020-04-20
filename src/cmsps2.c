@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2017 Marti Maria Saguer
+//  Copyright (c) 1998-2020 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -1414,7 +1414,7 @@ int WriteNamedColorCRD(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hNamed
     cmsUInt32Number i, nColors, nColorant;
     cmsUInt32Number OutputFormat;
     char ColorName[cmsMAX_PATH];
-    char Colorant[128];
+    char Colorant[512];
     cmsNAMEDCOLORLIST* NamedColorList;
 
 
