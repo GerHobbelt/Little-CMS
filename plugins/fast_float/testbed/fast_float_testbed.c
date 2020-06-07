@@ -819,6 +819,84 @@ void CheckChangeFormat(void)
 
 }
 
+static
+cmsBool ValidInt(cmsUInt16Number a, cmsUInt16Number b)
+{
+    return abs(a - b) <= 32;
+}
+
+static
+void CheckLab2Roundtrip(void)
+{
+    cmsHPROFILE hsRGB, hLab;
+    cmsHTRANSFORM xform, xform2;
+    cmsInt8Number* lab;
+    cmsInt32Number Mb, j;
+    cmsInt32Number r, g, b;
+    Scanline_rgb8bits* In;
+    Scanline_rgb8bits* Out;
+
+    printf("Checking lab2 roundtrip...");
+
+    hsRGB = cmsCreate_sRGBProfile();
+    hLab = cmsCreateLab2Profile(NULL);
+
+
+    xform = cmsCreateTransform(hsRGB, TYPE_RGB_8, hLab, TYPE_Lab_8, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_BLACKPOINTCOMPENSATION);
+    xform2 = cmsCreateTransform(hLab, TYPE_Lab_8, hsRGB, TYPE_RGB_8, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_NOOPTIMIZE | cmsFLAGS_BLACKPOINTCOMPENSATION);
+
+    cmsCloseProfile(hsRGB);
+    cmsCloseProfile(hLab);
+
+
+    Mb = 256 * 256 * 256 * sizeof(Scanline_rgb8bits);
+    In = (Scanline_rgb8bits*)malloc(Mb);
+    Out = (Scanline_rgb8bits*)malloc(Mb);
+    lab = (cmsInt8Number*)malloc(256 * 256 * 256 * 3 * sizeof(cmsInt8Number));
+
+    j = 0;
+    for (r = 0; r < 256; r++)
+        for (g = 0; g < 256; g++)
+            for (b = 0; b < 256; b++)
+            {
+
+                In[j].r = (cmsUInt8Number)r;
+                In[j].g = (cmsUInt8Number)g;
+                In[j].b = (cmsUInt8Number)b;
+                j++;
+            }
+
+
+    cmsDoTransform(xform, In, lab, 256 * 256 * 256);
+    cmsDoTransform(xform2, lab, Out, 256 * 256 * 256);
+
+    cmsDeleteTransform(xform);
+    cmsDeleteTransform(xform2);
+
+
+    j = 0;
+    for (r = 0; r < 256; r++)
+        for (g = 0; g < 256; g++)
+            for (b = 0; b < 256; b++) {
+
+                // Check for same values
+                if (!ValidInt(In[j].r, Out[j].r) ||
+                    !ValidInt(In[j].g, Out[j].g) ||
+                    !ValidInt(In[j].b, Out[j].b))
+                    Fail("Conversion failed at (%d %d %d) != (%d %d %d)", In[j].r, In[j].g, In[j].b,
+                        Out[j].r, Out[j].g, Out[j].b);
+
+                j++;
+            }
+
+
+    free(In);
+    free(Out);
+    free(lab);
+    printf("Ok\n");
+
+}
+
 // Convert some known values
 static
 void CheckConversionFloat(void)
@@ -1219,6 +1297,42 @@ cmsFloat64Number SpeedTest16bitsRGB(cmsContext ct, cmsHPROFILE hlcmsProfileIn, c
 }
 
 
+
+static
+void SpeedTest8(void)
+{
+    cmsContext noPlugin = cmsCreateContext(0, 0);
+
+    cmsFloat64Number t[10];
+
+    printf("\n\n");
+    printf("P E R F O R M A N C E   T E S T S   8 B I T S  (D E F A U L T)\n");
+    printf("==============================================================\n\n");
+    fflush(stdout);
+
+    PerformanceHeader();
+    t[0] = Performance("8 bits on CLUT profiles  ", SpeedTest8bitsRGB, noPlugin, "test5.icc", "test3.icc", sizeof(Scanline_rgb8bits), 0);
+    t[1] = Performance("8 bits on Matrix-Shaper  ", SpeedTest8bitsRGB, noPlugin, "test5.icc", "test0.icc", sizeof(Scanline_rgb8bits), 0);
+    t[2] = Performance("8 bits on same MatrixSh  ", SpeedTest8bitsRGB, noPlugin, "test0.icc", "test0.icc", sizeof(Scanline_rgb8bits), 0);
+    t[3] = Performance("8 bits on curves         ", SpeedTest8bitsRGB, noPlugin, NULL, NULL, sizeof(Scanline_rgb8bits), 0);
+
+    // Note that context 0 has the plug-in installed
+
+    printf("\n\n");
+    printf("P E R F O R M A N C E   T E S T S  8 B I T S  (P L U G I N)\n");
+    printf("===========================================================\n\n");
+    fflush(stdout);
+
+    PerformanceHeader();
+    Performance("8 bits on CLUT profiles  ", SpeedTest8bitsRGB, 0, "test5.icc", "test3.icc", sizeof(Scanline_rgb8bits), t[0]);
+    Performance("8 bits on Matrix-Shaper  ", SpeedTest8bitsRGB, 0, "test5.icc", "test0.icc", sizeof(Scanline_rgb8bits), t[1]);
+    Performance("8 bits on same MatrixSh  ", SpeedTest8bitsRGB, 0, "test0.icc", "test0.icc", sizeof(Scanline_rgb8bits), t[2]);
+    Performance("8 bits on curves         ", SpeedTest8bitsRGB, 0, NULL, NULL, sizeof(Scanline_rgb8bits), t[3]);
+
+    cmsDeleteContext(noPlugin);
+}
+
+#if 0
 static
 void SpeedTest8(void)
 {
@@ -1230,8 +1344,9 @@ void SpeedTest8(void)
        Performance("8 bits on Matrix-Shaper profiles", SpeedTest8bitsRGB, 0, "test5.icc", "test0.icc", sizeof(Scanline_rgb8bits), 0);
        Performance("8 bits on same Matrix-Shaper    ", SpeedTest8bitsRGB, 0, "test0.icc", "test0.icc", sizeof(Scanline_rgb8bits), 0);
        Performance("8 bits on curves                ", SpeedTest8bitsRGB, 0, NULL, NULL, sizeof(Scanline_rgb8bits), 0);
-       // Performance("8 bits on CMYK CLUT profiles    ", SpeedTest8bitsCMYK, 0, "test1.icc", "test2.icc", sizeof(Scanline_rgba15bits), 0);
+       
 }
+#endif
 
 
 static
@@ -1339,6 +1454,10 @@ void SpeedTestFloat(void)
 
        cmsDeleteContext(noPlugin);
 }
+
+
+
+
 
 
 static
@@ -1682,8 +1801,7 @@ int main()
 {
        printf("FastFloating point extensions testbed - 1.2\n");
        printf("Copyright (c) 1998-2020 Marti Maria Saguer, all rights reserved\n");
-
-
+       
        printf("\nInstalling error logger ... ");
        cmsSetLogErrorHandler(FatalErrorQuit);
        printf("done.\n");
@@ -1691,6 +1809,7 @@ int main()
        printf("Installing plug-in ... ");
        cmsPlugin(cmsFastFloatExtensions());
        printf("done.\n\n");
+              
 
        CheckComputeIncrements();
 

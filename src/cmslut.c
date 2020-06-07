@@ -397,28 +397,26 @@ cmsStage*  CMSEXPORT cmsStageAllocMatrix(cmsContext ContextID, cmsUInt32Number R
 
     NewElem = (_cmsStageMatrixData*) _cmsMallocZero(ContextID, sizeof(_cmsStageMatrixData));
     if (NewElem == NULL) goto Error;
-    NewMPE ->Data  = (void*) NewElem;
+    NewMPE->Data = (void*)NewElem;
 
 
     NewElem ->Double = (cmsFloat64Number*) _cmsCalloc(ContextID, n, sizeof(cmsFloat64Number));
     if (NewElem->Double == NULL) goto Error;
-
+   
     for (i=0; i < n; i++) {
         NewElem ->Double[i] = Matrix[i];
     }
-
 
     if (Offset != NULL) {
 
         NewElem ->Offset = (cmsFloat64Number*) _cmsCalloc(ContextID, Rows, sizeof(cmsFloat64Number));
         if (NewElem->Offset == NULL) goto Error;
-
+           
         for (i=0; i < Rows; i++) {
                 NewElem ->Offset[i] = Offset[i];
         }
-
     }
-
+    
     return NewMPE;
 
 Error:

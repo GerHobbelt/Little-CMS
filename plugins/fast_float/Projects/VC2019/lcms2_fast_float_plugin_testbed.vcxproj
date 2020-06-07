@@ -70,22 +70,22 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <IntDir>$(Platform)\testbed_$(Configuration)\</IntDir>
-    <OutDir>$(ProjectDir)..\..\testbed</OutDir>
+    <OutDir>$(ProjectDir)..\..\testbed\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IntDir>$(Platform)\testbed_$(Configuration)\</IntDir>
-    <OutDir>$(ProjectDir)..\..\testbed</OutDir>
+    <OutDir>$(ProjectDir)..\..\testbed\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <IntDir>$(Platform)\testbed_$(Configuration)\</IntDir>
-    <OutDir>$(ProjectDir)..\..\testbed</OutDir>
+    <OutDir>$(ProjectDir)..\..\testbed\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IntDir>$(Platform)\testbed_$(Configuration)\</IntDir>
-    <OutDir>$(ProjectDir)..\..\testbed</OutDir>
+    <OutDir>$(ProjectDir)..\..\testbed\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -125,6 +125,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\..\include;..\..\include;..\..\src</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

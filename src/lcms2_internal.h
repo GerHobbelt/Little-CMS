@@ -112,6 +112,13 @@
         #define isinf(x) (!_finite((x)))
 # endif
 
+#if !defined(_MSC_VER) && (defined(__STDC_VERSION__) && __STDC_VERSION__ < 199901L)
+        #if !defined(isinf)
+        #define isinf(x) (!finite((x)))
+        #endif
+#endif
+
+
 #else
 #  if !defined(HAVE_ISINF)
 #    if !defined(isinf)
