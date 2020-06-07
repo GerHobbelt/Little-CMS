@@ -8,12 +8,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
@@ -33,14 +33,12 @@ cmsBool  _cmsOptimizePipeline(cmsContext ContextID,
 // Optimization for 16 bits, 3 inputs only
 typedef struct {
 
-    cmsContext ContextID;
-
-    const cmsInterpParams* p;   // Tetrahedrical interpolation parameters. This is a not-owned pointer.    
+    const cmsInterpParams* p;   // Tetrahedrical interpolation parameters. This is a not-owned pointer.
 
 } Performance16Data;
 
 
-// Precomputes tables for 16-bit on input devicelink. 
+// Precomputes tables for 16-bit on input devicelink.
 static
 Performance16Data* Performance16alloc(cmsContext ContextID, const cmsInterpParams* p)
 {
@@ -48,8 +46,7 @@ Performance16Data* Performance16alloc(cmsContext ContextID, const cmsInterpParam
 
     p16 = (Performance16Data*) _cmsMallocZero(ContextID, sizeof(Performance16Data));
     if (p16 == NULL) return NULL;
-    
-    p16 ->ContextID = ContextID;
+
     p16 ->p = p;
 
     return p16;
@@ -57,13 +54,13 @@ Performance16Data* Performance16alloc(cmsContext ContextID, const cmsInterpParam
 
 static
 void Performance16free(cmsContext ContextID, void* ptr)
-{   
+{
     _cmsFree(ContextID, ptr);
 }
 
 /**
 * Because cmsChangeBuffersFormat, we have to allow this code to output data in either 8 or 16 bits.
-* The increments are already computed correctly, but the data may change. So, we use a macro to 
+* The increments are already computed correctly, but the data may change. So, we use a macro to
 * increase xput
 */
 #define TO_OUTPUT_16(d,v)  do { *(cmsUInt16Number*) (d) = v; } while(0)
@@ -74,7 +71,8 @@ void Performance16free(cmsContext ContextID, void* ptr)
 #define FROM_INPUT(v) (in16 ? (*((const cmsUInt16Number*)(v))) : FROM_8_TO_16(*((const cmsUInt8Number*)(v))))
 
 static
-void PerformanceEval16(struct _cmstransform_struct *CMMcargo,
+void PerformanceEval16(cmsContext ContextID,
+                      struct _cmstransform_struct *CMMcargo,
                       const void* Input,
                       void* Output,
                       cmsUInt32Number PixelsPerLine,
@@ -113,9 +111,9 @@ void PerformanceEval16(struct _cmstransform_struct *CMMcargo,
        int    in16, out16;  // Used by macros!
 
        cmsUInt32Number nalpha, strideIn, strideOut;
-          
-       cmsUInt32Number dwInFormat = cmsGetTransformInputFormat((cmsHTRANSFORM)CMMcargo);
-       cmsUInt32Number dwOutFormat = cmsGetTransformOutputFormat((cmsHTRANSFORM)CMMcargo);
+
+       cmsUInt32Number dwInFormat = cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo);
+       cmsUInt32Number dwOutFormat = cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo);
 
        _cmsComputeComponentIncrements(dwInFormat, Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
        _cmsComputeComponentIncrements(dwOutFormat, Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
@@ -142,7 +140,7 @@ void PerformanceEval16(struct _cmstransform_struct *CMMcargo,
 
               for (ii = 0; ii < PixelsPerLine; ii++) {
 
-                  r = FROM_INPUT(rin); 
+                  r = FROM_INPUT(rin);
                   g = FROM_INPUT(gin);
                   b = FROM_INPUT(bin);
 
@@ -278,7 +276,7 @@ void PerformanceEval16(struct _cmstransform_struct *CMMcargo,
                               c1 -= c2;
                               c2 -= c3;
                               c3 -= c0;
-                              Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;                              
+                              Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
                               res16 = (cmsUInt16Number)c0 + ((Rest + (Rest >> 16)) >> 16);
                               TO_OUTPUT(out[OutChan], res16);
                               out[OutChan] += DestIncrements[OutChan];
@@ -306,17 +304,17 @@ void PerformanceEval16(struct _cmstransform_struct *CMMcargo,
 
 // --------------------------------------------------------------------------------------------------------------
 
-cmsBool Optimize16BitRGBTransform(_cmsTransformFn* TransformFn,
+cmsBool Optimize16BitRGBTransform(cmsContext ContextID,
+                                  _cmsTransformFn* TransformFn,
                                   void** UserData,
                                   _cmsFreeUserDataFn* FreeDataFn,
-                                  cmsPipeline** Lut, 
-                                  cmsUInt32Number* InputFormat, 
-                                  cmsUInt32Number* OutputFormat, 
-                                  cmsUInt32Number* dwFlags)      
+                                  cmsPipeline** Lut,
+                                  cmsUInt32Number* InputFormat,
+                                  cmsUInt32Number* OutputFormat,
+                                  cmsUInt32Number* dwFlags)
 {
     cmsStage* mpe;
     Performance16Data* p16;
-    cmsContext ContextID;
     _cmsStageCLutData* data;
     cmsUInt32Number newFlags;
     cmsStage* OptimizedCLUTmpe;
@@ -336,15 +334,14 @@ cmsBool Optimize16BitRGBTransform(_cmsTransformFn* TransformFn,
 
     // Only on input RGB
     if (T_COLORSPACE(*InputFormat)  != PT_RGB) return FALSE;
-    
+
    // Named color pipelines cannot be optimized either
-   for (mpe = cmsPipelineGetPtrToFirstStage(*Lut);
+   for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, *Lut);
          mpe != NULL;
-         mpe = cmsStageNext(mpe)) {
-            if (cmsStageType(mpe) == cmsSigNamedColorElemType) return FALSE;
+         mpe = cmsStageNext(ContextID, mpe)) {
+            if (cmsStageType(ContextID, mpe) == cmsSigNamedColorElemType) return FALSE;
     }
 
-    ContextID = cmsGetPipelineContextID(*Lut);
     newFlags = *dwFlags | cmsFLAGS_FORCE_CLUT;
 
     if (!_cmsOptimizePipeline(ContextID,
@@ -354,10 +351,10 @@ cmsBool Optimize16BitRGBTransform(_cmsTransformFn* TransformFn,
                                OutputFormat,
                                &newFlags)) return FALSE;
 
-    OptimizedCLUTmpe = cmsPipelineGetPtrToFirstStage(*Lut);
+    OptimizedCLUTmpe = cmsPipelineGetPtrToFirstStage(ContextID, *Lut);
 
-    // Set the evaluator   
-    data = (_cmsStageCLutData*)cmsStageData(OptimizedCLUTmpe);
+    // Set the evaluator
+    data = (_cmsStageCLutData*)cmsStageData(ContextID, OptimizedCLUTmpe);
 
     p16 = Performance16alloc(ContextID, data->Params);
     if (p16 == NULL) return FALSE;
@@ -371,4 +368,3 @@ cmsBool Optimize16BitRGBTransform(_cmsTransformFn* TransformFn,
 
     return TRUE;
 }
-

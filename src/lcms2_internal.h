@@ -88,11 +88,11 @@
 #   define cmsINLINE static inline
 #endif
 
-// Allow signed overflow, we know this is harmless in this particular context 
+// Allow signed overflow, we know this is harmless in this particular context
 #if defined(__clang__)
 #   define CMS_NO_SANITIZE __attribute__((no_sanitize("signed-integer-overflow")))
 #else
-#   define CMS_NO_SANITIZE 
+#   define CMS_NO_SANITIZE
 #endif
 
 // Other replacement functions

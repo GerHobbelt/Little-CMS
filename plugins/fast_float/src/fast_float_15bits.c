@@ -8,12 +8,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
@@ -24,18 +24,18 @@
 
 //---------------------------------------------------------------------------------
 
-//  The internal photoshop 16 bit format range is 1.15 fixed point, which goes 0..32768 
+//  The internal photoshop 16 bit format range is 1.15 fixed point, which goes 0..32768
 // (NOT 32767) that means:
 //
 //         16 bits encoding            15 bit Photoshop encoding
 //         ================            =========================
-// 
+//
 //              0x0000                       0x0000
 //              0xFFFF                       0x8000
 //
 //  A nice (and fast) way to implement conversions is by using 64 bit values, which are
 // native CPU word size in most today architectures.
-// In CMYK, internal Photoshop format comes inverted, and this inversion happens after 
+// In CMYK, internal Photoshop format comes inverted, and this inversion happens after
 // the resizing, so values 32769 to 65535 are never used in PhotoShop.
 
 //---------------------------------------------------------------------------------
@@ -56,13 +56,16 @@ cmsINLINE cmsUInt16Number From15To16(cmsUInt16Number x15)
 
 // Specialized 1-channel formatters
 static
-cmsUInt8Number* Unroll15bitsGray(CMSREGISTER struct _cmstransform_struct* CMMcargo,
+cmsUInt8Number* Unroll15bitsGray(cmsContext ContextID,
+                                 CMSREGISTER struct _cmstransform_struct* CMMcargo,
                                  CMSREGISTER cmsUInt16Number Values[],
                                  CMSREGISTER cmsUInt8Number*  Buffer,
                                  CMSREGISTER cmsUInt32Number  Stride)
 {
+       UNUSED_PARAMETER(ContextID);
        UNUSED_PARAMETER(CMMcargo);
        UNUSED_PARAMETER(Stride);
+       UNUSED_PARAMETER(ContextID);
 
        Values[0] = From15To16(*(cmsUInt16Number*)Buffer);
 
@@ -71,11 +74,13 @@ cmsUInt8Number* Unroll15bitsGray(CMSREGISTER struct _cmstransform_struct* CMMcar
 
 
 static
-cmsUInt8Number* Pack15bitsGray(CMSREGISTER struct _cmstransform_struct* CMMcargo,
+cmsUInt8Number* Pack15bitsGray(cmsContext ContextID,
+                               CMSREGISTER struct _cmstransform_struct* CMMcargo,
                                CMSREGISTER cmsUInt16Number Values[],
                                CMSREGISTER cmsUInt8Number*  Buffer,
                                CMSREGISTER cmsUInt32Number  Stride)
 {
+       UNUSED_PARAMETER(ContextID);
        UNUSED_PARAMETER(CMMcargo);
        UNUSED_PARAMETER(Stride);
 
@@ -85,11 +90,13 @@ cmsUInt8Number* Pack15bitsGray(CMSREGISTER struct _cmstransform_struct* CMMcargo
 
 // Specialized 3-channels formatters
 static
-cmsUInt8Number* Unroll15bitsRGB(CMSREGISTER struct _cmstransform_struct* CMMcargo,
+cmsUInt8Number* Unroll15bitsRGB(cmsContext ContextID,
+                                   CMSREGISTER struct _cmstransform_struct* CMMcargo,
                                    CMSREGISTER cmsUInt16Number Values[],
                                    CMSREGISTER cmsUInt8Number*  Buffer,
                                    CMSREGISTER cmsUInt32Number  Stride)
 {
+       UNUSED_PARAMETER(ContextID);
        UNUSED_PARAMETER(CMMcargo);
        UNUSED_PARAMETER(Stride);
 
@@ -98,17 +105,19 @@ cmsUInt8Number* Unroll15bitsRGB(CMSREGISTER struct _cmstransform_struct* CMMcarg
        Values[1] = From15To16(*(cmsUInt16Number*)Buffer);
        Buffer += 2;
        Values[2] = From15To16(*(cmsUInt16Number*)Buffer);
-   
+
        return Buffer + 2;
 }
 
 
 static
-cmsUInt8Number* Pack15bitsRGB(CMSREGISTER struct _cmstransform_struct* CMMcargo,
+cmsUInt8Number* Pack15bitsRGB(cmsContext ContextID,
+                               CMSREGISTER struct _cmstransform_struct* CMMcargo,
                                CMSREGISTER cmsUInt16Number Values[],
                                CMSREGISTER cmsUInt8Number*  Buffer,
                                CMSREGISTER cmsUInt32Number  Stride)
 {
+       UNUSED_PARAMETER(ContextID);
        UNUSED_PARAMETER(CMMcargo);
        UNUSED_PARAMETER(Stride);
 
@@ -123,11 +132,13 @@ cmsUInt8Number* Pack15bitsRGB(CMSREGISTER struct _cmstransform_struct* CMMcargo,
 
 
 static
-cmsUInt8Number* Unroll15bitsRGBA(CMSREGISTER struct _cmstransform_struct* CMMcargo,
+cmsUInt8Number* Unroll15bitsRGBA(cmsContext ContextID,
+                                   CMSREGISTER struct _cmstransform_struct* CMMcargo,
                                    CMSREGISTER cmsUInt16Number Values[],
                                    CMSREGISTER cmsUInt8Number*  Buffer,
                                    CMSREGISTER cmsUInt32Number  Stride)
 {
+       UNUSED_PARAMETER(ContextID);
        UNUSED_PARAMETER(CMMcargo);
        UNUSED_PARAMETER(Stride);
 
@@ -136,17 +147,19 @@ cmsUInt8Number* Unroll15bitsRGBA(CMSREGISTER struct _cmstransform_struct* CMMcar
        Values[1] = From15To16(*(cmsUInt16Number*)Buffer);
        Buffer += 2;
        Values[2] = From15To16(*(cmsUInt16Number*)Buffer);
-   
+
        return Buffer + 4;
 }
 
 
 static
-cmsUInt8Number* Pack15bitsRGBA(CMSREGISTER struct _cmstransform_struct* CMMcargo,
+cmsUInt8Number* Pack15bitsRGBA(cmsContext ContextID,
+                               CMSREGISTER struct _cmstransform_struct* CMMcargo,
                                CMSREGISTER cmsUInt16Number Values[],
                                CMSREGISTER cmsUInt8Number*  Buffer,
                                CMSREGISTER cmsUInt32Number  Stride)
 {
+       UNUSED_PARAMETER(ContextID);
        UNUSED_PARAMETER(CMMcargo);
        UNUSED_PARAMETER(Stride);
 
@@ -162,11 +175,13 @@ cmsUInt8Number* Pack15bitsRGBA(CMSREGISTER struct _cmstransform_struct* CMMcargo
 
 // Specialized 3 channels reversed formatters
 static
-cmsUInt8Number* Unroll15bitsBGR(CMSREGISTER struct _cmstransform_struct* CMMcargo,
+cmsUInt8Number* Unroll15bitsBGR(cmsContext ContextID,
+                                   CMSREGISTER struct _cmstransform_struct* CMMcargo,
                                    CMSREGISTER cmsUInt16Number Values[],
                                    CMSREGISTER cmsUInt8Number*  Buffer,
                                    CMSREGISTER cmsUInt32Number  Stride)
 {
+       UNUSED_PARAMETER(ContextID);
        UNUSED_PARAMETER(CMMcargo);
        UNUSED_PARAMETER(Stride);
 
@@ -181,11 +196,13 @@ cmsUInt8Number* Unroll15bitsBGR(CMSREGISTER struct _cmstransform_struct* CMMcarg
 
 
 static
-cmsUInt8Number* Pack15bitsBGR(CMSREGISTER struct _cmstransform_struct* CMMcargo,
+cmsUInt8Number* Pack15bitsBGR(cmsContext ContextID,
+                                   CMSREGISTER struct _cmstransform_struct* CMMcargo,
                                    CMSREGISTER cmsUInt16Number Values[],
                                    CMSREGISTER cmsUInt8Number*  Buffer,
                                    CMSREGISTER cmsUInt32Number  Stride)
 {
+       UNUSED_PARAMETER(ContextID);
        UNUSED_PARAMETER(CMMcargo);
        UNUSED_PARAMETER(Stride);
 
@@ -200,11 +217,13 @@ cmsUInt8Number* Pack15bitsBGR(CMSREGISTER struct _cmstransform_struct* CMMcargo,
 
 // Specialized 4 channels CMYK formatters. Note Photoshop stores CMYK reversed
 static
-cmsUInt8Number* Unroll15bitsCMYK(CMSREGISTER struct _cmstransform_struct* CMMcargo,
+cmsUInt8Number* Unroll15bitsCMYK(cmsContext ContextID,
+                                   CMSREGISTER struct _cmstransform_struct* CMMcargo,
                                    CMSREGISTER cmsUInt16Number Values[],
                                    CMSREGISTER cmsUInt8Number*  Buffer,
                                    CMSREGISTER cmsUInt32Number  Stride)
 {
+       UNUSED_PARAMETER(ContextID);
        UNUSED_PARAMETER(CMMcargo);
        UNUSED_PARAMETER(Stride);
 
@@ -220,11 +239,13 @@ cmsUInt8Number* Unroll15bitsCMYK(CMSREGISTER struct _cmstransform_struct* CMMcar
 }
 
 static
-cmsUInt8Number* Pack15bitsCMYK(CMSREGISTER struct _cmstransform_struct* CMMcargo,
+cmsUInt8Number* Pack15bitsCMYK(cmsContext ContextID,
+                               CMSREGISTER struct _cmstransform_struct* CMMcargo,
                                CMSREGISTER cmsUInt16Number Values[],
                                CMSREGISTER cmsUInt8Number*  Buffer,
                                CMSREGISTER cmsUInt32Number  Stride)
 {
+       UNUSED_PARAMETER(ContextID);
        UNUSED_PARAMETER(CMMcargo);
        UNUSED_PARAMETER(Stride);
 
@@ -267,7 +288,8 @@ cmsINLINE cmsUInt16Number PackOne(cmsUInt16Number x, cmsBool Reverse, cmsBool Sw
 
 // Generic planar support
 static
-cmsUInt8Number* Unroll15bitsPlanar(CMSREGISTER struct _cmstransform_struct* CMMcargo,
+cmsUInt8Number* Unroll15bitsPlanar(cmsContext ContextID,
+                                   CMSREGISTER struct _cmstransform_struct* CMMcargo,
                                    CMSREGISTER cmsUInt16Number wIn[],
                                    CMSREGISTER cmsUInt8Number* accum,
                                    CMSREGISTER cmsUInt32Number Stride)
@@ -280,6 +302,7 @@ cmsUInt8Number* Unroll15bitsPlanar(CMSREGISTER struct _cmstransform_struct* CMMc
        int i;
        cmsUInt8Number* Init = accum;
 
+       UNUSED_PARAMETER(ContextID);
        UNUSED_PARAMETER(Stride);
 
        if (DoSwap) {
@@ -289,7 +312,7 @@ cmsUInt8Number* Unroll15bitsPlanar(CMSREGISTER struct _cmstransform_struct* CMMc
        for (i = 0; i < nChan; i++) {
 
               int index = DoSwap ? (nChan - i - 1) : i;
-        
+
               wIn[index] = UnrollOne(*(cmsUInt16Number*)accum, Reverse, SwapEndian);
 
               accum += Stride * 2;
@@ -300,7 +323,8 @@ cmsUInt8Number* Unroll15bitsPlanar(CMSREGISTER struct _cmstransform_struct* CMMc
 
 
 static
-cmsUInt8Number* Pack15bitsPlanar(CMSREGISTER struct _cmstransform_struct* CMMcargo,
+cmsUInt8Number* Pack15bitsPlanar(cmsContext ContextID,
+                                 CMSREGISTER struct _cmstransform_struct* CMMcargo,
                                  CMSREGISTER cmsUInt16Number wOut[],
                                  CMSREGISTER cmsUInt8Number* output,
                                  CMSREGISTER cmsUInt32Number Stride)
@@ -313,6 +337,7 @@ cmsUInt8Number* Pack15bitsPlanar(CMSREGISTER struct _cmstransform_struct* CMMcar
        CMSREGISTER int i;
        cmsUInt8Number* Init = output;
 
+       UNUSED_PARAMETER(ContextID);
 
        if (DoSwap) {
               output += T_EXTRA(head->OutputFormat) * Stride * 2;
@@ -333,7 +358,8 @@ cmsUInt8Number* Pack15bitsPlanar(CMSREGISTER struct _cmstransform_struct* CMMcar
 
 // Generic falltrough
 static
-cmsUInt8Number* Unroll15bitsChunky(CMSREGISTER struct _cmstransform_struct* CMMcargo,
+cmsUInt8Number* Unroll15bitsChunky(cmsContext ContextID,
+                                   CMSREGISTER struct _cmstransform_struct* CMMcargo,
                                    CMSREGISTER cmsUInt16Number Values[],
                                    CMSREGISTER cmsUInt8Number*  Buffer,
                                    CMSREGISTER cmsUInt32Number  Stride)
@@ -347,6 +373,7 @@ cmsUInt8Number* Unroll15bitsChunky(CMSREGISTER struct _cmstransform_struct* CMMc
 
 	CMSREGISTER int i;
 
+       UNUSED_PARAMETER(ContextID);
        UNUSED_PARAMETER(Stride);
 
        if (DoSwap) {
@@ -368,7 +395,8 @@ cmsUInt8Number* Unroll15bitsChunky(CMSREGISTER struct _cmstransform_struct* CMMc
 
 
 static
-cmsUInt8Number* Pack15bitsChunky(CMSREGISTER struct _cmstransform_struct* CMMcargo,
+cmsUInt8Number* Pack15bitsChunky(cmsContext ContextID,
+                           CMSREGISTER struct _cmstransform_struct* CMMcargo,
                            CMSREGISTER cmsUInt16Number Values[],
                            CMSREGISTER cmsUInt8Number*  Buffer,
                            CMSREGISTER cmsUInt32Number  Stride)
@@ -382,6 +410,7 @@ cmsUInt8Number* Pack15bitsChunky(CMSREGISTER struct _cmstransform_struct* CMMcar
 
        CMSREGISTER int i;
 
+       UNUSED_PARAMETER(ContextID);
        UNUSED_PARAMETER(Stride);
 
        if (DoSwap) {
@@ -391,7 +420,7 @@ cmsUInt8Number* Pack15bitsChunky(CMSREGISTER struct _cmstransform_struct* CMMcar
        for (i = 0; i < nChan; i++) {
 
               int index = DoSwap ? (nChan - i - 1) : i;
-  
+
               *(cmsUInt16Number*)Buffer = PackOne(Values[index], Reverse, SwapEndian);
 
               Buffer += 2;
@@ -402,11 +431,12 @@ cmsUInt8Number* Pack15bitsChunky(CMSREGISTER struct _cmstransform_struct* CMMcar
 
 
 
-// Generic N-bytes plus dither 16-to-8 conversion. 
+// Generic N-bytes plus dither 16-to-8 conversion.
 static int err[cmsMAXCHANNELS];
 
 static
-cmsUInt8Number*  PackNBytesDither(CMSREGISTER struct _cmstransform_struct* CMMcargo,
+cmsUInt8Number*  PackNBytesDither(cmsContext ContextID,
+                                   CMSREGISTER struct _cmstransform_struct* CMMcargo,
                                    CMSREGISTER cmsUInt16Number Values[],
                                    CMSREGISTER cmsUInt8Number*  Buffer,
                                    CMSREGISTER cmsUInt32Number  Stride)
@@ -417,6 +447,7 @@ cmsUInt8Number*  PackNBytesDither(CMSREGISTER struct _cmstransform_struct* CMMca
        CMSREGISTER int i;
        unsigned int n, pe, pf;
 
+       UNUSED_PARAMETER(ContextID);
        UNUSED_PARAMETER(Stride);
 
        for (i = 0; i < nChan; i++) {
@@ -436,7 +467,8 @@ cmsUInt8Number*  PackNBytesDither(CMSREGISTER struct _cmstransform_struct* CMMca
 
 
 static
-cmsUInt8Number*  PackNBytesSwapDither(CMSREGISTER struct _cmstransform_struct* CMMcargo,
+cmsUInt8Number*  PackNBytesSwapDither(cmsContext ContextID,
+                                          CMSREGISTER struct _cmstransform_struct* CMMcargo,
                                           CMSREGISTER cmsUInt16Number Values[],
                                           CMSREGISTER cmsUInt8Number*  Buffer,
                                           CMSREGISTER cmsUInt32Number  Stride)
@@ -447,6 +479,7 @@ cmsUInt8Number*  PackNBytesSwapDither(CMSREGISTER struct _cmstransform_struct* C
        CMSREGISTER int i;
        unsigned int n, pe, pf;
 
+       UNUSED_PARAMETER(ContextID);
        UNUSED_PARAMETER(Stride);
 
        for (i = nChan - 1; i >= 0; --i) {
@@ -469,17 +502,19 @@ cmsUInt8Number*  PackNBytesSwapDither(CMSREGISTER struct _cmstransform_struct* C
 // The factory for 15 bits. This function returns a pointer to specialized function
 // that would deal with the asked format. It return a pointer to NULL if the format
 // is not supported. This is tha basis of formatter plug-in for 15 bit formats.
-cmsFormatter Formatter_15Bit_Factory(cmsUInt32Number Type,
+cmsFormatter Formatter_15Bit_Factory(cmsContext ContextID,
+                                     cmsUInt32Number Type,
                                      cmsFormatterDirection Dir,
                                      cmsUInt32Number dwFlags)
 {
        cmsFormatter Result = { NULL };
 
+       UNUSED_PARAMETER(ContextID);
 	   UNUSED_PARAMETER(dwFlags);
 
        switch (Type) {
 
-       // Simple Gray 
+       // Simple Gray
        case TYPE_GRAY_15:
               Result.Fmt16 = (Dir == cmsFormatterInput) ? Unroll15bitsGray : Pack15bitsGray;
               break;
@@ -505,7 +540,7 @@ cmsFormatter Formatter_15Bit_Factory(cmsUInt32Number Type,
        case TYPE_CMYK_15:
               Result.Fmt16 = (Dir == cmsFormatterInput) ? Unroll15bitsCMYK : Pack15bitsCMYK;
               break;
-  
+
        // Planar versions
        case TYPE_GRAYA_15_PLANAR:
        case TYPE_RGB_15_PLANAR:
@@ -530,7 +565,7 @@ cmsFormatter Formatter_15Bit_Factory(cmsUInt32Number Type,
        case TYPE_ABGR_15_SE:
        case TYPE_BGRA_15:
        case TYPE_BGRA_15_SE:
-       case TYPE_CMY_15_SE:      
+       case TYPE_CMY_15_SE:
        case TYPE_CMYK_15_REV:
        case TYPE_CMYK_15_SE:
        case TYPE_KYMC_15:
@@ -544,12 +579,12 @@ cmsFormatter Formatter_15Bit_Factory(cmsUInt32Number Type,
        case TYPE_GRAY_8_DITHER:
        case TYPE_RGB_8_DITHER:
        case TYPE_RGBA_8_DITHER:
-       case TYPE_CMYK_8_DITHER: 
+       case TYPE_CMYK_8_DITHER:
               if (Dir == cmsFormatterOutput) {
                      Result.Fmt16 = PackNBytesDither;
               }
               break;
-       
+
        case TYPE_ABGR_8_DITHER:
        case TYPE_BGR_8_DITHER:
        case TYPE_KYMC_8_DITHER:

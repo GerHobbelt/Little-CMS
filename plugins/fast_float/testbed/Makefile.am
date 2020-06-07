@@ -10,7 +10,7 @@ INCLUDES	=  -I$(builddir)/../include -I$(srcdir)/../include -I$(srcdir)/../src \
 
 check_PROGRAMS = fast_float_testbed
 
-fast_float_testbed_LDADD = $(top_builddir)/src/liblcms2.la $(srcdir)/../src/liblcms2_fast_float.la
+fast_float_testbed_LDADD = $(top_builddir)/src/liblcms2mt.la $(srcdir)/../src/liblcms2mt_fast_float.la
 fast_float_testbed_LDFLAGS = @LDFLAGS@
 fast_float_testbed_SOURCES = fast_float_testbed.c 
 

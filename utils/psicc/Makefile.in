@@ -117,7 +117,7 @@ am__dirstamp = $(am__leading_dot)dirstamp
 am_psicc_OBJECTS = psicc.$(OBJEXT) ../common/xgetopt.$(OBJEXT) \
 	../common/vprf.$(OBJEXT)
 psicc_OBJECTS = $(am_psicc_OBJECTS)
-psicc_DEPENDENCIES = $(top_builddir)/src/liblcms2.la
+psicc_DEPENDENCIES = $(top_builddir)/src/liblcms2mt.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -362,7 +362,7 @@ AUTOMAKE_OPTIONS = 1.7 foreign no-dependencies
 AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include \
                -I$(top_srcdir)/utils/common -I$(top_builddir)/utils/common
 
-psicc_LDADD = $(top_builddir)/src/liblcms2.la @LCMS_LIB_DEPLIBS@
+psicc_LDADD = $(top_builddir)/src/liblcms2mt.la @LCMS_LIB_DEPLIBS@
 psicc_LDFLAGS = @LDFLAGS@
 psicc_SOURCES = psicc.c ../common/xgetopt.c ../common/vprf.c ../common/utils.h
 man_MANS = psicc.1

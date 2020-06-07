@@ -117,7 +117,7 @@ am__dirstamp = $(am__leading_dot)dirstamp
 am_transicc_OBJECTS = transicc.$(OBJEXT) ../common/xgetopt.$(OBJEXT) \
 	../common/vprf.$(OBJEXT)
 transicc_OBJECTS = $(am_transicc_OBJECTS)
-transicc_DEPENDENCIES = $(top_builddir)/src/liblcms2.la
+transicc_DEPENDENCIES = $(top_builddir)/src/liblcms2mt.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -362,7 +362,7 @@ AUTOMAKE_OPTIONS = 1.7 foreign no-dependencies
 AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include \
                -I$(top_srcdir)/utils/common -I$(top_builddir)/utils/common
 
-transicc_LDADD = $(top_builddir)/src/liblcms2.la @LCMS_LIB_DEPLIBS@
+transicc_LDADD = $(top_builddir)/src/liblcms2mt.la @LCMS_LIB_DEPLIBS@
 transicc_LDFLAGS = @LDFLAGS@
 transicc_SOURCES = transicc.c ../common/xgetopt.c ../common/vprf.c  ../common/utils.h
 man_MANS = transicc.1

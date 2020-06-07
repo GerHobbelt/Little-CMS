@@ -285,7 +285,8 @@ cmsBool PreOptimize(cmsContext ContextID, cmsPipeline* Lut)
 }
 
 static
-void Eval16nop1D(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[],
+void Eval16nop1D(cmsContext ContextID,
+                 CMSREGISTER const cmsUInt16Number Input[],
                  CMSREGISTER cmsUInt16Number Output[],
                  CMSREGISTER const struct _cms_interp_struc* p)
 {
@@ -296,7 +297,8 @@ void Eval16nop1D(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[]
 }
 
 static
-void PrelinEval16(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[],
+void PrelinEval16(cmsContext ContextID,
+                  CMSREGISTER const cmsUInt16Number Input[],
                   CMSREGISTER cmsUInt16Number Output[],
                   CMSREGISTER const void* D)
 {
@@ -907,9 +909,10 @@ void* Prelin8dup(cmsContext ContextID, const void* ptr)
 // A optimized interpolation for 8-bit input.
 #define DENS(i,j,k) (LutTable[(i)+(j)+(k)+OutChan])
 static CMS_NO_SANITIZE
-void PrelinEval8(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[],
-                  CMSREGISTER cmsUInt16Number Output[],
-                  CMSREGISTER const void* D)
+void PrelinEval8(cmsContext ContextID,
+                 CMSREGISTER const cmsUInt16Number Input[],
+                 CMSREGISTER cmsUInt16Number Output[],
+                 CMSREGISTER const void* D)
 {
     cmsUInt8Number         r, g, b;
     cmsS15Fixed16Number    rx, ry, rz;
@@ -1329,9 +1332,10 @@ Curves16Data* CurvesAlloc(cmsContext ContextID, cmsUInt32Number nCurves, cmsUInt
 }
 
 static
-void FastEvaluateCurves8(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
-                          CMSREGISTER cmsUInt16Number Out[],
-                          CMSREGISTER const void* D)
+void FastEvaluateCurves8(cmsContext ContextID,
+                         CMSREGISTER const cmsUInt16Number In[],
+                         CMSREGISTER cmsUInt16Number Out[],
+                         CMSREGISTER const void* D)
 {
     Curves16Data* Data = (Curves16Data*) D;
     int x;
@@ -1347,7 +1351,8 @@ void FastEvaluateCurves8(cmsContext ContextID, CMSREGISTER const cmsUInt16Number
 
 
 static
-void FastEvaluateCurves16(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
+void FastEvaluateCurves16(cmsContext ContextID,
+                          CMSREGISTER const cmsUInt16Number In[],
                           CMSREGISTER cmsUInt16Number Out[],
                           CMSREGISTER const void* D)
 {
@@ -1362,7 +1367,8 @@ void FastEvaluateCurves16(cmsContext ContextID, CMSREGISTER const cmsUInt16Numbe
 
 
 static
-void FastIdentity16(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
+void FastIdentity16(cmsContext ContextID,
+                    CMSREGISTER const cmsUInt16Number In[],
                     CMSREGISTER cmsUInt16Number Out[],
                     CMSREGISTER const void* D)
 {
@@ -1523,7 +1529,8 @@ void* DupMatShaper(cmsContext ContextID, const void* Data)
 // to accomplish some performance. Actually it takes 256x3 16 bits tables and 16385 x 3 tables of 8 bits,
 // in total about 50K, and the performance boost is huge!
 static
-void MatShaperEval16(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
+void MatShaperEval16(cmsContext ContextID,
+                     CMSREGISTER const cmsUInt16Number In[],
                      CMSREGISTER cmsUInt16Number Out[],
                      CMSREGISTER const void* D)
 {

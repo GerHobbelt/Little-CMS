@@ -8,12 +8,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
@@ -21,9 +21,9 @@
 
 #include "fast_float_internal.h"
 
-// Curves, optimization is valid for floating point curves 
+// Curves, optimization is valid for floating point curves
 typedef struct {
-   
+
     cmsFloat32Number CurveR[MAX_NODES_IN_CURVE];
     cmsFloat32Number CurveG[MAX_NODES_IN_CURVE];
     cmsFloat32Number CurveB[MAX_NODES_IN_CURVE];
@@ -43,7 +43,7 @@ static CurvesFloatData* malloc_aligned(cmsContext ContextID)
        CurvesFloatData* p = (CurvesFloatData*)aligned;
 
        p->real_ptr = real_ptr;
-       
+
        return p;
 }
 
@@ -57,12 +57,13 @@ static void free_aligned(cmsContext ContextID, void* Data)
 
 // Evaluator for float curves. This are just 1D tables
 
-static void FastEvaluateFloatRGBCurves(struct _cmstransform_struct *CMMcargo,
+static void FastEvaluateFloatRGBCurves(cmsContext ContextID,
+                            struct _cmstransform_struct *CMMcargo,
                             const cmsFloat32Number* Input,
                             cmsFloat32Number* Output,
                             cmsUInt32Number len,
                             cmsUInt32Number Stride)
-{   
+{
     cmsUInt32Number ii;
 	cmsUInt32Number SourceStartingOrder[cmsMAXCHANNELS];
 	cmsUInt32Number SourceIncrements[cmsMAXCHANNELS];
@@ -72,13 +73,13 @@ static void FastEvaluateFloatRGBCurves(struct _cmstransform_struct *CMMcargo,
     const cmsUInt8Number* rin;
     const cmsUInt8Number* gin;
     const cmsUInt8Number* bin;
-        
+
     cmsUInt8Number* rout;
     cmsUInt8Number* gout;
     cmsUInt8Number* bout;
 
-    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat((cmsHTRANSFORM) CMMcargo);
-    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat((cmsHTRANSFORM) CMMcargo);
+    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
+    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
 
     CurvesFloatData* Data = (CurvesFloatData*)  _cmsGetTransformUserData(CMMcargo);
 
@@ -115,12 +116,13 @@ static void FastEvaluateFloatRGBCurves(struct _cmstransform_struct *CMMcargo,
 }
 
 // Do nothing but arrange the RGB format.
-static void FastFloatRGBIdentity(struct _cmstransform_struct *CMMcargo,
+static void FastFloatRGBIdentity(cmsContext ContextID,
+                                struct _cmstransform_struct *CMMcargo,
                                 const cmsFloat32Number* Input,
                                 cmsFloat32Number* Output,
                                 cmsUInt32Number len,
                                 cmsUInt32Number Stride)
-{   
+{
     cmsUInt32Number ii;
 	cmsUInt32Number SourceStartingOrder[cmsMAXCHANNELS];
 	cmsUInt32Number SourceIncrements[cmsMAXCHANNELS];
@@ -134,9 +136,9 @@ static void FastFloatRGBIdentity(struct _cmstransform_struct *CMMcargo,
     cmsUInt8Number* bout;
 
 
-    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat((cmsHTRANSFORM) CMMcargo);
-    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat((cmsHTRANSFORM) CMMcargo);
-  
+    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
+    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
+
 
     cmsUInt32Number nchans, nalpha;
 
@@ -156,9 +158,9 @@ static void FastFloatRGBIdentity(struct _cmstransform_struct *CMMcargo,
 
     for (ii=0; ii < len; ii++) {
 
-        memmove(rout, rin, 4); 
-        memmove(gout, gin, 4); 
-        memmove(bout, bin, 4); 
+        memmove(rout, rin, 4);
+        memmove(gout, gin, 4);
+        memmove(bout, bin, 4);
 
         rin += SourceIncrements[0];
         gin += SourceIncrements[1];
@@ -171,12 +173,13 @@ static void FastFloatRGBIdentity(struct _cmstransform_struct *CMMcargo,
 }
 
 // Evaluate 1 channel only
-static void FastEvaluateFloatGrayCurves(struct _cmstransform_struct *CMMcargo,
+static void FastEvaluateFloatGrayCurves(cmsContext ContextID,
+                                    struct _cmstransform_struct *CMMcargo,
                                     const cmsFloat32Number* Input,
                                     cmsFloat32Number* Output,
                                     cmsUInt32Number len,
                                     cmsUInt32Number Stride)
-{   
+{
     cmsUInt32Number ii;
     cmsUInt32Number SourceStartingOrder[cmsMAXCHANNELS];
     cmsUInt32Number SourceIncrements[cmsMAXCHANNELS];
@@ -184,9 +187,9 @@ static void FastEvaluateFloatGrayCurves(struct _cmstransform_struct *CMMcargo,
     cmsUInt32Number DestIncrements[cmsMAXCHANNELS];
     const cmsUInt8Number* kin;
     cmsUInt8Number* kout;
-    
-    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat((cmsHTRANSFORM) CMMcargo);
-    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat((cmsHTRANSFORM) CMMcargo);
+
+    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
+    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
 
     CurvesFloatData* Data = (CurvesFloatData*)  _cmsGetTransformUserData(CMMcargo);
 
@@ -200,7 +203,7 @@ static void FastEvaluateFloatGrayCurves(struct _cmstransform_struct *CMMcargo,
 
     kin = (const cmsUInt8Number*)Input + SourceStartingOrder[0];
     kout = (cmsUInt8Number*)Output + DestStartingOrder[0];
-    
+
     for (ii = 0; ii < len; ii++) {
 
            *(cmsFloat32Number*)kout = flerp(Data->CurveR, *(cmsFloat32Number*)kin);
@@ -211,12 +214,13 @@ static void FastEvaluateFloatGrayCurves(struct _cmstransform_struct *CMMcargo,
 }
 
 
-static void FastFloatGrayIdentity(struct _cmstransform_struct *CMMcargo,
+static void FastFloatGrayIdentity(cmsContext ContextID,
+                                struct _cmstransform_struct *CMMcargo,
                                 const cmsFloat32Number* Input,
                                 cmsFloat32Number* Output,
                                 cmsUInt32Number len,
                                 cmsUInt32Number Stride)
-{   
+{
     cmsUInt32Number ii;
     cmsUInt32Number SourceStartingOrder[cmsMAXCHANNELS];
     cmsUInt32Number SourceIncrements[cmsMAXCHANNELS];
@@ -224,10 +228,10 @@ static void FastFloatGrayIdentity(struct _cmstransform_struct *CMMcargo,
     cmsUInt32Number DestIncrements[cmsMAXCHANNELS];
     const cmsUInt8Number* kin;
     cmsUInt8Number* kout;
-    
-    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat((cmsHTRANSFORM) CMMcargo);
-    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat((cmsHTRANSFORM) CMMcargo);
-  
+
+    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
+    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
+
     cmsUInt32Number nchans, nalpha;
 
     _cmsComputeComponentIncrements(InputFormat, Stride, &nchans, &nalpha, SourceStartingOrder, SourceIncrements);
@@ -238,13 +242,13 @@ static void FastFloatGrayIdentity(struct _cmstransform_struct *CMMcargo,
 
     kin = (const cmsUInt8Number*) Input + SourceStartingOrder[0];
     kout = (cmsUInt8Number*)Output + DestStartingOrder[0];
-    
+
     for (ii=0; ii < len; ii++) {
 
         memmove(kout, kin, 4);
-        
+
         kin += SourceIncrements[0];
-        kout += DestIncrements[0];        
+        kout += DestIncrements[0];
     }
 }
 
@@ -291,21 +295,21 @@ cmsBool KCurveIsLinear(CurvesFloatData* data)
 
 // Create linearization tables with a reasonable number of entries. Precission is about 32 bits.
 static
-CurvesFloatData* ComputeCompositeCurves(cmsUInt32Number nChan,  cmsPipeline* Src)
+CurvesFloatData* ComputeCompositeCurves(cmsContext ContextID, cmsUInt32Number nChan,  cmsPipeline* Src)
 {
     cmsUInt32Number i, j;
     cmsFloat32Number InFloat[3], OutFloat[3];
 
-    CurvesFloatData* Data = malloc_aligned(cmsGetPipelineContextID(Src));
+    CurvesFloatData* Data = malloc_aligned(ContextID);
     if (Data == NULL) return NULL;
 
     // Create target curves
     for (i = 0; i < MAX_NODES_IN_CURVE; i++) {
 
-        for (j=0; j <nChan; j++) 
+        for (j=0; j <nChan; j++)
                InFloat[j] = (cmsFloat32Number)i /  (cmsFloat32Number)(MAX_NODES_IN_CURVE-1);
 
-        cmsPipelineEvalFloat(InFloat, OutFloat, Src);
+        cmsPipelineEvalFloat(ContextID, InFloat, OutFloat, Src);
 
         if (nChan == 1) {
 
@@ -316,7 +320,7 @@ CurvesFloatData* ComputeCompositeCurves(cmsUInt32Number nChan,  cmsPipeline* Src
                Data->CurveG[i] = OutFloat[1];
                Data->CurveB[i] = OutFloat[2];
         }
-        
+
     }
 
     return Data;
@@ -324,18 +328,19 @@ CurvesFloatData* ComputeCompositeCurves(cmsUInt32Number nChan,  cmsPipeline* Src
 
 
 // If the target LUT holds only curves, the optimization procedure is to join all those
-// curves together. That only works on curves and does not work on matrices. 
-cmsBool OptimizeFloatByJoiningCurves(_cmsTransformFn* TransformFn,                                  
+// curves together. That only works on curves and does not work on matrices.
+cmsBool OptimizeFloatByJoiningCurves(cmsContext ContextID,
+                                  _cmsTransformFn* TransformFn,
                                   void** UserData,
                                   _cmsFreeUserDataFn* FreeUserData,
-                                  cmsPipeline** Lut, 
-                                  cmsUInt32Number* InputFormat, 
-                                  cmsUInt32Number* OutputFormat, 
-                                  cmsUInt32Number* dwFlags)    
+                                  cmsPipeline** Lut,
+                                  cmsUInt32Number* InputFormat,
+                                  cmsUInt32Number* OutputFormat,
+                                  cmsUInt32Number* dwFlags)
 {
- 
+
     cmsPipeline* Src = *Lut;
-    cmsStage* mpe;   
+    cmsStage* mpe;
     CurvesFloatData* Data;
     cmsUInt32Number nChans;
 
@@ -349,19 +354,19 @@ cmsBool OptimizeFloatByJoiningCurves(_cmsTransformFn* TransformFn,
     nChans = T_CHANNELS(*InputFormat);
     if (nChans != T_CHANNELS(*OutputFormat)) return FALSE;
 
-    // gray and RGB 
+    // gray and RGB
     if (nChans != 1 && nChans != 3) return FALSE;
-   
-    //  Only curves in this LUT?
-    for (mpe = cmsPipelineGetPtrToFirstStage(Src);
-        mpe != NULL;
-        mpe = cmsStageNext(mpe)) {
 
-            if (cmsStageType(mpe) != cmsSigCurveSetElemType) return FALSE;
+    //  Only curves in this LUT?
+    for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, Src);
+        mpe != NULL;
+        mpe = cmsStageNext(ContextID, mpe)) {
+
+            if (cmsStageType(ContextID, mpe) != cmsSigCurveSetElemType) return FALSE;
     }
-   
-    Data = ComputeCompositeCurves(nChans, Src);
-    
+
+    Data = ComputeCompositeCurves(ContextID, nChans, Src);
+
     *dwFlags |= cmsFLAGS_NOCACHE;
     *dwFlags &= ~cmsFLAGS_CAN_CHANGE_FORMATTER;
     *UserData = Data;

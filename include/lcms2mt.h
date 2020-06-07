@@ -81,7 +81,7 @@ extern "C" {
 #endif
 
 // Version/release
-// Vanilla LCMS2 uses values from 2000-2090. This is
+// Vanilla LCMS2 uses values from 2000-2100. This is
 // used as an unsigned number. We want any attempt to
 // use OUR numbers with a mainline LCMS to fail, so
 // we have to go under 2000-2100. Let's subtract
@@ -89,7 +89,7 @@ extern "C" {
 #define LCMS_VERSION              (2100 - 2000)
 
 // We expect any LCMS2MT release to fall within the
-// following rance.
+// following range.
 #define LCMS2MT_VERSION_MIN (0)
 #define LCMS2MT_VERSION_MAX (999)
 
@@ -162,7 +162,7 @@ typedef double               cmsFloat64Number;
 #endif
 
 // Handle "register" keyword
-#if defined(CMS_NO_REGISTER_KEYWORD) && !defined(CMS_DLL) && !defined(CMS_DLL_BUILD) 
+#if defined(CMS_NO_REGISTER_KEYWORD) && !defined(CMS_DLL) && !defined(CMS_DLL_BUILD)
 #  define CMSREGISTER
 #else
 #  define CMSREGISTER register
@@ -254,10 +254,15 @@ typedef int                  cmsBool;
 #       define CMSEXPORT
 #       define CMSAPI
 #  endif
+#else  // not Windows
+#  ifdef HAVE_FUNC_ATTRIBUTE_VISIBILITY
+#     define CMSEXPORT
+#     define CMSAPI    __attribute__((visibility("default")))
 #else
 # define CMSEXPORT
 # define CMSAPI
 #endif
+#endif  // CMS_IS_WINDOWS_
 
 #ifdef HasTHREADS
 # if HasTHREADS == 1
@@ -1259,11 +1264,13 @@ CMSAPI cmsStageSignature CMSEXPORT cmsStageType(cmsContext ContextID, const cmsS
 CMSAPI void*             CMSEXPORT cmsStageData(cmsContext ContextID, const cmsStage* mpe);
 
 // Sampling
-typedef cmsInt32Number (* cmsSAMPLER16)   (cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
+typedef cmsInt32Number (* cmsSAMPLER16)   (cmsContext ContextID,
+                                           CMSREGISTER const cmsUInt16Number In[],
                                            CMSREGISTER cmsUInt16Number Out[],
                                            CMSREGISTER void * Cargo);
 
-typedef cmsInt32Number (* cmsSAMPLERFLOAT)(cmsContext ContextID, CMSREGISTER const cmsFloat32Number In[],
+typedef cmsInt32Number (* cmsSAMPLERFLOAT)(cmsContext ContextID,
+                                           CMSREGISTER const cmsFloat32Number In[],
                                            CMSREGISTER cmsFloat32Number Out[],
                                            CMSREGISTER void * Cargo);
 
@@ -1406,7 +1413,6 @@ typedef struct {
 typedef struct {
 
     cmsUInt32Number n;
-    cmsContext      ContextID;
     cmsPSEQDESC*    seq;
 
 } cmsSEQ;

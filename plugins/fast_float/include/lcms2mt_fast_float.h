@@ -8,21 +8,21 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 //---------------------------------------------------------------------------------
 
-#ifndef _LCMS2_FAST_FLOAT_H
-#define _LCMS2_FAST_FLOAT_H
+#ifndef _LCMS2MT_FAST_FLOAT_H
+#define _LCMS2MT_FAST_FLOAT_H
 
-#include "lcms2_plugin.h"
+#include "lcms2mt_plugin.h"
 
 #ifndef CMS_USE_CPP_API
 #   ifdef __cplusplus
@@ -36,7 +36,7 @@ extern "C" {
 // you need to place this in some initialization place:
 //
 //  cmsPlugin(cmsFastFloatExtensions());
-// 
+//
 
 void* cmsFastFloatExtensions(void);
 
@@ -137,4 +137,3 @@ void* cmsFastFloatExtensions(void);
 #endif
 
 #endif
-

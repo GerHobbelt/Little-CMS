@@ -62,21 +62,21 @@ void TestMemoryLeaks(cmsBool ok);
 void Say(const char* str);
 
 // Plug-in tests
-cmsInt32Number CheckSimpleContext(void);
-cmsInt32Number CheckAllocContext(void);
-cmsInt32Number CheckAlarmColorsContext(void);
-cmsInt32Number CheckAdaptationStateContext(void);
-cmsInt32Number CheckInterp1DPlugin(void);
-cmsInt32Number CheckInterp3DPlugin(void);
-cmsInt32Number CheckParametricCurvePlugin(void);
-cmsInt32Number CheckFormattersPlugin(void);
-cmsInt32Number CheckTagTypePlugin(void);
-cmsInt32Number CheckMPEPlugin(void);
-cmsInt32Number CheckOptimizationPlugin(void);
-cmsInt32Number CheckIntentPlugin(void);
-cmsInt32Number CheckTransformPlugin(void);
-cmsInt32Number CheckMutexPlugin(void);
-cmsInt32Number CheckMethodPackDoublesFromFloat(void);
+cmsInt32Number CheckSimpleContext(cmsContext ContextID);
+cmsInt32Number CheckAllocContext(cmsContext ContextID);
+cmsInt32Number CheckAlarmColorsContext(cmsContext ContextID);
+cmsInt32Number CheckAdaptationStateContext(cmsContext ContextID);
+cmsInt32Number CheckInterp1DPlugin(cmsContext ContextID);
+cmsInt32Number CheckInterp3DPlugin(cmsContext ContextID);
+cmsInt32Number CheckParametricCurvePlugin(cmsContext ContextID);
+cmsInt32Number CheckFormattersPlugin(cmsContext ContextID);
+cmsInt32Number CheckTagTypePlugin(cmsContext ContextID);
+cmsInt32Number CheckMPEPlugin(cmsContext ContextID);
+cmsInt32Number CheckOptimizationPlugin(cmsContext ContextID);
+cmsInt32Number CheckIntentPlugin(cmsContext ContextID);
+cmsInt32Number CheckTransformPlugin(cmsContext ContextID);
+cmsInt32Number CheckMutexPlugin(cmsContext ContextID);
+cmsInt32Number CheckMethodPackDoublesFromFloat(cmsContext ContextID);
 
 
 // Zoo

@@ -13,7 +13,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\lcms2_fast_float.h">
+    <ClInclude Include="..\..\include\lcms2mt_fast_float.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\fast_float_internal.h">

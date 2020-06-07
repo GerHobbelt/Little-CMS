@@ -222,6 +222,8 @@ cmsOpenIOhandlerFromMem                  =    cmsOpenIOhandlerFromMem
 cmsOpenIOhandlerFromNULL                 =    cmsOpenIOhandlerFromNULL
 cmsOpenIOhandlerFromStream               =    cmsOpenIOhandlerFromStream
 cmsOpenProfileFromFile                   =    cmsOpenProfileFromFile
+cmsOpenProfileFromIOhandler              =    cmsOpenProfileFromIOhandler
+cmsOpenProfileFromIOhandler2             =    cmsOpenProfileFromIOhandler2
 cmsOpenProfileFromMem                    =    cmsOpenProfileFromMem
 cmsOpenProfileFromStream                 =    cmsOpenProfileFromStream
 cmsPlugin                                =    cmsPlugin
@@ -334,5 +336,3 @@ cmsMD5add                                =   cmsMD5add
 cmsMD5alloc                              =   cmsMD5alloc
 cmsMD5finish                             =   cmsMD5finish
 _cmsComputeInterpParams                  =   _cmsComputeInterpParams
-
-

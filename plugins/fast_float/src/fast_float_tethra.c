@@ -8,12 +8,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
@@ -24,12 +24,11 @@
 // Optimization for floating point tetrahedral interpolation
 typedef struct {
 
-    cmsContext ContextID;
     const cmsInterpParams* p;   // Tetrahedrical interpolation parameters. This is a not-owned pointer.
 
 } FloatCLUTData;
 
-// Precomputes tables for 8-bit on input devicelink. 
+// Precomputes tables for 8-bit on input devicelink.
 static
 FloatCLUTData* FloatCLUTAlloc(cmsContext ContextID, const cmsInterpParams* p)
 {
@@ -37,20 +36,19 @@ FloatCLUTData* FloatCLUTAlloc(cmsContext ContextID, const cmsInterpParams* p)
 
     fd = (FloatCLUTData*) _cmsMallocZero(ContextID, sizeof(FloatCLUTData));
     if (fd == NULL) return NULL;
-    
-    fd ->ContextID = ContextID;
+
     fd ->p = p;
     return fd;
 }
 
 
-// Sampler implemented by another LUT. This is a clean way to precalculate the devicelink 3D CLUT for 
+// Sampler implemented by another LUT. This is a clean way to precalculate the devicelink 3D CLUT for
 // almost any transform. We use floating point precision and then convert from floating point to 16 bits.
 static
-int XFormSampler(CMSREGISTER const cmsFloat32Number In[], CMSREGISTER cmsFloat32Number Out[], CMSREGISTER void* Cargo)
+int XFormSampler(cmsContext ContextID, CMSREGISTER const cmsFloat32Number In[], CMSREGISTER cmsFloat32Number Out[], CMSREGISTER void* Cargo)
 {
     // Evaluate in 16 bits
-    cmsPipelineEvalFloat(In, Out, (cmsPipeline*) Cargo);
+    cmsPipelineEvalFloat(ContextID, In, Out, (cmsPipeline*) Cargo);
 
     // Always succeed
     return TRUE;
@@ -62,13 +60,14 @@ int XFormSampler(CMSREGISTER const cmsFloat32Number In[], CMSREGISTER cmsFloat32
 #define DENS(i,j,k) (LutTable[(i)+(j)+(k)+OutChan])
 
 static
-void FloatCLUTEval(struct _cmstransform_struct *CMMcargo,
+void FloatCLUTEval(cmsContext ContextID,
+                      struct _cmstransform_struct *CMMcargo,
                       const cmsFloat32Number* Input,
                       cmsFloat32Number* Output,
                       cmsUInt32Number len,
                       cmsUInt32Number Stride)
 {
-    
+
     cmsFloat32Number        r, g, b;
     cmsFloat32Number        px, py, pz;
     int                     x0, y0, z0;
@@ -93,8 +92,8 @@ void FloatCLUTEval(struct _cmstransform_struct *CMMcargo,
     cmsUInt32Number DestStartingOrder[cmsMAXCHANNELS];
     cmsUInt32Number DestIncrements[cmsMAXCHANNELS];
 
-    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat((cmsHTRANSFORM) CMMcargo);
-    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat((cmsHTRANSFORM) CMMcargo);
+    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
+    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
 
     cmsUInt32Number nchans, nalpha;
 
@@ -108,11 +107,11 @@ void FloatCLUTEval(struct _cmstransform_struct *CMMcargo,
     gin = (const cmsUInt8Number*)Input + SourceStartingOrder[1];
     bin = (const cmsUInt8Number*)Input + SourceStartingOrder[2];
 
-    for (ii=0; ii < TotalOut; ii++) 
+    for (ii=0; ii < TotalOut; ii++)
            out[ii] = (cmsUInt8Number*) Output + DestStartingOrder[ii];
 
     for (ii=0; ii < len; ii++) {
-            
+
            r = fclamp(*(cmsFloat32Number*)rin);
            g = fclamp(*(cmsFloat32Number*)gin);
            b = fclamp(*(cmsFloat32Number*)bin);
@@ -120,16 +119,16 @@ void FloatCLUTEval(struct _cmstransform_struct *CMMcargo,
         rin += SourceIncrements[0];
         gin += SourceIncrements[1];
         bin += SourceIncrements[2];
-       
+
         px = r * p->Domain[0];
         py = g * p->Domain[1];
         pz = b * p->Domain[2];
 
-        
+
         x0 = (int)_cmsQuickFloor(px); rx = (px - (cmsFloat32Number)x0);
         y0 = (int)_cmsQuickFloor(py); ry = (py - (cmsFloat32Number)y0);
         z0 = (int)_cmsQuickFloor(pz); rz = (pz - (cmsFloat32Number)z0);
-   
+
         X0 = p->opta[2] * x0;
         X1 = X0 + (r >= 1.0 ? 0 : p->opta[2]);
 
@@ -138,7 +137,7 @@ void FloatCLUTEval(struct _cmstransform_struct *CMMcargo,
 
         Z0 = p->opta[0] * z0;
         Z1 = Z0 + (b >= 1.0 ? 0 : p->opta[0]);
-      
+
         for (OutChan = 0; OutChan < TotalOut; OutChan++) {
 
                // These are the 6 Tetrahedral
@@ -197,7 +196,7 @@ void FloatCLUTEval(struct _cmstransform_struct *CMMcargo,
                                                   }
 
                                                   *(cmsFloat32Number*) (out[OutChan]) = c0 + c1 * rx + c2 * ry + c3 * rz;
-                                                 
+
                                                   out[OutChan] += DestIncrements[OutChan];
 
         }
@@ -212,22 +211,22 @@ void FloatCLUTEval(struct _cmstransform_struct *CMMcargo,
 
 // --------------------------------------------------------------------------------------------------------------
 
-cmsBool OptimizeCLUTRGBTransform(_cmsTransformFn* TransformFn,
+cmsBool OptimizeCLUTRGBTransform(cmsContext ContextID,
+                                  _cmsTransformFn* TransformFn,
                                   void** UserData,
                                   _cmsFreeUserDataFn* FreeDataFn,
-                                  cmsPipeline** Lut, 
-                                  cmsUInt32Number* InputFormat, 
-                                  cmsUInt32Number* OutputFormat, 
-                                  cmsUInt32Number* dwFlags)      
+                                  cmsPipeline** Lut,
+                                  cmsUInt32Number* InputFormat,
+                                  cmsUInt32Number* OutputFormat,
+                                  cmsUInt32Number* dwFlags)
 {
     cmsPipeline* OriginalLut;
-    int nGridPoints;    
-    cmsPipeline* OptimizedLUT = NULL;    
+    int nGridPoints;
+    cmsPipeline* OptimizedLUT = NULL;
     cmsStage* OptimizedCLUTmpe;
-    cmsColorSpaceSignature OutputColorSpace;    
+    cmsColorSpaceSignature OutputColorSpace;
     cmsStage* mpe;
     FloatCLUTData* p8;
-    cmsContext ContextID;
     _cmsStageCLutData* data;
 
     // For empty transforms, do nothing
@@ -242,42 +241,41 @@ cmsBool OptimizeCLUTRGBTransform(_cmsTransformFn* TransformFn,
     // Only on RGB
     if (T_COLORSPACE(*InputFormat)  != PT_RGB) return FALSE;
     if (T_COLORSPACE(*OutputFormat) != PT_RGB) return FALSE;
-  
+
     OriginalLut = *Lut;
 
    // Named color pipelines cannot be optimized either
-   for (mpe = cmsPipelineGetPtrToFirstStage(OriginalLut);
+   for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, OriginalLut);
          mpe != NULL;
-         mpe = cmsStageNext(mpe)) {
-            if (cmsStageType(mpe) == cmsSigNamedColorElemType) return FALSE;
+         mpe = cmsStageNext(ContextID, mpe)) {
+            if (cmsStageType(ContextID, mpe) == cmsSigNamedColorElemType) return FALSE;
     }
 
-    ContextID = cmsGetPipelineContextID(OriginalLut);
-    OutputColorSpace = _cmsICCcolorSpace(T_COLORSPACE(*OutputFormat));
+    OutputColorSpace = _cmsICCcolorSpace(ContextID, T_COLORSPACE(*OutputFormat));
     nGridPoints      = _cmsReasonableGridpointsByColorspace(cmsSigRgbData, *dwFlags);
-             
+
     // Create the result LUT
-    OptimizedLUT = cmsPipelineAlloc(cmsGetPipelineContextID(OriginalLut), 3, cmsPipelineOutputChannels(OriginalLut));
+    OptimizedLUT = cmsPipelineAlloc(ContextID, 3, cmsPipelineOutputChannels(ContextID, OriginalLut));
     if (OptimizedLUT == NULL) goto Error;
 
-    
+
     // Allocate the CLUT for result
-    OptimizedCLUTmpe = cmsStageAllocCLutFloat(ContextID, nGridPoints, 3, cmsPipelineOutputChannels(OriginalLut), NULL);
+    OptimizedCLUTmpe = cmsStageAllocCLutFloat(ContextID, nGridPoints, 3, cmsPipelineOutputChannels(ContextID, OriginalLut), NULL);
 
     // Add the CLUT to the destination LUT
-    cmsPipelineInsertStage(OptimizedLUT, cmsAT_BEGIN, OptimizedCLUTmpe);
+    cmsPipelineInsertStage(ContextID, OptimizedLUT, cmsAT_BEGIN, OptimizedCLUTmpe);
 
     // Resample the LUT
-    if (!cmsStageSampleCLutFloat(OptimizedCLUTmpe, XFormSampler, (void*)OriginalLut, 0)) goto Error;
+    if (!cmsStageSampleCLutFloat(ContextID, OptimizedCLUTmpe, XFormSampler, (void*)OriginalLut, 0)) goto Error;
 
-    // Set the evaluator, copy parameters   
-    data = (_cmsStageCLutData*) cmsStageData(OptimizedCLUTmpe);
+    // Set the evaluator, copy parameters
+    data = (_cmsStageCLutData*) cmsStageData(ContextID, OptimizedCLUTmpe);
 
     p8 = FloatCLUTAlloc(ContextID, data ->Params);
-    if (p8 == NULL) return FALSE;   
+    if (p8 == NULL) return FALSE;
 
     // And return the obtained LUT
-    cmsPipelineFree(OriginalLut);
+    cmsPipelineFree(ContextID, OriginalLut);
 
     *Lut = OptimizedLUT;
     *TransformFn = (_cmsTransformFn) FloatCLUTEval;
@@ -287,9 +285,8 @@ cmsBool OptimizeCLUTRGBTransform(_cmsTransformFn* TransformFn,
     return TRUE;
 
 Error:
-      
-    if (OptimizedLUT != NULL) cmsPipelineFree(OptimizedLUT);
 
-    return FALSE;    
+    if (OptimizedLUT != NULL) cmsPipelineFree(ContextID, OptimizedLUT);
+
+    return FALSE;
 }
-

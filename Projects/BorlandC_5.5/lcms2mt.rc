@@ -12,10 +12,10 @@ FILETYPE VFT_DLL
   {
    VALUE "CompanyName", "Marti Maria\000\000"
    VALUE "FileDescription", "lcms color engine\000"
-   VALUE "FileVersion", "2.08\000\000"
+   VALUE "FileVersion", "2.10\000\000"
    VALUE "InternalName", "lcms2\000"
-   VALUE "LegalCopyright", "Copyright © Marti Maria 2015\000\000"
-   VALUE "OriginalFilename", "lcms2.dll\000"
+   VALUE "LegalCopyright", "Copyright © Marti Maria 2020\000\000"
+   VALUE "OriginalFilename", "lcms2mt.dll\000"
   }
 
  }

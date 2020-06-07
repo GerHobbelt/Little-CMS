@@ -2165,7 +2165,6 @@ void CookPointers(cmsContext ContextID, cmsIT8* it8)
 
         if (cmsstrcasecmp(Fld, "SAMPLE_ID") == 0) {
 
-            t -> SampleID = idField;            
         }
 
         // "LABEL" is an extension. It keeps references to forward tables
