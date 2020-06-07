@@ -276,7 +276,7 @@ cmsInterpFunction my_Interpolators_Factory(cmsContext ContextID, cmsUInt32Number
 static
 cmsPluginInterpolation InterpPluginSample = {
 
-    { cmsPluginMagicNumber, 2060-2000, cmsPluginInterpolationSig, NULL },
+    { cmsPluginMagicNumber, 2060, cmsPluginInterpolationSig, NULL },
     my_Interpolators_Factory
 };
 
@@ -512,7 +512,7 @@ static double Rec709Math(cmsContext ContextID, int Type, const double Params[], 
 
 cmsPluginParametricCurves Rec709Plugin = {
 
-    { cmsPluginMagicNumber, 2060-2000, cmsPluginParametricCurveSig, NULL },
+    { cmsPluginMagicNumber, 2060, cmsPluginParametricCurveSig, NULL },
 
     1, {TYPE_709}, {5}, Rec709Math
 
@@ -521,7 +521,7 @@ cmsPluginParametricCurves Rec709Plugin = {
 
 static
 cmsPluginParametricCurves CurvePluginSample = {
-    { cmsPluginMagicNumber, 2060-2000, cmsPluginParametricCurveSig, NULL },
+    { cmsPluginMagicNumber, 2060, cmsPluginParametricCurveSig, NULL },
 
     2,                       // nFunctions
     { TYPE_SIN, TYPE_COS },  // Function Types
@@ -531,7 +531,7 @@ cmsPluginParametricCurves CurvePluginSample = {
 
 static
 cmsPluginParametricCurves CurvePluginSample2 = {
-    { cmsPluginMagicNumber, 2060-2000, cmsPluginParametricCurveSig, NULL },
+    { cmsPluginMagicNumber, 2060, cmsPluginParametricCurveSig, NULL },
 
     1,                       // nFunctions
     { TYPE_TAN},             // Function Types
@@ -691,7 +691,7 @@ cmsFormatter my_FormatterFactory2(cmsContext ContextID, cmsUInt32Number Type,
 
 static
 cmsPluginFormatters FormattersPluginSample = { {cmsPluginMagicNumber,
-                                2060-2000,
+                                2060,
                                 cmsPluginFormattersSig,
                                 NULL},
                                 my_FormatterFactory };
@@ -700,7 +700,7 @@ cmsPluginFormatters FormattersPluginSample = { {cmsPluginMagicNumber,
 
 static
 cmsPluginFormatters FormattersPluginSample2 = { {cmsPluginMagicNumber,
-                                2060-2000,
+                                2060,
                                 cmsPluginFormattersSig,
                                 NULL},
                                 my_FormatterFactory2 };
@@ -779,13 +779,13 @@ void Type_int_Free(cmsContext ContextID, struct _cms_typehandler_struct* self,
 
 static cmsPluginTag HiddenTagPluginSample = {
 
-    { cmsPluginMagicNumber, 2060-2000, cmsPluginTagSig, NULL},
+    { cmsPluginMagicNumber, 2060, cmsPluginTagSig, NULL},
     SigInt,  {  1, 1, { SigIntType }, NULL }
 };
 
 static cmsPluginTagType TagTypePluginSample = {
 
-     { cmsPluginMagicNumber, 2060-2000, cmsPluginTagTypeSig,  (cmsPluginBase*) &HiddenTagPluginSample},
+     { cmsPluginMagicNumber, 2060, cmsPluginTagTypeSig,  (cmsPluginBase*) &HiddenTagPluginSample},
      { SigIntType, Type_int_Read, Type_int_Write, Type_int_Dup, Type_int_Free, 0 }
 };
 
@@ -944,7 +944,7 @@ cmsBool Type_negate_Write(cmsContext ContextID, struct _cms_typehandler_struct* 
 static
 cmsPluginMultiProcessElement MPEPluginSample = {
 
-    {cmsPluginMagicNumber, 2060-2000, cmsPluginMultiProcessElementSig, NULL},
+    {cmsPluginMagicNumber, 2060, cmsPluginMultiProcessElementSig, NULL},
 
     { (cmsTagTypeSignature) SigNegateType, Type_negate_Read, Type_negate_Write, NULL, NULL, 0 }
 };
@@ -1212,7 +1212,7 @@ cmsPipeline*  MyNewIntent(cmsContext      ContextID,
 
 static cmsPluginRenderingIntent IntentPluginSample = {
 
-    {cmsPluginMagicNumber, 2060-2000, cmsPluginRenderingIntentSig, NULL},
+    {cmsPluginMagicNumber, 2060, cmsPluginRenderingIntentSig, NULL},
 
     INTENT_DECEPTIVE, MyNewIntent,  "bypass gray to gray rendering intent"
 };
@@ -1302,7 +1302,7 @@ cmsBool  TransformFactory(cmsContext ContextID, _cmsTransformFn* xformPtr,
 // The Plug-in entry point
 static cmsPluginTransform FullTransformPluginSample = {
 
-     { cmsPluginMagicNumber, 2060-2000, cmsPluginTransformSig, NULL},
+     { cmsPluginMagicNumber, 2060, cmsPluginTransformSig, NULL},
 
      TransformFactory
 };

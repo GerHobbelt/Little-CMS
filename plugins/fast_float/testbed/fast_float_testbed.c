@@ -1816,6 +1816,10 @@ int main()
        TestGrayTransformPerformance(plugin);
        TestGrayTransformPerformance1(plugin);
 
+	   // [i_a] cleanup
+       cmsDeleteContext(raw);
+       cmsDeleteContext(plugin);
+
        printf("\nAll tests passed OK\n");
 
 

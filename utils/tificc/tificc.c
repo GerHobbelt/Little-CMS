@@ -237,7 +237,7 @@ cmsFormatter TiffFormatterFactory(cmsContext ContextID, cmsUInt32Number Type,
     return Result;
 }
 
-static cmsPluginFormatters TiffLabPlugin = { {cmsPluginMagicNumber, 2000-2000, cmsPluginFormattersSig, NULL}, TiffFormatterFactory };
+static cmsPluginFormatters TiffLabPlugin = { {cmsPluginMagicNumber, 2000, cmsPluginFormattersSig, NULL}, TiffFormatterFactory };
 
 
 

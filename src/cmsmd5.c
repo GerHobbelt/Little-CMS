@@ -304,3 +304,4 @@ Error:
     memmove(Icc, &Keep, sizeof(_cmsICCPROFILE));
     return FALSE;
 }
+

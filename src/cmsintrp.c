@@ -190,8 +190,7 @@ cmsINLINE CMS_NO_SANITIZE cmsUInt16Number LinearInterp(cmsS15Fixed16Number a, cm
 
 //  Linear interpolation (Fixed-point optimized)
 static
-void LinLerp1D(cmsContext ContextID,
-               CMSREGISTER const cmsUInt16Number Value[],
+void LinLerp1D(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Value[],
                CMSREGISTER cmsUInt16Number Output[],
                CMSREGISTER const cmsInterpParams* p)
 {
@@ -266,8 +265,7 @@ void LinLerp1Dfloat(cmsContext ContextID, const cmsFloat32Number Value[],
 
 // Eval gray LUT having only one input channel
 static CMS_NO_SANITIZE
-void Eval1Input(cmsContext ContextID,
-                CMSREGISTER const cmsUInt16Number Input[],
+void Eval1Input(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[],
                 CMSREGISTER cmsUInt16Number Output[],
                 CMSREGISTER const cmsInterpParams* p16)
 {
@@ -400,8 +398,7 @@ void BilinearInterpFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 
 // Bilinear interpolation (16 bits) - optimized version
 static CMS_NO_SANITIZE
-void BilinearInterp16(cmsContext ContextID,
-                      CMSREGISTER const cmsUInt16Number Input[],
+void BilinearInterp16(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[],
                       CMSREGISTER cmsUInt16Number Output[],
                       CMSREGISTER const cmsInterpParams* p)
 
@@ -534,8 +531,7 @@ void TrilinearInterpFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 
 // Trilinear interpolation (16 bits) - optimized version
 static CMS_NO_SANITIZE
-void TrilinearInterp16(cmsContext ContextID,
-                       CMSREGISTER const cmsUInt16Number Input[],
+void TrilinearInterp16(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[],
                        CMSREGISTER cmsUInt16Number Output[],
                        CMSREGISTER const cmsInterpParams* p)
 
@@ -717,8 +713,7 @@ void TetrahedralInterpFloat(cmsContext ContextID, const cmsFloat32Number Input[]
 
 
 static CMS_NO_SANITIZE
-void TetrahedralInterp16(cmsContext ContextID,
-                         CMSREGISTER const cmsUInt16Number Input[],
+void TetrahedralInterp16(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[],
                          CMSREGISTER cmsUInt16Number Output[],
                          CMSREGISTER const cmsInterpParams* p)
 {
@@ -853,10 +848,9 @@ void TetrahedralInterp16(cmsContext ContextID,
 
 #define DENS(i,j,k) (LutTable[(i)+(j)+(k)+OutChan])
 static CMS_NO_SANITIZE
-void Eval4Inputs(cmsContext ContextID,
-                 CMSREGISTER const cmsUInt16Number Input[],
-                 CMSREGISTER cmsUInt16Number Output[],
-                 CMSREGISTER const cmsInterpParams* p16)
+void Eval4Inputs(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[],
+                     CMSREGISTER cmsUInt16Number Output[],
+                     CMSREGISTER const cmsInterpParams* p16)
 {
     const cmsUInt16Number* LutTable;
     cmsS15Fixed16Number fk;
@@ -1084,8 +1078,7 @@ void Eval4InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 
 
 static CMS_NO_SANITIZE
-void Eval5Inputs(cmsContext ContextID,
-                 CMSREGISTER const cmsUInt16Number Input[],
+void Eval5Inputs(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[],
                  CMSREGISTER cmsUInt16Number Output[],
                  CMSREGISTER const cmsInterpParams* p16)
 {
@@ -1173,8 +1166,7 @@ void Eval5InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 
 
 static CMS_NO_SANITIZE
-void Eval6Inputs(cmsContext ContextID,
-                 CMSREGISTER const cmsUInt16Number Input[],
+void Eval6Inputs(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[],
                  CMSREGISTER cmsUInt16Number Output[],
                  CMSREGISTER const cmsInterpParams* p16)
 {
@@ -1260,8 +1252,7 @@ void Eval6InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 
 
 static CMS_NO_SANITIZE
-void Eval7Inputs(cmsContext ContextID,
-                 CMSREGISTER const cmsUInt16Number Input[],
+void Eval7Inputs(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[],
                  CMSREGISTER cmsUInt16Number Output[],
                  CMSREGISTER const cmsInterpParams* p16)
 {
@@ -1347,8 +1338,7 @@ void Eval7InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 }
 
 static CMS_NO_SANITIZE
-void Eval8Inputs(cmsContext ContextID,
-                 CMSREGISTER const cmsUInt16Number Input[],
+void Eval8Inputs(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[],
                  CMSREGISTER cmsUInt16Number Output[],
                  CMSREGISTER const cmsInterpParams* p16)
 {
