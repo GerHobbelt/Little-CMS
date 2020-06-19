@@ -548,7 +548,7 @@ void EmitNGamma(cmsContext ContextID, cmsIOHANDLER* m, cmsUInt32Number n, cmsTon
 
         if (i > 0 && GammaTableEquals(g[i-1]->Table16, g[i]->Table16, g[i]->nEntries)) {
 
-            _cmsIOPrintf(m, "dup ");
+            _cmsIOPrintf(ContextID, m, "dup ");
         }
         else {
             snprintf(buffer, sizeof(buffer), "%s%d", nameprefix, i);
@@ -812,7 +812,7 @@ int EmitCIEBasedDEF(cmsContext ContextID, cmsIOHANDLER* m, cmsPipeline* Pipeline
             buffer[sizeof(buffer) - 1] = '\0';
             EmitSafeGuardBegin(ContextID, m, buffer);
         }
-        EmitNGamma(ContextID, m, cmsStageOutputChannels(mpe), _cmsStageGetPtrToCurveSet(mpe), "lcms2gammaproc");
+        EmitNGamma(ContextID, m, cmsStageOutputChannels(ContextID, mpe), _cmsStageGetPtrToCurveSet(mpe), "lcms2gammaproc");
         _cmsIOPrintf(ContextID, m, "/DecodeDEF [\n");
         for (i = 0; i < numchans; ++i) {
             snprintf(buffer, sizeof(buffer), "  /lcms2gammaproc%d load\n", i);
