@@ -505,6 +505,7 @@ cmsBool CMSEXPORT _cmsIOPrintf(cmsContext ContextID, cmsIOHANDLER* io, const cha
     int len;
     cmsUInt8Number Buffer[2048];
     cmsBool rc;
+    cmsUInt8Number* ptr;
 
     _cmsAssert(io != NULL);
     _cmsAssert(frm != NULL);
@@ -515,6 +516,13 @@ cmsBool CMSEXPORT _cmsIOPrintf(cmsContext ContextID, cmsIOHANDLER* io, const cha
     if (len < 0) {
         va_end(args);
         return FALSE;   // Truncated, which is a fatal error for us
+    }
+
+    // setlocale may be active, no commas are needed in PS generator
+    // and PS generator is our only client
+    for (ptr = Buffer; *ptr; ptr++)
+    {
+        if (*ptr == ',') *ptr = '.';
     }
 
     rc = io ->Write(ContextID, io, (cmsUInt32Number) len, Buffer);
