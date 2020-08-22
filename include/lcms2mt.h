@@ -81,7 +81,17 @@ extern "C" {
 #endif
 
 // Version/release
-#define LCMS_VERSION        2110
+// Vanilla LCMS2 uses values from 2000-2100. This is
+// used as an unsigned number. We want any attempt to
+// use OUR numbers with a mainline LCMS to fail, so
+// we have to go under 2000-2100. Let's subtract
+// 2000 from the mainline release.
+#define LCMS_VERSION              (2110 - 2000)
+
+// We expect any LCMS2MT release to fall within the
+// following range.
+#define LCMS2MT_VERSION_MIN (0)
+#define LCMS2MT_VERSION_MAX (999)
 
 // I will give the chance of redefining basic types for compilers that are not fully C99 compliant
 #ifndef CMS_BASIC_TYPES_ALREADY_DEFINED
