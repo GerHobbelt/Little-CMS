@@ -213,6 +213,9 @@ cmsINLINE cmsUInt16Number _cmsQuickSaturateWord(cmsFloat64Number d)
 
 #define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
+#if defined(_MSC_VER)
+#include <crtdbg.h>
+#endif
 
 
 // The locking scheme in LCMS requires a single 'top level' mutex
