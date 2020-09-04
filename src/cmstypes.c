@@ -3043,9 +3043,10 @@ void *Type_ColorantTable_Read(cmsContext ContextID, struct _cms_typehandler_stru
     }
 
     List = cmsAllocNamedColorList(ContextID, Count, 0, "", "");
-    if (List == NULL)           
-        return NULL; 
-        
+    if (List == NULL) {
+        cmsSignalError(ContextID, cmsERROR_RANGE, "Too many named colors '%d'", Count);
+        return NULL;
+    }
     for (i=0; i < Count; i++) {
 
         if (io ->Read(ContextID, io,Name, 32, 1) != 1) goto Error;
