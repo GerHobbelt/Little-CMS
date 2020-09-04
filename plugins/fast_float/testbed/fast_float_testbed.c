@@ -30,6 +30,7 @@ typedef struct { cmsUInt8Number  r, g, b;    }  Scanline_rgb8bits;
 typedef struct { cmsUInt8Number  r, g, b, a; }  Scanline_rgba8bits;
 typedef struct { cmsUInt16Number r, g, b;    }  Scanline_rgb16bits;
 typedef struct { cmsUInt16Number r, g, b, a; }  Scanline_rgba16bits;
+typedef struct { cmsUInt16Number c, m, y, k; }  Scanline_cmyk16bits;
 typedef struct { cmsUInt16Number r, g, b;    }  Scanline_rgb15bits;
 typedef struct { cmsUInt16Number r, g, b, a; }  Scanline_rgba15bits;
 typedef struct { cmsUInt16Number r, g, b, a; }  Scanline_cmyk15bits;
@@ -1278,6 +1279,51 @@ cmsFloat64Number SpeedTest16bitsRGB(cmsContext ct, cmsHPROFILE hlcmsProfileIn, c
     return MPixSec(diff);
 }
 
+static
+cmsFloat64Number SpeedTest16bitsCMYK(cmsContext ct, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut)
+{
+
+    cmsInt32Number r, g, b, j;
+    clock_t atime;
+    cmsFloat64Number diff;
+    cmsHTRANSFORM hlcmsxform;
+    Scanline_cmyk16bits* In;
+    cmsUInt32Number Mb;
+
+    if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
+        Fail("Unable to open profiles");
+
+    hlcmsxform = cmsCreateTransformTHR(ct, hlcmsProfileIn, TYPE_CMYK_16, hlcmsProfileOut, TYPE_CMYK_16, INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE);
+    cmsCloseProfile(hlcmsProfileIn);
+    cmsCloseProfile(hlcmsProfileOut);
+
+    Mb = 256 * 256 * 256 * sizeof(Scanline_cmyk16bits);
+    In = (Scanline_cmyk16bits*)malloc(Mb);
+
+    j = 0;
+    for (r = 0; r < 256; r++)
+        for (g = 0; g < 256; g++)
+            for (b = 0; b < 256; b++) {
+
+                In[j].c = (cmsUInt16Number)r;
+                In[j].m = (cmsUInt16Number)g;
+                In[j].y = (cmsUInt16Number)b;
+                In[j].k = (cmsUInt16Number)r;
+
+                j++;
+            }
+
+    atime = clock();
+
+    cmsDoTransform(hlcmsxform, In, In, 256 * 256 * 256);
+
+    diff = clock() - atime;
+    free(In);
+
+    cmsDeleteTransform(hlcmsxform);
+    return MPixSec(diff);
+}
+
 
 
 static
@@ -1314,22 +1360,6 @@ void SpeedTest8(cmsContext ct)
     cmsDeleteContext(noPlugin);
 }
 
-#if 0
-static
-void SpeedTest8(cmsContext ct)
-{
-       printf("\n\nP E R F O R M A N C E   T E S T S   8  B I T S\n");
-       printf(    "==============================================\n\n");
-
-       PerformanceHeader();
-       Performance("8 bits on CLUT profiles         ", SpeedTest8bitsRGB, ct, "test5.icc", "test3.icc", sizeof(Scanline_rgb8bits), 0);
-       Performance("8 bits on Matrix-Shaper profiles", SpeedTest8bitsRGB, ct, "test5.icc", "test0.icc", sizeof(Scanline_rgb8bits), 0);
-       Performance("8 bits on same Matrix-Shaper    ", SpeedTest8bitsRGB, ct, "test0.icc", "test0.icc", sizeof(Scanline_rgb8bits), 0);
-       Performance("8 bits on curves                ", SpeedTest8bitsRGB, ct, NULL, NULL, sizeof(Scanline_rgb8bits), 0);
-       // Performance("8 bits on CMYK CLUT profiles    ", SpeedTest8bitsCMYK, ct, "test1.icc", "test2.icc", sizeof(Scanline_rgba15bits), 0);
-}
-#endif
-
 
 static
 void SpeedTest15(cmsContext ct)
@@ -1348,12 +1378,32 @@ void SpeedTest15(cmsContext ct)
 static
 void SpeedTest16(cmsContext ct)
 {
-    printf("\n\nP E R F O R M A N C E   T E S T S   1 6  B I T S\n");
-    printf("================================================\n\n");
+    cmsContext noPlugin = cmsCreateContext(0, 0);
 
+
+    printf("\n\n");
+    printf("P E R F O R M A N C E   T E S T S   1 6  B I T S  (D E F A U L T)\n");
+    printf("=================================================================\n\n");
+
+    
     PerformanceHeader();
-    Performance("16 bits on CLUT profiles         ", SpeedTest16bitsRGB, ct, "test5.icc", "test3.icc", sizeof(Scanline_rgb15bits), 0);
 
+    Performance("16 bits on CLUT profiles         ", SpeedTest16bitsRGB,  noPlugin, "test5.icc", "test3.icc", sizeof(Scanline_rgb16bits), 0);
+    Performance("16 bits on Matrix-Shaper profiles", SpeedTest16bitsRGB,  noPlugin, "test5.icc", "test0.icc",  sizeof(Scanline_rgb16bits), 0);
+    Performance("16 bits on same Matrix-Shaper    ", SpeedTest16bitsRGB,  noPlugin, "test0.icc", "test0.icc",  sizeof(Scanline_rgb16bits), 0);
+    Performance("16 bits on curves                ", SpeedTest16bitsRGB,  noPlugin, NULL, NULL,                sizeof(Scanline_rgb16bits), 0);
+    Performance("16 bits on CMYK CLUT profiles    ", SpeedTest16bitsCMYK, noPlugin, "test1.icc", "test2.icc", sizeof(Scanline_cmyk16bits), 0);
+
+    printf("\n\n");
+    printf("P E R F O R M A N C E   T E S T S   1 6  B I T S  (P L U G I N)\n");
+    printf("===============================================================\n\n");
+
+
+    Performance("16 bits on CLUT profiles         ", SpeedTest16bitsRGB,  0, "test5.icc", "test3.icc", sizeof(Scanline_rgb16bits), 0);
+    Performance("16 bits on Matrix-Shaper profiles", SpeedTest16bitsRGB,  0, "test5.icc", "test0.icc", sizeof(Scanline_rgb16bits), 0);
+    Performance("16 bits on same Matrix-Shaper    ", SpeedTest16bitsRGB,  0, "test0.icc", "test0.icc", sizeof(Scanline_rgb16bits), 0);
+    Performance("16 bits on curves                ", SpeedTest16bitsRGB,  0, NULL,         NULL,       sizeof(Scanline_rgb16bits), 0);
+    Performance("16 bits on CMYK CLUT profiles    ", SpeedTest16bitsCMYK, 0, "test1.icc", "test2.icc", sizeof(Scanline_cmyk16bits), 0);
 }
 
 // The worst case is used, no cache and all rgb combinations
@@ -1432,10 +1482,6 @@ void SpeedTestFloat(cmsContext noPlugin, cmsContext plugin)
        Performance("Floating point on same MatrixSh  ", SpeedTestFloatRGB, plugin, "test0.icc", "test0.icc", sizeof(Scanline_rgbFloat), t[2]);
        Performance("Floating point on curves         ", SpeedTestFloatRGB, plugin, NULL, NULL, sizeof(Scanline_rgbFloat), t[3]);
 }
-
-
-
-
 
 
 static
