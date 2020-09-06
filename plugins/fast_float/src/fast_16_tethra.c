@@ -340,11 +340,11 @@ cmsBool Optimize16BitRGBTransform(cmsContext ContextID,
 
 
     // If this is a matrix-shaper, the default does already a good job
-    if (cmsPipelineCheckAndRetreiveStages(*Lut, 4,
+    if (cmsPipelineCheckAndRetreiveStages(ContextID, *Lut, 4,
         cmsSigCurveSetElemType, cmsSigMatrixElemType, cmsSigMatrixElemType, cmsSigCurveSetElemType,
         NULL, NULL, NULL, NULL)) return FALSE;
 
-    if (cmsPipelineCheckAndRetreiveStages(*Lut, 2,
+    if (cmsPipelineCheckAndRetreiveStages(ContextID, *Lut, 2,
         cmsSigCurveSetElemType, cmsSigCurveSetElemType,
         NULL, NULL)) return FALSE;
 

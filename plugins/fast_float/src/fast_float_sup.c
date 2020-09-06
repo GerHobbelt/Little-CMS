@@ -43,7 +43,7 @@ cmsBool Floating_Point_Transforms_Dispatcher(cmsContext ContextID,
 
 #ifndef CMS_DONT_USE_SSE2
        // Try to use SSE2 to optimize as a set of curves plus a matrix plus a set of curves
-       if (Optimize8MatrixShaperSSE(TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
+       if (Optimize8MatrixShaperSSE(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
 #endif
        // Try to optimize as a set of curves plus a matrix plus a set of curves
        if (Optimize8MatrixShaper(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;

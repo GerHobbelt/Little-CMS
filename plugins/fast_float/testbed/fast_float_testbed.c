@@ -1280,7 +1280,7 @@ cmsFloat64Number SpeedTest16bitsRGB(cmsContext ct, cmsHPROFILE hlcmsProfileIn, c
 }
 
 static
-cmsFloat64Number SpeedTest16bitsCMYK(cmsContext ct, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut)
+cmsFloat64Number SpeedTest16bitsCMYK(cmsContext ContextID, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut)
 {
 
     cmsInt32Number r, g, b, j;
@@ -1293,9 +1293,9 @@ cmsFloat64Number SpeedTest16bitsCMYK(cmsContext ct, cmsHPROFILE hlcmsProfileIn, 
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Fail("Unable to open profiles");
 
-    hlcmsxform = cmsCreateTransformTHR(ct, hlcmsProfileIn, TYPE_CMYK_16, hlcmsProfileOut, TYPE_CMYK_16, INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE);
-    cmsCloseProfile(hlcmsProfileIn);
-    cmsCloseProfile(hlcmsProfileOut);
+    hlcmsxform = cmsCreateTransform(ContextID, hlcmsProfileIn, TYPE_CMYK_16, hlcmsProfileOut, TYPE_CMYK_16, INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE);
+    cmsCloseProfile(ContextID, hlcmsProfileIn);
+    cmsCloseProfile(ContextID, hlcmsProfileOut);
 
     Mb = 256 * 256 * 256 * sizeof(Scanline_cmyk16bits);
     In = (Scanline_cmyk16bits*)malloc(Mb);
@@ -1315,12 +1315,12 @@ cmsFloat64Number SpeedTest16bitsCMYK(cmsContext ct, cmsHPROFILE hlcmsProfileIn, 
 
     atime = clock();
 
-    cmsDoTransform(hlcmsxform, In, In, 256 * 256 * 256);
+    cmsDoTransform(ContextID, hlcmsxform, In, In, 256 * 256 * 256);
 
     diff = clock() - atime;
     free(In);
 
-    cmsDeleteTransform(hlcmsxform);
+    cmsDeleteTransform(ContextID, hlcmsxform);
     return MPixSec(diff);
 }
 

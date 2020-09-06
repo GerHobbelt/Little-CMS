@@ -8149,9 +8149,9 @@ int CheckProofingIntersection(cmsContext ContextID)
 * then call cmsMD5computeID on said profile, the program crashes.
 */
 static
-int CheckEmptyMLUC(void)
+int CheckEmptyMLUC(cmsContext ContextID)
 {
-    cmsContext context = cmsCreateContext(NULL, NULL);    
+    //cmsContext context = cmsCreateContext(NULL, NULL);    
     cmsCIExyY white = { 0.31271, 0.32902, 1.0 };
     cmsCIExyYTRIPLE primaries =
     {
@@ -8161,30 +8161,30 @@ int CheckEmptyMLUC(void)
     };
 
     cmsFloat64Number parameters[10] = { 2.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
-    cmsToneCurve* toneCurve = cmsBuildParametricToneCurve(context, 1, parameters);
+    cmsToneCurve* toneCurve = cmsBuildParametricToneCurve(ContextID, 1, parameters);
     cmsToneCurve* toneCurves[3] = { toneCurve, toneCurve, toneCurve };
 
-    cmsHPROFILE profile = cmsCreateRGBProfileTHR(context, &white, &primaries, toneCurves);
+    cmsHPROFILE profile = cmsCreateRGBProfile(ContextID, &white, &primaries, toneCurves);
     
-    cmsSetLogErrorHandlerTHR(context, FatalErrorQuit);
+    cmsSetLogErrorHandler(ContextID, FatalErrorQuit);
 
-    cmsFreeToneCurve(toneCurve);
+    cmsFreeToneCurve(ContextID, toneCurve);
 
     // Set an empty copyright tag. This should log an error.
-    cmsMLU* mlu = cmsMLUalloc(context, 1);
+    cmsMLU* mlu = cmsMLUalloc(ContextID, 1);
     
-    cmsMLUsetASCII(mlu, "en", "AU", "");
-    cmsMLUsetWide(mlu,  "en", "EN", L"");
-    cmsWriteTag(profile, cmsSigCopyrightTag, mlu);
-    cmsMLUfree(mlu);
+    cmsMLUsetASCII(ContextID, mlu, "en", "AU", "");
+    cmsMLUsetWide(ContextID, mlu,  "en", "EN", L"");
+    cmsWriteTag(ContextID, profile, cmsSigCopyrightTag, mlu);
+    cmsMLUfree(ContextID, mlu);
 
     // This will cause a crash after setting an empty copyright tag.
-    cmsMD5computeID(profile);
+    cmsMD5computeID(ContextID, profile);
 
     // Cleanup
-    cmsCloseProfile(profile);
-    DebugMemDontCheckThis(context);
-    cmsDeleteContext(context);
+    cmsCloseProfile(ContextID, profile);
+    DebugMemDontCheckThis(ContextID);
+    //cmsDeleteContext(context);
 
     return 1;
 }
@@ -8923,7 +8923,7 @@ int main(int argc, char* argv[])
     cmsSetLogErrorHandler(NULL, FatalErrorQuit);
     printf("done.\n");
 
-    CheckMethodPackDoublesFromFloat();
+    CheckMethodPackDoublesFromFloat(ctx);
 
     PrintSupportedIntents();
 

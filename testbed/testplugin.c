@@ -546,6 +546,7 @@ cmsInt32Number CheckParametricCurvePlugin(cmsContext ContextID)
 {
     cmsContext ctx = NULL;
     cmsContext cpy = NULL;
+    cmsContext cpy2 = NULL;
     cmsToneCurve* sinus;
     cmsToneCurve* cosinus;
     cmsToneCurve* tangent;
@@ -560,6 +561,11 @@ cmsInt32Number CheckParametricCurvePlugin(cmsContext ContextID)
     cpy = DupContext(ctx, NULL);
 
     cmsPlugin(cpy, &CurvePluginSample2);
+
+    cpy2 =  DupContext(cpy, NULL);
+    
+    cmsPlugin(cpy2, &Rec709Plugin);
+    
 
     sinus = cmsBuildParametricToneCurve(cpy, TYPE_SIN, &scale);
     cosinus = cmsBuildParametricToneCurve(cpy, TYPE_COS, &scale);
@@ -597,6 +603,7 @@ cmsInt32Number CheckParametricCurvePlugin(cmsContext ContextID)
 
      cmsDeleteContext(ctx);
      cmsDeleteContext(cpy);
+     cmsDeleteContext(cpy2);
 
      return 1;
 
@@ -609,6 +616,7 @@ Error:
 
      if (ctx != NULL) cmsDeleteContext(ctx);
      if (cpy != NULL) cmsDeleteContext(cpy);
+     if (cpy2 != NULL) cmsDeleteContext(cpy2);
      return 0;
 }
 
@@ -710,6 +718,7 @@ cmsInt32Number CheckFormattersPlugin(cmsContext ContextID)
 {
     cmsContext ctx = WatchDogContext(NULL);
     cmsContext cpy;
+    cmsContext cpy2;
     cmsHTRANSFORM xform;
     cmsUInt16Number stream[]= { 0xffffU, 0x1234U, 0x0000U, 0x33ddU };
     cmsUInt16Number result[4];
@@ -721,13 +730,16 @@ cmsInt32Number CheckFormattersPlugin(cmsContext ContextID)
 
     cmsPlugin(cpy, &FormattersPluginSample2);
 
-    xform = cmsCreateTransform(cpy, NULL, TYPE_RGB_565, NULL, TYPE_RGB_565, INTENT_PERCEPTUAL, cmsFLAGS_NULLTRANSFORM);
+    cpy2 = DupContext(cpy, NULL);
+    
+    xform = cmsCreateTransform(cpy /* cpy2? */, NULL, TYPE_RGB_565, NULL, TYPE_RGB_565, INTENT_PERCEPTUAL, cmsFLAGS_NULLTRANSFORM);
 
     cmsDoTransform(cpy, xform, stream, result, 4);
 
     cmsDeleteTransform(cpy, xform);
     cmsDeleteContext(ctx);
     cmsDeleteContext(cpy);
+    cmsDeleteContext(cpy2);
 
     for (i=0; i < 4; i++)
         if (stream[i] != result[i]) return 0;
@@ -889,6 +901,7 @@ Error:
     if (h != NULL) cmsCloseProfile(cpy, h);
     if (ctx != NULL) cmsDeleteContext(ctx);
     if (cpy != NULL) cmsDeleteContext(cpy);
+    if (cpy2 != NULL) cmsDeleteContext(cpy2);
     if (data) free(data);
 
     return 0;
@@ -1073,6 +1086,8 @@ cmsInt32Number CheckMPEPlugin(cmsContext ContextID)
 Error:
 
     if (h != NULL) cmsCloseProfile(cpy2, h);
+    if (ctx != NULL) cmsDeleteContext(ctx);
+    if (cpy != NULL) cmsDeleteContext(cpy);
     if (cpy2 != NULL) cmsDeleteContext(cpy2);
     if (data) free(data);
 
@@ -1133,6 +1148,7 @@ cmsInt32Number CheckOptimizationPlugin(cmsContext ContextID)
 {
     cmsContext ctx = WatchDogContext(NULL);
     cmsContext cpy;
+    cmsContext cpy2;
     cmsHTRANSFORM xform;
     cmsUInt8Number In[]= { 10, 20, 30, 40 };
     cmsUInt8Number Out[4];
@@ -1143,12 +1159,13 @@ cmsInt32Number CheckOptimizationPlugin(cmsContext ContextID)
     cmsPlugin(ctx, &OptimizationPluginSample);
 
     cpy = DupContext(ctx, NULL);
+    cpy2 = DupContext(cpy, NULL);
 
     Linear[0] = cmsBuildGamma(cpy, 1.0);
-    h = cmsCreateLinearizationDeviceLink(cpy, cmsSigGrayData, Linear);
+    h = cmsCreateLinearizationDeviceLink(cpy /* cpy2? */, cmsSigGrayData, Linear);
     cmsFreeToneCurve(cpy, Linear[0]);
 
-    xform = cmsCreateTransform(cpy, h, TYPE_GRAY_8, h, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
+    xform = cmsCreateTransform(cpy /* cpy2? */, h, TYPE_GRAY_8, h, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
     cmsCloseProfile(cpy, h);
 
     cmsDoTransform(cpy, xform, In, Out, 4);
@@ -1156,6 +1173,7 @@ cmsInt32Number CheckOptimizationPlugin(cmsContext ContextID)
     cmsDeleteTransform(cpy, xform);
     cmsDeleteContext(ctx);
     cmsDeleteContext(cpy);
+    cmsDeleteContext(cpy2);
 
     for (i=0; i < 4; i++)
         if (In[i] != Out[i]) return 0;

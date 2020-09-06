@@ -251,17 +251,17 @@ typedef int                  cmsBool;
 #       endif
 #     endif
 #  else
-#       define CMSEXPORT
-#       define CMSAPI
+#     define CMSEXPORT
+#     define CMSAPI
 #  endif
 #else  // not Windows
 #  ifdef HAVE_FUNC_ATTRIBUTE_VISIBILITY
 #     define CMSEXPORT
 #     define CMSAPI    __attribute__((visibility("default")))
-#else
-# define CMSEXPORT
-# define CMSAPI
-#endif
+#  else
+#     define CMSEXPORT
+#     define CMSAPI
+#  endif
 #endif  // CMS_IS_WINDOWS_
 
 #ifdef HasTHREADS

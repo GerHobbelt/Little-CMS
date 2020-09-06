@@ -25,7 +25,7 @@
 #include "lcms2mt_fast_float.h"
 #include <stdint.h>
 
-#define REQUIRED_LCMS_VERSION (2100-2000)
+#define REQUIRED_LCMS_VERSION (2110-2000)
 
 // Unused parameter warning supression
 #define UNUSED_PARAMETER(x) ((void)x)
@@ -174,7 +174,8 @@ cmsBool Optimize8MatrixShaper(cmsContext ContextID,
                               cmsUInt32Number* dwFlags);
 
 //  8 bits using SSE
-cmsBool Optimize8MatrixShaperSSE(_cmsTransformFn* TransformFn,
+cmsBool Optimize8MatrixShaperSSE(cmsContext ContextID,
+	                          _cmsTransformFn* TransformFn,
                               void** UserData,
                               _cmsFreeUserDataFn* FreeUserData,
                               cmsPipeline** Lut,
