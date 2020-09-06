@@ -139,7 +139,7 @@ void  DebugFree(cmsContext ContextID, void *Ptr)
     blk = (_cmsMemoryBlock*) (((cmsUInt8Number*) Ptr) - SIZE_OF_MEM_HEADER);
     TotalMemory -= blk ->KeepSize;
 
-    if (blk ->WhoAllocated != ContextID && !blk->DontCheck) {
+    if (blk ->WhoAllocated != ContextID && !blk->DontCheck && ContextID) {
         Die("Trying to free memory allocated by a different thread");
     }
 
@@ -8149,9 +8149,9 @@ int CheckProofingIntersection(cmsContext ContextID)
 * then call cmsMD5computeID on said profile, the program crashes.
 */
 static
-int CheckEmptyMLUC(cmsContext ContextID)
+int CheckEmptyMLUC(cmsContext ctx)
 {
-    //cmsContext context = cmsCreateContext(NULL, NULL);    
+    cmsContext ContextID = cmsCreateContext(NULL, NULL);    
     cmsCIExyY white = { 0.31271, 0.32902, 1.0 };
     cmsCIExyYTRIPLE primaries =
     {
@@ -8184,7 +8184,7 @@ int CheckEmptyMLUC(cmsContext ContextID)
     // Cleanup
     cmsCloseProfile(ContextID, profile);
     DebugMemDontCheckThis(ContextID);
-    //cmsDeleteContext(context);
+    cmsDeleteContext(ContextID);
 
     return 1;
 }

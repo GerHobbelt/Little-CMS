@@ -276,7 +276,7 @@ cmsInterpFunction my_Interpolators_Factory(cmsContext ContextID, cmsUInt32Number
 static
 cmsPluginInterpolation InterpPluginSample = {
 
-    { cmsPluginMagicNumber, 2060, cmsPluginInterpolationSig, NULL },
+    { cmsPluginMagicNumber, 2060-2000, cmsPluginInterpolationSig, NULL },
     my_Interpolators_Factory
 };
 
@@ -338,7 +338,7 @@ cmsInt32Number CheckInterp1DPlugin(cmsContext ContextID)
 
 Error:
     if (ctx != NULL) cmsDeleteContext(ctx);
-     if (cpy != NULL) cmsDeleteContext(ctx);
+     if (cpy != NULL) cmsDeleteContext(cpy);
     if (Sampled1D != NULL) cmsFreeToneCurve(NULL, Sampled1D);
     return 0;
 
@@ -512,7 +512,7 @@ static double Rec709Math(cmsContext ContextID, int Type, const double Params[], 
 
 cmsPluginParametricCurves Rec709Plugin = {
 
-    { cmsPluginMagicNumber, 2060, cmsPluginParametricCurveSig, NULL },
+    { cmsPluginMagicNumber, 2060-2000, cmsPluginParametricCurveSig, NULL },
 
     1, {TYPE_709}, {5}, Rec709Math
 
@@ -521,7 +521,7 @@ cmsPluginParametricCurves Rec709Plugin = {
 
 static
 cmsPluginParametricCurves CurvePluginSample = {
-    { cmsPluginMagicNumber, 2060, cmsPluginParametricCurveSig, NULL },
+    { cmsPluginMagicNumber, 2060-2000, cmsPluginParametricCurveSig, NULL },
 
     2,                       // nFunctions
     { TYPE_SIN, TYPE_COS },  // Function Types
@@ -531,7 +531,7 @@ cmsPluginParametricCurves CurvePluginSample = {
 
 static
 cmsPluginParametricCurves CurvePluginSample2 = {
-    { cmsPluginMagicNumber, 2060, cmsPluginParametricCurveSig, NULL },
+    { cmsPluginMagicNumber, 2060-2000, cmsPluginParametricCurveSig, NULL },
 
     1,                       // nFunctions
     { TYPE_TAN},             // Function Types
@@ -699,7 +699,7 @@ cmsFormatter my_FormatterFactory2(cmsContext ContextID, cmsUInt32Number Type,
 
 static
 cmsPluginFormatters FormattersPluginSample = { {cmsPluginMagicNumber,
-                                2060,
+                                2060-2000,
                                 cmsPluginFormattersSig,
                                 NULL},
                                 my_FormatterFactory };
@@ -708,7 +708,7 @@ cmsPluginFormatters FormattersPluginSample = { {cmsPluginMagicNumber,
 
 static
 cmsPluginFormatters FormattersPluginSample2 = { {cmsPluginMagicNumber,
-                                2060,
+                                2060-2000,
                                 cmsPluginFormattersSig,
                                 NULL},
                                 my_FormatterFactory2 };
@@ -732,7 +732,7 @@ cmsInt32Number CheckFormattersPlugin(cmsContext ContextID)
 
     cpy2 = DupContext(cpy, NULL);
     
-    xform = cmsCreateTransform(cpy /* cpy2? */, NULL, TYPE_RGB_565, NULL, TYPE_RGB_565, INTENT_PERCEPTUAL, cmsFLAGS_NULLTRANSFORM);
+    xform = cmsCreateTransform(cpy, NULL, TYPE_RGB_565, NULL, TYPE_RGB_565, INTENT_PERCEPTUAL, cmsFLAGS_NULLTRANSFORM);
 
     cmsDoTransform(cpy, xform, stream, result, 4);
 
@@ -791,13 +791,13 @@ void Type_int_Free(cmsContext ContextID, struct _cms_typehandler_struct* self,
 
 static cmsPluginTag HiddenTagPluginSample = {
 
-    { cmsPluginMagicNumber, 2060, cmsPluginTagSig, NULL},
+    { cmsPluginMagicNumber, 2060-2000, cmsPluginTagSig, NULL},
     SigInt,  {  1, 1, { SigIntType }, NULL }
 };
 
 static cmsPluginTagType TagTypePluginSample = {
 
-     { cmsPluginMagicNumber, 2060, cmsPluginTagTypeSig,  (cmsPluginBase*) &HiddenTagPluginSample},
+     { cmsPluginMagicNumber, 2060-2000, cmsPluginTagTypeSig,  (cmsPluginBase*) &HiddenTagPluginSample},
      { SigIntType, Type_int_Read, Type_int_Write, Type_int_Dup, Type_int_Free, 0 }
 };
 
@@ -957,7 +957,7 @@ cmsBool Type_negate_Write(cmsContext ContextID, struct _cms_typehandler_struct* 
 static
 cmsPluginMultiProcessElement MPEPluginSample = {
 
-    {cmsPluginMagicNumber, 2060, cmsPluginMultiProcessElementSig, NULL},
+    {cmsPluginMagicNumber, 2060-2000, cmsPluginMultiProcessElementSig, NULL},
 
     { (cmsTagTypeSignature) SigNegateType, Type_negate_Read, Type_negate_Write, NULL, NULL, 0 }
 };
@@ -1148,7 +1148,6 @@ cmsInt32Number CheckOptimizationPlugin(cmsContext ContextID)
 {
     cmsContext ctx = WatchDogContext(NULL);
     cmsContext cpy;
-    cmsContext cpy2;
     cmsHTRANSFORM xform;
     cmsUInt8Number In[]= { 10, 20, 30, 40 };
     cmsUInt8Number Out[4];
@@ -1159,13 +1158,12 @@ cmsInt32Number CheckOptimizationPlugin(cmsContext ContextID)
     cmsPlugin(ctx, &OptimizationPluginSample);
 
     cpy = DupContext(ctx, NULL);
-    cpy2 = DupContext(cpy, NULL);
 
     Linear[0] = cmsBuildGamma(cpy, 1.0);
-    h = cmsCreateLinearizationDeviceLink(cpy /* cpy2? */, cmsSigGrayData, Linear);
+    h = cmsCreateLinearizationDeviceLink(cpy, cmsSigGrayData, Linear);
     cmsFreeToneCurve(cpy, Linear[0]);
 
-    xform = cmsCreateTransform(cpy /* cpy2? */, h, TYPE_GRAY_8, h, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
+    xform = cmsCreateTransform(cpy, h, TYPE_GRAY_8, h, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
     cmsCloseProfile(cpy, h);
 
     cmsDoTransform(cpy, xform, In, Out, 4);
@@ -1173,7 +1171,6 @@ cmsInt32Number CheckOptimizationPlugin(cmsContext ContextID)
     cmsDeleteTransform(cpy, xform);
     cmsDeleteContext(ctx);
     cmsDeleteContext(cpy);
-    cmsDeleteContext(cpy2);
 
     for (i=0; i < 4; i++)
         if (In[i] != Out[i]) return 0;
@@ -1230,7 +1227,7 @@ cmsPipeline*  MyNewIntent(cmsContext      ContextID,
 
 static cmsPluginRenderingIntent IntentPluginSample = {
 
-    {cmsPluginMagicNumber, 2060, cmsPluginRenderingIntentSig, NULL},
+    {cmsPluginMagicNumber, 2060-2000, cmsPluginRenderingIntentSig, NULL},
 
     INTENT_DECEPTIVE, MyNewIntent,  "bypass gray to gray rendering intent"
 };
@@ -1284,12 +1281,13 @@ static
 void TrancendentalTransform(cmsContext ContextID, struct _cmstransform_struct * CMM,
                               const void* InputBuffer,
                               void* OutputBuffer,
-                              cmsUInt32Number Size,
-                              cmsUInt32Number Stride)
+							  cmsUInt32Number PixelsPerLine,
+							  cmsUInt32Number LineCount,
+							  const cmsStride* Stride)
 {
     cmsUInt32Number i;
 
-    for (i=0; i < Size; i++)
+    for (i = 0; i < PixelsPerLine * LineCount; i++)
     {
         ((cmsUInt8Number*) OutputBuffer)[i] = 0x42;
     }
@@ -1297,14 +1295,13 @@ void TrancendentalTransform(cmsContext ContextID, struct _cmstransform_struct * 
 }
 
 
-cmsBool  TransformFactory(cmsContext ContextID, _cmsTransformFn* xformPtr,
+cmsBool  TransformFactory(cmsContext ContextID, _cmsTransform2Fn* xformPtr,
                           void** UserData,
                            _cmsFreeUserDataFn* FreePrivateDataFn,
                            cmsPipeline** Lut,
                            cmsUInt32Number* InputFormat,
                            cmsUInt32Number* OutputFormat,
                            cmsUInt32Number* dwFlags)
-
 {
     if (*OutputFormat == TYPE_GRAY_8)
     {
@@ -1320,7 +1317,7 @@ cmsBool  TransformFactory(cmsContext ContextID, _cmsTransformFn* xformPtr,
 // The Plug-in entry point
 static cmsPluginTransform FullTransformPluginSample = {
 
-     { cmsPluginMagicNumber, 2060, cmsPluginTransformSig, NULL},
+     { cmsPluginMagicNumber, 2060-2000, cmsPluginTransformSig, NULL},
 
      TransformFactory
 };
@@ -1409,7 +1406,7 @@ void MyMtxUnlock(cmsContext id, void* mtx)
 
 static cmsPluginMutex MutexPluginSample = {
 
-     { cmsPluginMagicNumber, 2060, cmsPluginMutexSig, NULL},
+     { cmsPluginMagicNumber, 2060-2000, cmsPluginMutexSig, NULL},
 
      MyMtxCreate,  MyMtxDestroy,  MyMtxLock,  MyMtxUnlock
 };
