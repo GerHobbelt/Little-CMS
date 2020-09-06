@@ -32,13 +32,10 @@
 // Optimization for 8 bits, Shaper-CLUT (3 inputs only)
 typedef struct {
 
-    cmsContext ContextID;
-
     const cmsInterpParams* p;   // Tetrahedrical interpolation parameters. This is a not-owned pointer.
 
     cmsUInt16Number rx[256], ry[256], rz[256];
     cmsUInt32Number X0[256], Y0[256], Z0[256];  // Precomputed nodes and offsets for 8-bit input data
-
 
 } Prelin8Data;
 
@@ -896,7 +893,7 @@ Prelin8Data* PrelinOpt8alloc(cmsContext ContextID, const cmsInterpParams* p, cms
         p8 ->rz[i] = (cmsUInt16Number) FIXED_REST_TO_INT(v3);
     }
 
-    p8 ->ContextID = ContextID;
+    //p8 ->ContextID = ContextID;
     p8 ->p = p;
 
     return p8;

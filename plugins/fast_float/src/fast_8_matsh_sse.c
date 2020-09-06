@@ -317,7 +317,7 @@ cmsBool IsSSE2Available(void)
 
 //  8 bits on input allows matrix-shaper boost up a little bit
 cmsBool Optimize8MatrixShaperSSE(cmsContext ContextID,
-                                  _cmsTransformFn* TransformFn,
+                                  _cmsTransform2Fn* TransformFn,
                                   void** UserData,
                                   _cmsFreeUserDataFn* FreeUserData,
                                   cmsPipeline** Lut, 

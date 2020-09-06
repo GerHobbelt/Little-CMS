@@ -254,7 +254,7 @@ void MatShaperXform(cmsContext ContextID,
 
 //  15 bits on input allows matrix-shaper boost up a little bit
 cmsBool OptimizeMatrixShaper15(cmsContext ContextID,
-                                   _cmsTransformFn* TransformFn,
+                                   _cmsTransform2Fn* TransformFn,
                                    void** UserData,
                                    _cmsFreeUserDataFn* FreeUserData,
                                    cmsPipeline** Lut,
@@ -336,7 +336,7 @@ cmsBool OptimizeMatrixShaper15(cmsContext ContextID,
               *UserData = SetMatShaper(ContextID, mpeC1->TheCurves, &res, (cmsVEC3*)Data2->Offset, mpeC2->TheCurves, IdentityMat);
               *FreeUserData = FreeMatShaper;
 
-              *TransformFn = (_cmsTransformFn)MatShaperXform;
+              *TransformFn = MatShaperXform;
        }
 
 

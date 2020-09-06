@@ -325,7 +325,7 @@ void SlopeLimiting(cmsUInt16Number* Table16, int nEntries)
 // --------------------------------------------------------------------------------------------------------------
 
 cmsBool Optimize8BitRGBTransform( cmsContext ContextID,
-                                  _cmsTransformFn* TransformFn,
+                                  _cmsTransform2Fn* TransformFn,
                                   void** UserData,
                                   _cmsFreeUserDataFn* FreeDataFn,
                                   cmsPipeline** Lut,
@@ -480,7 +480,7 @@ cmsBool Optimize8BitRGBTransform( cmsContext ContextID,
 
     *dwFlags &= ~cmsFLAGS_CAN_CHANGE_FORMATTER;
     *Lut = OptimizedLUT;
-    *TransformFn = (_cmsTransformFn) PerformanceEval8;
+    *TransformFn = PerformanceEval8;
     *UserData   = p8;
     *FreeDataFn = Performance8free;
 

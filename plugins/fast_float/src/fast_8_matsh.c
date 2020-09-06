@@ -261,7 +261,7 @@ void MatShaperXform8(cmsContext ContextID,
 
 //  8 bits on input allows matrix-shaper boost up a little bit
 cmsBool Optimize8MatrixShaper(    cmsContext ContextID,
-                                  _cmsTransformFn* TransformFn,
+                                  _cmsTransform2Fn* TransformFn,
                                   void** UserData,
                                   _cmsFreeUserDataFn* FreeUserData,
                                   cmsPipeline** Lut,
@@ -365,7 +365,7 @@ cmsBool Optimize8MatrixShaper(    cmsContext ContextID,
         *UserData = SetMatShaper(ContextID, mpeC1 ->TheCurves, &res, (cmsVEC3*) Data2 ->Offset, mpeC2->TheCurves);
         *FreeUserData = FreeMatShaper;
 
-        *TransformFn = (_cmsTransformFn) MatShaperXform8;
+        *TransformFn = MatShaperXform8;
     }
 
     *dwFlags &= ~cmsFLAGS_CAN_CHANGE_FORMATTER;

@@ -365,7 +365,7 @@ cmsBool OptimizeCLUTCMYKTransform(cmsContext ContextID,
     cmsPipelineFree(ContextID, OriginalLut);
 
     *Lut = OptimizedLUT;
-    *TransformFn = (_cmsTransformFn) FloatCMYKCLUTEval;
+    *TransformFn = FloatCMYKCLUTEval;
     *UserData   = p8;
     *FreeDataFn = _cmsFree;
     *dwFlags &= ~cmsFLAGS_CAN_CHANGE_FORMATTER;

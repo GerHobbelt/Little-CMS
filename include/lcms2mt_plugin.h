@@ -626,10 +626,10 @@ typedef struct {
       cmsPluginBase     base;
 
       // Transform entry point
-      union {
-             _cmsTransformFactory        legacy_xform;
+      //union {
+      //       _cmsTransformFactory        legacy_xform;
              _cmsTransform2Factory       xform;
-      } factories;
+      //} factories;
 
 }  cmsPluginTransform;
 

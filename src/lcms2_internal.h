@@ -1087,7 +1087,7 @@ typedef struct _cmstransform_struct {
     _cmsCACHE Cache;
 
     // A way to provide backwards compatibility with full xform plugins
-    _cmsTransformFn OldXform;
+    //_cmsTransformFn OldXform;
 
     _cmsTRANSFORMCORE *core;
 } _cmsTRANSFORM;

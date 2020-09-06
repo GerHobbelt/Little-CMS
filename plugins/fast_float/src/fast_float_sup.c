@@ -26,7 +26,7 @@
 // This is the main dispatcher
 static
 cmsBool Floating_Point_Transforms_Dispatcher(cmsContext ContextID,
-                                  _cmsTransformFn* TransformFn,
+                                  _cmsTransform2Fn* TransformFn,
                                   void** UserData,
                                   _cmsFreeUserDataFn* FreeUserData,
                                   cmsPipeline** Lut,

@@ -278,7 +278,7 @@ cmsBool OptimizeCLUTRGBTransform(cmsContext ContextID,
     cmsPipelineFree(ContextID, OriginalLut);
 
     *Lut = OptimizedLUT;
-    *TransformFn = (_cmsTransformFn) FloatCLUTEval;
+    *TransformFn = FloatCLUTEval;
     *UserData   = p8;
     *FreeDataFn = _cmsFree;
     *dwFlags &= ~cmsFLAGS_CAN_CHANGE_FORMATTER;

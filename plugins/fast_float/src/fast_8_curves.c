@@ -356,7 +356,7 @@ Curves8Data* ComputeCompositeCurves(cmsContext ContextID, cmsUInt32Number nChan,
 // curves together. That only works on curves and does not work on matrices.
 // Any number of channels up to 16
 cmsBool Optimize8ByJoiningCurves(cmsContext ContextID,
-                                 _cmsTransformFn* TransformFn,
+                                 _cmsTransform2Fn* TransformFn,
                                  void** UserData,
                                  _cmsFreeUserDataFn* FreeUserData,
                                  cmsPipeline** Lut,
@@ -400,9 +400,9 @@ cmsBool Optimize8ByJoiningCurves(cmsContext ContextID,
 
     // Maybe the curves are linear at the end
     if (nChans == 1)
-        *TransformFn = (_cmsTransformFn) (AllCurvesAreLinear(Data) ? FastGrayIdentity8 : FastEvaluateGrayCurves8);
+        *TransformFn = (AllCurvesAreLinear(Data) ? FastGrayIdentity8 : FastEvaluateGrayCurves8);
     else
-        *TransformFn = (_cmsTransformFn) (AllCurvesAreLinear(Data) ? FastRGBIdentity8 : FastEvaluateRGBCurves8);
+        *TransformFn = (AllCurvesAreLinear(Data) ? FastRGBIdentity8 : FastEvaluateRGBCurves8);
 
     return TRUE;
 

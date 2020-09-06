@@ -854,7 +854,7 @@ do {                                            \
 typedef struct _cmsTransformCollection_st {
 
     _cmsTransform2Factory  Factory;
-    cmsBool                OldXform;   // Factory returns xform function in the old style
+    //cmsBool                OldXform;   // Factory returns xform function in the old style
 
     struct _cmsTransformCollection_st *Next;
 
@@ -913,6 +913,7 @@ void _cmsAllocTransformPluginChunk(struct _cmsContext_struct* ctx,
     }
 }
 
+#if 0
 // Adaptor for old versions of plug-in
 static
 void _cmsTransform2toTransformAdaptor(cmsContext ContextID, struct _cmstransform_struct *CMMcargo,
@@ -941,7 +942,7 @@ void _cmsTransform2toTransformAdaptor(cmsContext ContextID, struct _cmstransform
               strideOut += Stride->BytesPerLineOut;
        }
 }
-
+#endif
 
 
 // Register new ways to transform
@@ -959,22 +960,24 @@ cmsBool  _cmsRegisterTransformPlugin(cmsContext ContextID, cmsPluginBase* Data)
     }
 
     // Factory callback is required
-    if (Plugin->factories.xform == NULL) return FALSE;
+    if (Plugin->xform == NULL) return FALSE;
 
 
     fl = (_cmsTransformCollection*) _cmsPluginMalloc(ContextID, sizeof(_cmsTransformCollection));
     if (fl == NULL) return FALSE;
 
-    // Check for full xform plug-ins previous to 2.8, we would need an adapter in that case
-    if (Plugin->base.ExpectedVersion < 2080) {
+#if 0
+	// Check for full xform plug-ins previous to 2.8, we would need an adapter in that case
+    if (Plugin->base.ExpectedVersion < (2080 - 2000)) {
 
            fl->OldXform = TRUE;
     }
     else
            fl->OldXform = FALSE;
+#endif
 
     // Copy the parameters
-    fl->Factory = Plugin->factories.xform;
+    fl->Factory = Plugin->xform;
 
     // Keep linked list
     fl ->Next = ctx->TransformCollection;
@@ -1181,11 +1184,13 @@ _cmsTRANSFORM* AllocEmptyTransform(cmsContext ContextID, cmsPipeline* lut,
                        p->FromInputFloat = _cmsGetFormatter(ContextID, *InputFormat, cmsFormatterInput, CMS_PACK_FLAGS_FLOAT).FmtFloat;
                        p->ToOutputFloat = _cmsGetFormatter(ContextID, *OutputFormat, cmsFormatterOutput, CMS_PACK_FLAGS_FLOAT).FmtFloat;
 
-                       // Save the day? (Ignore the warning)
+#if 0
+					   // Save the day? (Ignore the warning)
                        if (Plugin->OldXform) {
                            p->OldXform = (_cmsTransformFn)(void*)p->xform;
                            p->xform = _cmsTransform2toTransformAdaptor;
                        }
+#endif
 
                        return p;
                    }
