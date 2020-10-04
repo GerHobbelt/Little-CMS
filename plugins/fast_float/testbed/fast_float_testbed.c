@@ -612,7 +612,7 @@ void TryAllValuesFloat(cmsContext Raw, cmsContext Plugin, cmsHPROFILE hlcmsProfi
 }
 
 static
-void TryAllValuesFloatAlpha(cmsContext Raw, cmsContext Plugin, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
+void TryAllValuesFloatAlpha(cmsContext Raw, cmsContext Plugin, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent, cmsBool copyAlpha)
 {
        Scanline_rgbaFloat* bufferIn;
        Scanline_rgbaFloat* bufferRawOut;
@@ -622,8 +622,10 @@ void TryAllValuesFloatAlpha(cmsContext Raw, cmsContext Plugin, cmsHPROFILE hlcms
        int j;
        cmsUInt32Number npixels = 256 * 256 * 256;
 
-       cmsHTRANSFORM xformRaw = cmsCreateTransform(Raw, hlcmsProfileIn, TYPE_RGBA_FLT, hlcmsProfileOut, TYPE_RGBA_FLT, Intent, cmsFLAGS_NOCACHE);
-       cmsHTRANSFORM xformPlugin = cmsCreateTransform(Plugin, hlcmsProfileIn, TYPE_RGBA_FLT, hlcmsProfileOut, TYPE_RGBA_FLT, Intent, cmsFLAGS_NOCACHE);
+       cmsUInt32Number flags = cmsFLAGS_NOCACHE | ( copyAlpha? cmsFLAGS_COPY_ALPHA : 0);
+
+       cmsHTRANSFORM xformRaw = cmsCreateTransform(Raw, hlcmsProfileIn, TYPE_RGBA_FLT, hlcmsProfileOut, TYPE_RGBA_FLT, Intent, flags);
+       cmsHTRANSFORM xformPlugin = cmsCreateTransform(Plugin, hlcmsProfileIn, TYPE_RGBA_FLT, hlcmsProfileOut, TYPE_RGBA_FLT, Intent, flags);
 
        cmsCloseProfile(Raw, hlcmsProfileIn);
        cmsCloseProfile(Plugin, hlcmsProfileOut);
@@ -637,6 +639,9 @@ void TryAllValuesFloatAlpha(cmsContext Raw, cmsContext Plugin, cmsHPROFILE hlcms
        bufferIn = (Scanline_rgbaFloat*)malloc(npixels * sizeof(Scanline_rgbaFloat));
        bufferRawOut = (Scanline_rgbaFloat*)malloc(npixels * sizeof(Scanline_rgbaFloat));
        bufferPluginOut = (Scanline_rgbaFloat*)malloc(npixels * sizeof(Scanline_rgbaFloat));
+
+       memset(bufferRawOut, 0, npixels * sizeof(Scanline_rgbaFloat));
+       memset(bufferPluginOut, 0, npixels * sizeof(Scanline_rgbaFloat));
 
        // Same input to both transforms
        j = 0;
@@ -656,7 +661,6 @@ void TryAllValuesFloatAlpha(cmsContext Raw, cmsContext Plugin, cmsHPROFILE hlcms
        cmsDoTransform(Raw, xformRaw,    bufferIn, bufferRawOut, npixels);
        cmsDoTransform(Plugin, xformPlugin, bufferIn, bufferPluginOut, npixels);
 
-#if 1
        // Lets compare results
        j = 0;
        for (r = 0; r < 256; r++)
@@ -672,7 +676,6 @@ void TryAllValuesFloatAlpha(cmsContext Raw, cmsContext Plugin, cmsHPROFILE hlcms
 
               j++;
               }
-#endif
 
        free(bufferIn); free(bufferRawOut);
        free(bufferPluginOut);
@@ -884,12 +887,17 @@ void CheckLab2Roundtrip(cmsContext ContextID)
 static
 void CheckConversionFloat(cmsContext Raw, cmsContext Plugin)
 {
-       printf("Crash test...");
-       TryAllValuesFloatAlpha(Raw, Plugin, cmsOpenProfileFromFile(Raw, "test5.icc", "r"), cmsOpenProfileFromFile(Raw, "test0.icc", "r"), INTENT_PERCEPTUAL);
+       printf("Crash test.");
+       TryAllValuesFloatAlpha(Raw, Plugin, cmsOpenProfileFromFile(Raw, "test5.icc", "r"), cmsOpenProfileFromFile(Raw, "test0.icc", "r"), INTENT_PERCEPTUAL, FALSE);
+       printf("..");
+       TryAllValuesFloatAlpha(Raw, Plugin, cmsOpenProfileFromFile(Raw, "test5.icc", "r"), cmsOpenProfileFromFile(Raw, "test0.icc", "r"), INTENT_PERCEPTUAL, TRUE);
        printf("Ok\n");
 
-       printf("Crash (II) test...");
-       TryAllValuesFloatAlpha(Raw, Plugin, cmsOpenProfileFromFile(Raw, "test0.icc", "r"), cmsOpenProfileFromFile(Raw, "test0.icc", "r"), INTENT_PERCEPTUAL);
+
+       printf("Crash (II) test.");
+       TryAllValuesFloatAlpha(Raw, Plugin, cmsOpenProfileFromFile(Raw, "test0.icc", "r"), cmsOpenProfileFromFile(Raw, "test0.icc", "r"), INTENT_PERCEPTUAL, FALSE);
+       printf("..");
+       TryAllValuesFloatAlpha(Raw, Plugin, cmsOpenProfileFromFile(Raw, "test0.icc", "r"), cmsOpenProfileFromFile(Raw, "test0.icc", "r"), INTENT_PERCEPTUAL, TRUE);
        printf("Ok\n");
 
        // Matrix-shaper should be accurate
@@ -1744,7 +1752,7 @@ void TestGrayTransformPerformance(cmsContext ct)
 
        pixels = 256 * 256 * 256;
        Mb = pixels* 2*sizeof(float);
-       In = malloc(Mb);
+       In = (float*) malloc(Mb);
 
        for (j = 0; j < pixels*2; j++)
               In[j] = (j % 256) / 255.0f;
@@ -1793,7 +1801,7 @@ void TestGrayTransformPerformance1(cmsContext ct)
 
        pixels = 256 * 256 * 256;
        Mb = pixels* sizeof(float);
-       In = malloc(Mb);
+       In = (float*) malloc(Mb);
 
        for (j = 0; j < pixels; j++)
               In[j] = (j % 256) / 255.0f;
