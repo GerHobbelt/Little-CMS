@@ -1352,7 +1352,14 @@ cmsInt32Number  CMSEXPORT cmsGetToneCurveParametricType(cmsContext ContextID, co
 // We need accuracy this time
 cmsFloat32Number CMSEXPORT cmsEvalToneCurveFloat(cmsContext ContextID, const cmsToneCurve* Curve, cmsFloat32Number v)
 {
+    return _cmsEvalToneCurveFloatWithSlopeLimit(ContextID, Curve, v, 0);
+}
+
+cmsFloat32Number _cmsEvalToneCurveFloatWithSlopeLimit(cmsContext ContextID, const cmsToneCurve* Curve, cmsFloat32Number v, int SlopeLimit)
+{
     _cmsAssert(Curve != NULL);
+    
+    cmsFloat32Number result;
 
     // Check for 16 bits table. If so, this is a limited-precision tone curve
     if (Curve ->nSegments == 0) {
@@ -1362,10 +1369,23 @@ cmsFloat32Number CMSEXPORT cmsEvalToneCurveFloat(cmsContext ContextID, const cms
         In = (cmsUInt16Number) _cmsQuickSaturateWord(v * 65535.0);
         Out = cmsEvalToneCurve16(ContextID, Curve, In);
 
-        return (cmsFloat32Number) (Out / 65535.0);
+        result = (cmsFloat32Number) (Out / 65535.0);
     }
-
-    return (cmsFloat32Number) EvalSegmentedFn(ContextID, Curve, v);
+    else result = (cmsFloat32Number) EvalSegmentedFn(Curve, v);
+    
+    // Apply slope limit, if set to do so
+    if (SlopeLimit < 0) {       // < 0 means input tone curve
+    
+        cmsFloat32Number factor = (cmsFloat32Number)(-SlopeLimit);
+        result = fmaxf(result, v / factor);
+    }
+    else if (SlopeLimit > 0) {  // > 0 means output tone curve
+        
+        cmsFloat32Number factor = (cmsFloat32Number)(SlopeLimit);
+        result = fminf(result, v * factor);
+    }
+    
+    return result;
 }
 
 // We need xput over here

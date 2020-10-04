@@ -28,14 +28,16 @@
 
 
 // Allocates an empty multi profile element
-cmsStage* CMSEXPORT _cmsStageAllocPlaceholder(cmsContext ContextID,
+static
+cmsStage* _cmsStageAllocPlaceholderWithSlopeLimit(cmsContext ContextID,
                                 cmsStageSignature Type,
                                 cmsUInt32Number InputChannels,
                                 cmsUInt32Number OutputChannels,
                                 _cmsStageEvalFn     EvalPtr,
                                 _cmsStageDupElemFn  DupElemPtr,
                                 _cmsStageFreeElemFn FreePtr,
-                                void*             Data)
+                                void*               Data,
+                                int                 SlopeLimit)
 {
     cmsStage* ph = (cmsStage*) _cmsMallocZero(ContextID, sizeof(cmsStage));
 
@@ -50,8 +52,30 @@ cmsStage* CMSEXPORT _cmsStageAllocPlaceholder(cmsContext ContextID,
     ph ->DupElemPtr     = DupElemPtr;
     ph ->FreePtr        = FreePtr;
     ph ->Data           = Data;
+    ph ->SlopeLimit     = SlopeLimit;
 
     return ph;
+}
+
+
+cmsStage* CMSEXPORT _cmsStageAllocPlaceholder(cmsContext ContextID,
+                                cmsStageSignature   Type,
+                                cmsUInt32Number     InputChannels,
+                                cmsUInt32Number     OutputChannels,
+                                _cmsStageEvalFn     EvalPtr,
+                                _cmsStageDupElemFn  DupElemPtr,
+                                _cmsStageFreeElemFn FreePtr,
+                                void*               Data)
+{
+    return _cmsStageAllocPlaceholderWithSlopeLimit(ContextID,
+                                    Type,
+                                    InputChannels,
+                                    OutputChannels,
+                                    EvalPtr,
+                                    DupElemPtr,
+                                    FreePtr,
+                                    Data,
+                                    0);
 }
 
 
@@ -177,7 +201,7 @@ void EvaluateCurves(cmsContext ContextID, const cmsFloat32Number In[],
     if (Data ->TheCurves == NULL) return;
 
     for (i=0; i < Data ->nCurves; i++) {
-        Out[i] = cmsEvalToneCurveFloat(ContextID, Data ->TheCurves[i], In[i]);
+        Out[i] = cmsEvalToneCurveFloatWithSlopeLimit(ContextID, Data ->TheCurves[i], In[i], mpe ->SlopeLimit);
     }
 }
 
@@ -245,13 +269,19 @@ Error:
 // Curves == NULL forces identity curves
 cmsStage* CMSEXPORT cmsStageAllocToneCurves(cmsContext ContextID, cmsUInt32Number nChannels, cmsToneCurve* const Curves[])
 {
+    return _cmsStageAllocToneCurvesWithSlopeLimit(ContextID, nChannels, Curves, 0);
+}
+
+
+cmsStage* _cmsStageAllocToneCurvesWithSlopeLimit(cmsContext ContextID, cmsUInt32Number nChannels, cmsToneCurve* const Curves[], int SlopeLimit)
+{
     cmsUInt32Number i;
     _cmsStageToneCurvesData* NewElem;
     cmsStage* NewMPE;
 
 
-    NewMPE = _cmsStageAllocPlaceholder(ContextID, cmsSigCurveSetElemType, nChannels, nChannels,
-                                     EvaluateCurves, CurveSetDup, CurveSetElemTypeFree, NULL );
+    NewMPE = _cmsStageAllocPlaceholderWithSlopeLimit(ContextID, cmsSigCurveSetElemType, nChannels, nChannels,
+                                     EvaluateCurves, CurveSetDup, CurveSetElemTypeFree, NULL, SlopeLimit );
     if (NewMPE == NULL) return NULL;
 
     NewElem = (_cmsStageToneCurvesData*) _cmsMallocZero(ContextID, sizeof(_cmsStageToneCurvesData));
@@ -1245,14 +1275,15 @@ cmsStage* CMSEXPORT cmsStageDup(cmsContext ContextID, cmsStage* mpe)
     cmsStage* NewMPE;
 
     if (mpe == NULL) return NULL;
-    NewMPE = _cmsStageAllocPlaceholder(ContextID,
+    NewMPE = _cmsStageAllocPlaceholderWithSlopeLimit(mpe ->ContextID,
                                      mpe ->Type,
                                      mpe ->InputChannels,
                                      mpe ->OutputChannels,
                                      mpe ->EvalPtr,
                                      mpe ->DupElemPtr,
                                      mpe ->FreePtr,
-                                     NULL);
+                                     NULL,
+                                     mpe ->SlopeLimit);
     if (NewMPE == NULL) return NULL;
 
     NewMPE ->Implements = mpe ->Implements;

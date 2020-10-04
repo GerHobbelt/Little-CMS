@@ -339,7 +339,7 @@ static void FastFloatGrayIdentity(cmsContext ContextID,
             *(cmsFloat32Number*)kout = *(cmsFloat32Number*)kin;
 
             kin += SourceIncrements[0];
-            kout += DestIncrements[0];        
+            kout += DestIncrements[0];
 
             if (ain)
             {
