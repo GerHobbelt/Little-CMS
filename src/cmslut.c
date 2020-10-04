@@ -201,7 +201,7 @@ void EvaluateCurves(cmsContext ContextID, const cmsFloat32Number In[],
     if (Data ->TheCurves == NULL) return;
 
     for (i=0; i < Data ->nCurves; i++) {
-        Out[i] = cmsEvalToneCurveFloatWithSlopeLimit(ContextID, Data ->TheCurves[i], In[i], mpe ->SlopeLimit);
+        Out[i] = _cmsEvalToneCurveFloatWithSlopeLimit(ContextID, Data ->TheCurves[i], In[i], mpe ->SlopeLimit);
     }
 }
 
@@ -432,7 +432,7 @@ cmsStage*  CMSEXPORT cmsStageAllocMatrix(cmsContext ContextID, cmsUInt32Number R
 
     NewElem ->Double = (cmsFloat64Number*) _cmsCalloc(ContextID, n, sizeof(cmsFloat64Number));
     if (NewElem->Double == NULL) goto Error;
-   
+
     for (i=0; i < n; i++) {
         NewElem ->Double[i] = Matrix[i];
     }
@@ -441,12 +441,12 @@ cmsStage*  CMSEXPORT cmsStageAllocMatrix(cmsContext ContextID, cmsUInt32Number R
 
         NewElem ->Offset = (cmsFloat64Number*) _cmsCalloc(ContextID, Rows, sizeof(cmsFloat64Number));
         if (NewElem->Offset == NULL) goto Error;
-           
+
         for (i=0; i < Rows; i++) {
                 NewElem ->Offset[i] = Offset[i];
         }
     }
-    
+
     return NewMPE;
 
 Error:
@@ -1275,7 +1275,7 @@ cmsStage* CMSEXPORT cmsStageDup(cmsContext ContextID, cmsStage* mpe)
     cmsStage* NewMPE;
 
     if (mpe == NULL) return NULL;
-    NewMPE = _cmsStageAllocPlaceholderWithSlopeLimit(mpe ->ContextID,
+    NewMPE = _cmsStageAllocPlaceholderWithSlopeLimit(ContextID,
                                      mpe ->Type,
                                      mpe ->InputChannels,
                                      mpe ->OutputChannels,

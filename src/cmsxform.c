@@ -1021,7 +1021,7 @@ void CMSEXPORT _cmsGetTransformFormattersFloat(struct _cmstransform_struct *CMMc
 cmsUInt32Number CMSEXPORT _cmsGetTransformFlags(struct _cmstransform_struct* CMMcargo)
 {
     _cmsAssert(CMMcargo != NULL);
-    return CMMcargo->dwOriginalFlags;
+    return CMMcargo->core->dwOriginalFlags;
 }
 
 void
@@ -1173,8 +1173,8 @@ _cmsTRANSFORM* AllocEmptyTransform(cmsContext ContextID, cmsPipeline* lut,
                      if (Plugin->Factory(ContextID, &p->xform, &core->UserData, &core->FreeUserData, &core->Lut, InputFormat, OutputFormat, dwFlags)) {
 
                        // Last plugin in the declaration order takes control. We just keep
-                       // the original parameters as a logging. 
-                       // Note that cmsFLAGS_CAN_CHANGE_FORMATTER is not set, so by default 
+                       // the original parameters as a logging.
+                       // Note that cmsFLAGS_CAN_CHANGE_FORMATTER is not set, so by default
                        // an optimized transform is not reusable. The plug-in can, however, change
                        // the flags and make it suitable.
 
@@ -1183,7 +1183,7 @@ _cmsTRANSFORM* AllocEmptyTransform(cmsContext ContextID, cmsPipeline* lut,
                        core->dwOriginalFlags = *dwFlags;
 
                        // Fill the formatters just in case the optimized routine is interested.
-                       // No error is thrown if the formatter doesn't exist. It is up to the optimization 
+                       // No error is thrown if the formatter doesn't exist. It is up to the optimization
                        // factory to decide what to do in those cases.
                        p->FromInput = _cmsGetFormatter(ContextID, *InputFormat, cmsFormatterInput, CMS_PACK_FLAGS_16BITS).Fmt16;
                        p->ToOutput = _cmsGetFormatter(ContextID, *OutputFormat, cmsFormatterOutput, CMS_PACK_FLAGS_16BITS).Fmt16;
