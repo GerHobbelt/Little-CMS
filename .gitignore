@@ -59,3 +59,8 @@ DerivedData
 *.tlog
 *.ipdb
 *.iobj
+*.idb
+*.recipe
+
+/plugins/fast_float/Projects/VC2019/Win32/fast_float_plugin_Debug
+
