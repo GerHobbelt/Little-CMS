@@ -1163,14 +1163,13 @@ _cmsTRANSFORM* AllocEmptyTransform(cmsContext ContextID, cmsPipeline* lut,
 
        // Let's see if any plug-in want to do the transform by itself
        if (core->Lut != NULL) {
+           if (!(*dwFlags & cmsFLAGS_NOOPTIMIZE)) {
 
-           if (!(*dwFlags & cmsFLAGS_NOOPTIMIZE))
-           {
                for (Plugin = ctx->TransformCollection;
                    Plugin != NULL;
                    Plugin = Plugin->Next) {
 
-                     if (Plugin->Factory(ContextID, &p->xform, &core->UserData, &core->FreeUserData, &core->Lut, InputFormat, OutputFormat, dwFlags)) {
+                   if (Plugin->Factory(ContextID, &p->xform, &core->UserData, &core->FreeUserData, &core->Lut, InputFormat, OutputFormat, dwFlags)) {
 
                        // Last plugin in the declaration order takes control. We just keep
                        // the original parameters as a logging.
@@ -1190,20 +1189,20 @@ _cmsTRANSFORM* AllocEmptyTransform(cmsContext ContextID, cmsPipeline* lut,
                        p->FromInputFloat = _cmsGetFormatter(ContextID, *InputFormat, cmsFormatterInput, CMS_PACK_FLAGS_FLOAT).FmtFloat;
                        p->ToOutputFloat = _cmsGetFormatter(ContextID, *OutputFormat, cmsFormatterOutput, CMS_PACK_FLAGS_FLOAT).FmtFloat;
 
-#if 0
+#if 0   // [i_a] DO NOT support old-style plugins: they'll only b0rk anyway!
 					   // Save the day? (Ignore the warning)
                        if (Plugin->OldXform) {
-                           p->OldXform = (_cmsTransformFn)(void*)p->xform;
+                           p->OldXform = (_cmsTransformFn)(void*) p->xform;
                            p->xform = _cmsTransform2toTransformAdaptor;
-                       }
+                        }
 #endif
 
-                       return p;
+                        return p;
                    }
                }
-           }
+	   }
 
-           // Not suitable for the transform plug-in, let's check  the pipeline plug-in
+           // Not suitable for the transform plug-in, let's check the pipeline plug-in
            _cmsOptimizePipeline(ContextID, &core->Lut, Intent, InputFormat, OutputFormat, dwFlags);
        }
 

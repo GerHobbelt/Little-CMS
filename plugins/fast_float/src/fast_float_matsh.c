@@ -161,7 +161,7 @@ void MatShaperFloat(cmsContext ContextID, struct _cmstransform_struct *CMMcargo,
     cmsUInt8Number* gout;
     cmsUInt8Number* bout;
     cmsUInt8Number* aout = NULL;
-    
+
     cmsUInt32Number nchans, nalpha;
     cmsUInt32Number strideIn, strideOut;
 

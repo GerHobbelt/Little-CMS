@@ -1335,7 +1335,7 @@ cmsFloat64Number SpeedTest16bitsCMYK(cmsContext ContextID, cmsHPROFILE hlcmsProf
 
 
 static
-void SpeedTest8(cmsContext ct)
+void SpeedTest8(void)
 {
     cmsContext noPlugin = cmsCreateContext(0, 0);
 
@@ -1368,7 +1368,6 @@ void SpeedTest8(cmsContext ct)
     cmsDeleteContext(noPlugin);
 }
 
-
 static
 void SpeedTest15(cmsContext ct)
 {
@@ -1393,9 +1392,8 @@ void SpeedTest16(cmsContext ct)
     printf("P E R F O R M A N C E   T E S T S   1 6  B I T S  (D E F A U L T)\n");
     printf("=================================================================\n\n");
 
-    
-    PerformanceHeader();
 
+    PerformanceHeader();
     Performance("16 bits on CLUT profiles         ", SpeedTest16bitsRGB,  noPlugin, "test5.icc", "test3.icc", sizeof(Scanline_rgb16bits), 0);
     Performance("16 bits on Matrix-Shaper profiles", SpeedTest16bitsRGB,  noPlugin, "test5.icc", "test0.icc",  sizeof(Scanline_rgb16bits), 0);
     Performance("16 bits on same Matrix-Shaper    ", SpeedTest16bitsRGB,  noPlugin, "test0.icc", "test0.icc",  sizeof(Scanline_rgb16bits), 0);
@@ -1836,8 +1834,6 @@ int main()
        cmsPlugin(plugin, cmsFastFloatExtensions());
        printf("done.\n\n");
               
-       CheckLab2Roundtrip(plugin);
-
        CheckComputeIncrements();
 
        // 15 bit functionality

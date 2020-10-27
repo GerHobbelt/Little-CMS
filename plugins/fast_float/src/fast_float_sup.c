@@ -82,7 +82,7 @@ static cmsPluginTransform PluginList = {
 
               { cmsPluginMagicNumber, REQUIRED_LCMS_VERSION, cmsPluginTransformSig, (cmsPluginBase *) &PluginFastFloat },
 
-              // When initializing a union, the initializer list must have only one member, which initializes the first member of 
+              // When initializing a union, the initializer list must have only one member, which initializes the first member of
               // the union unless a designated initializer is used (C99)
 
               (_cmsTransformFactory) Floating_Point_Transforms_Dispatcher
@@ -94,4 +94,3 @@ void* cmsFastFloatExtensions(void)
 {
        return (void*)&PluginList;
 }
-
