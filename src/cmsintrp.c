@@ -1077,7 +1077,7 @@ void Eval4InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 }
 
 #define EVAL_FNS(N,NM) static CMS_NO_SANITIZE \
-void Eval##N##Inputs(cmsContext contextID, CMSREGISTER const cmsUInt16Number Input[], CMSREGISTER cmsUInt16Number Output[], CMSREGISTER const cmsInterpParams* p16) \
+void Eval##N##Inputs(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[], CMSREGISTER cmsUInt16Number Output[], CMSREGISTER const cmsInterpParams* p16) \
 {\
        const cmsUInt16Number* LutTable = (cmsUInt16Number*) p16 -> Table;\
        cmsS15Fixed16Number fk;\
@@ -1114,7 +1114,7 @@ void Eval##N##Inputs(cmsContext contextID, CMSREGISTER const cmsUInt16Number Inp
        }\
 }\
 \
-static void Eval##N##InputsFloat(cmsContext contextID,\
+static void Eval##N##InputsFloat(cmsContext ContextID,\
                                  const cmsFloat32Number Input[], \
                                  cmsFloat32Number Output[],\
                                  const cmsInterpParams * p)\
