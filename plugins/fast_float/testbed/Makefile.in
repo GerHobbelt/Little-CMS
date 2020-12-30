@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# Makefile for building testcms
+# Makefile for building fast_float_testbed
 #
 VPATH = @srcdir@
 am__is_gnu_make = { \
@@ -91,8 +91,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = testcms$(EXEEXT)
-subdir = testbed
+check_PROGRAMS = fast_float_testbed$(EXEEXT)
+subdir = plugins/fast_float/testbed
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/acx_pthread.m4 \
 	$(top_srcdir)/m4/ax_append_compile_flags.m4 \
@@ -109,17 +109,18 @@ DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am_testcms_OBJECTS = testcms2.$(OBJEXT) testplugin.$(OBJEXT) \
-	zoo_icc.$(OBJEXT)
-testcms_OBJECTS = $(am_testcms_OBJECTS)
-testcms_DEPENDENCIES = $(top_builddir)/src/liblcms2mt.la
+am_fast_float_testbed_OBJECTS = fast_float_testbed.$(OBJEXT)
+fast_float_testbed_OBJECTS = $(am_fast_float_testbed_OBJECTS)
+fast_float_testbed_DEPENDENCIES =  \
+	$(srcdir)/../src/liblcms2_fast_float.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-testcms_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(testcms_LDFLAGS) $(LDFLAGS) -o $@
+fast_float_testbed_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(fast_float_testbed_LDFLAGS) \
+	$(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -135,8 +136,7 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/testcms2.Po \
-	./$(DEPDIR)/testplugin.Po ./$(DEPDIR)/zoo_icc.Po
+am__depfiles_remade = ./$(DEPDIR)/fast_float_testbed.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -156,8 +156,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(testcms_SOURCES)
-DIST_SOURCES = $(testcms_SOURCES)
+SOURCES = $(fast_float_testbed_SOURCES)
+DIST_SOURCES = $(fast_float_testbed_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -327,20 +327,13 @@ top_srcdir = @top_srcdir@
 
 # Don't require all the GNU mandated files
 AUTOMAKE_OPTIONS = 1.7 foreign
-AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/src
+AM_CPPFLAGS = -I$(builddir)/../include -I$(srcdir)/../include -I$(srcdir)/../src \
+                   -I$(top_builddir)/include 
 
-# CFLAGS = --pedantic -Wall -std=c99 -O2
-
-# The testsuite binary is statically linked. This is necessary as it uses some
-# of the internal functions that are not necessarily exported by the shared
-# library.
-testcms_LDADD = $(top_builddir)/src/liblcms2mt.la 
-testcms_LDFLAGS = -static @LDFLAGS@
-testcms_SOURCES = testcms2.c testplugin.c zoo_icc.c testcms2.h
-EXTRA_DIST = test1.icc bad.icc toosmall.icc test2.icc \
-             test3.icc test4.icc \
-             test5.icc ibm-t61.icc crayons.icc bad_mpe.icc 
-
+fast_float_testbed_LDADD = $(srcdir)/../src/liblcms2_fast_float.la
+fast_float_testbed_LDFLAGS = @LDFLAGS@
+fast_float_testbed_SOURCES = fast_float_testbed.c 
+EXTRA_DIST = test0.icc test1.icc test2.icc test3.icc test5.icc 
 all: all-am
 
 .SUFFIXES:
@@ -354,9 +347,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign testbed/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign plugins/fast_float/testbed/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign testbed/Makefile
+	  $(AUTOMAKE) --foreign plugins/fast_float/testbed/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
@@ -384,9 +377,9 @@ clean-checkPROGRAMS:
 	echo " rm -f" $$list; \
 	rm -f $$list
 
-testcms$(EXEEXT): $(testcms_OBJECTS) $(testcms_DEPENDENCIES) $(EXTRA_testcms_DEPENDENCIES) 
-	@rm -f testcms$(EXEEXT)
-	$(AM_V_CCLD)$(testcms_LINK) $(testcms_OBJECTS) $(testcms_LDADD) $(LIBS)
+fast_float_testbed$(EXEEXT): $(fast_float_testbed_OBJECTS) $(fast_float_testbed_DEPENDENCIES) $(EXTRA_fast_float_testbed_DEPENDENCIES) 
+	@rm -f fast_float_testbed$(EXEEXT)
+	$(AM_V_CCLD)$(fast_float_testbed_LINK) $(fast_float_testbed_OBJECTS) $(fast_float_testbed_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -394,9 +387,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testcms2.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testplugin.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zoo_icc.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fast_float_testbed.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -560,9 +551,7 @@ clean-am: clean-checkPROGRAMS clean-generic clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
-		-rm -f ./$(DEPDIR)/testcms2.Po
-	-rm -f ./$(DEPDIR)/testplugin.Po
-	-rm -f ./$(DEPDIR)/zoo_icc.Po
+		-rm -f ./$(DEPDIR)/fast_float_testbed.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -608,9 +597,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-		-rm -f ./$(DEPDIR)/testcms2.Po
-	-rm -f ./$(DEPDIR)/testplugin.Po
-	-rm -f ./$(DEPDIR)/zoo_icc.Po
+		-rm -f ./$(DEPDIR)/fast_float_testbed.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -649,13 +636,7 @@ uninstall-am:
 
 
 check:
-	if [ $(top_srcdir) != $(top_builddir) ]; then \
-		cp $(top_srcdir)/testbed/*.ic? $(top_builddir)/testbed; \
-	fi
-	LD_LIBRARY_PATH=$(top_builddir)/src/.libs ./testcms
-	if [ $(top_srcdir) != $(top_builddir) ]; then \
-		rm -f $(top_builddir)/testbed/*.ic?; \
-	fi
+	./fast_float_testbed
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

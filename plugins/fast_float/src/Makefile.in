@@ -15,8 +15,9 @@
 @SET_MAKE@
 
 #
-# Makefile for building testcms
+# Makefile for building lcms2_fast_float library
 #
+
 VPATH = @srcdir@
 am__is_gnu_make = { \
   if test -z '$(MAKELEVEL)'; then \
@@ -91,8 +92,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = testcms$(EXEEXT)
-subdir = testbed
+subdir = plugins/fast_float/src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/acx_pthread.m4 \
 	$(top_srcdir)/m4/ax_append_compile_flags.m4 \
@@ -109,17 +109,52 @@ DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am_testcms_OBJECTS = testcms2.$(OBJEXT) testplugin.$(OBJEXT) \
-	zoo_icc.$(OBJEXT)
-testcms_OBJECTS = $(am_testcms_OBJECTS)
-testcms_DEPENDENCIES = $(top_builddir)/src/liblcms2mt.la
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = f=`echo $$p | sed -e 's|^.*/||'`;
+am__install_max = 40
+am__nobase_strip_setup = \
+  srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*|]/\\\\&/g'`
+am__nobase_strip = \
+  for p in $$list; do echo "$$p"; done | sed -e "s|$$srcdirstrip/||"
+am__nobase_list = $(am__nobase_strip_setup); \
+  for p in $$list; do echo "$$p $$p"; done | \
+  sed "s| $$srcdirstrip/| |;"' / .*\//!s/ .*/ ./; s,\( .*\)/[^/]*$$,\1,' | \
+  $(AWK) 'BEGIN { files["."] = "" } { files[$$2] = files[$$2] " " $$1; \
+    if (++n[$$2] == $(am__install_max)) \
+      { print $$2, files[$$2]; n[$$2] = 0; files[$$2] = "" } } \
+    END { for (dir in files) print dir, files[dir] }'
+am__base_list = \
+  sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
+  sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
+am__uninstall_files_from_dir = { \
+  test -z "$$files" \
+    || { test ! -d "$$dir" && test ! -f "$$dir" && test ! -r "$$dir"; } \
+    || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
+         $(am__cd) "$$dir" && rm -f $$files; }; \
+  }
+am__installdirs = "$(DESTDIR)$(libdir)"
+LTLIBRARIES = $(lib_LTLIBRARIES)
+am__DEPENDENCIES_1 =
+liblcms2_fast_float_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(top_builddir)/src/liblcms2.la
+am_liblcms2_fast_float_la_OBJECTS = fast_8_curves.lo \
+	fast_8_matsh_sse.lo fast_8_matsh.lo fast_8_tethra.lo \
+	fast_16_tethra.lo fast_float_15bits.lo fast_float_15mats.lo \
+	fast_float_cmyk.lo fast_float_curves.lo fast_float_matsh.lo \
+	fast_float_separate.lo fast_float_sup.lo fast_float_tethra.lo
+liblcms2_fast_float_la_OBJECTS = $(am_liblcms2_fast_float_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-testcms_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(testcms_LDFLAGS) $(LDFLAGS) -o $@
+liblcms2_fast_float_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(liblcms2_fast_float_la_LDFLAGS) \
+	$(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -135,8 +170,17 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/testcms2.Po \
-	./$(DEPDIR)/testplugin.Po ./$(DEPDIR)/zoo_icc.Po
+am__depfiles_remade = ./$(DEPDIR)/fast_16_tethra.Plo \
+	./$(DEPDIR)/fast_8_curves.Plo ./$(DEPDIR)/fast_8_matsh.Plo \
+	./$(DEPDIR)/fast_8_matsh_sse.Plo ./$(DEPDIR)/fast_8_tethra.Plo \
+	./$(DEPDIR)/fast_float_15bits.Plo \
+	./$(DEPDIR)/fast_float_15mats.Plo \
+	./$(DEPDIR)/fast_float_cmyk.Plo \
+	./$(DEPDIR)/fast_float_curves.Plo \
+	./$(DEPDIR)/fast_float_matsh.Plo \
+	./$(DEPDIR)/fast_float_separate.Plo \
+	./$(DEPDIR)/fast_float_sup.Plo \
+	./$(DEPDIR)/fast_float_tethra.Plo
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -156,8 +200,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(testcms_SOURCES)
-DIST_SOURCES = $(testcms_SOURCES)
+SOURCES = $(liblcms2_fast_float_la_SOURCES)
+DIST_SOURCES = $(liblcms2_fast_float_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -225,9 +269,9 @@ LCMS_LIB_DEPLIBS = @LCMS_LIB_DEPLIBS@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
-LIBRARY_AGE = @LIBRARY_AGE@
-LIBRARY_CURRENT = @LIBRARY_CURRENT@
-LIBRARY_REVISION = @LIBRARY_REVISION@
+LIBRARY_AGE = 0
+LIBRARY_CURRENT = 1
+LIBRARY_REVISION = 1
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
@@ -301,7 +345,7 @@ host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
 htmldir = @htmldir@
-includedir = @includedir@
+includedir = ${prefix}/include
 infodir = @infodir@
 inline = @inline@
 install_sh = @install_sh@
@@ -327,19 +371,17 @@ top_srcdir = @top_srcdir@
 
 # Don't require all the GNU mandated files
 AUTOMAKE_OPTIONS = 1.7 foreign
-AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/src
 
-# CFLAGS = --pedantic -Wall -std=c99 -O2
+# Shared libraries built in this directory
+lib_LTLIBRARIES = liblcms2_fast_float.la
+AM_CPPFLAGS = -Ofast -I$(top_builddir)/include -I$(top_srcdir)/include -I$(srcdir)/../include -I$(builddir)/../include
+liblcms2_fast_float_la_LDFLAGS = -no-undefined \
+  -version-info $(LIBRARY_CURRENT):$(LIBRARY_REVISION):$(LIBRARY_AGE)
 
-# The testsuite binary is statically linked. This is necessary as it uses some
-# of the internal functions that are not necessarily exported by the shared
-# library.
-testcms_LDADD = $(top_builddir)/src/liblcms2mt.la 
-testcms_LDFLAGS = -static @LDFLAGS@
-testcms_SOURCES = testcms2.c testplugin.c zoo_icc.c testcms2.h
-EXTRA_DIST = test1.icc bad.icc toosmall.icc test2.icc \
-             test3.icc test4.icc \
-             test5.icc ibm-t61.icc crayons.icc bad_mpe.icc 
+liblcms2_fast_float_la_LIBADD = $(LCMS_LIB_DEPLIBS) $(top_builddir)/src/liblcms2.la  
+liblcms2_fast_float_la_SOURCES = fast_8_curves.c fast_8_matsh_sse.c fast_8_matsh.c fast_8_tethra.c \
+  fast_16_tethra.c fast_float_15bits.c fast_float_15mats.c fast_float_cmyk.c fast_float_curves.c fast_float_matsh.c  \
+  fast_float_separate.c fast_float_sup.c fast_float_tethra.c fast_float_internal.h
 
 all: all-am
 
@@ -354,9 +396,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign testbed/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign plugins/fast_float/src/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign testbed/Makefile
+	  $(AUTOMAKE) --foreign plugins/fast_float/src/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
@@ -375,18 +417,43 @@ $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
 
-clean-checkPROGRAMS:
-	@list='$(check_PROGRAMS)'; test -n "$$list" || exit 0; \
-	echo " rm -f" $$list; \
-	rm -f $$list || exit $$?; \
-	test -n "$(EXEEXT)" || exit 0; \
-	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
-	echo " rm -f" $$list; \
-	rm -f $$list
+install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+	@$(NORMAL_INSTALL)
+	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
+	list2=; for p in $$list; do \
+	  if test -f $$p; then \
+	    list2="$$list2 $$p"; \
+	  else :; fi; \
+	done; \
+	test -z "$$list2" || { \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(libdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(libdir)" || exit 1; \
+	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 '$(DESTDIR)$(libdir)'"; \
+	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 "$(DESTDIR)$(libdir)"; \
+	}
 
-testcms$(EXEEXT): $(testcms_OBJECTS) $(testcms_DEPENDENCIES) $(EXTRA_testcms_DEPENDENCIES) 
-	@rm -f testcms$(EXEEXT)
-	$(AM_V_CCLD)$(testcms_LINK) $(testcms_OBJECTS) $(testcms_LDADD) $(LIBS)
+uninstall-libLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
+	for p in $$list; do \
+	  $(am__strip_dir) \
+	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(libdir)/$$f'"; \
+	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(libdir)/$$f"; \
+	done
+
+clean-libLTLIBRARIES:
+	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+	@list='$(lib_LTLIBRARIES)'; \
+	locs=`for p in $$list; do echo $$p; done | \
+	      sed 's|^[^/]*$$|.|; s|/[^/]*$$||; s|$$|/so_locations|' | \
+	      sort -u`; \
+	test -z "$$locs" || { \
+	  echo rm -f $${locs}; \
+	  rm -f $${locs}; \
+	}
+
+liblcms2_fast_float.la: $(liblcms2_fast_float_la_OBJECTS) $(liblcms2_fast_float_la_DEPENDENCIES) $(EXTRA_liblcms2_fast_float_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(liblcms2_fast_float_la_LINK) -rpath $(libdir) $(liblcms2_fast_float_la_OBJECTS) $(liblcms2_fast_float_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -394,9 +461,19 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testcms2.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testplugin.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zoo_icc.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fast_16_tethra.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fast_8_curves.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fast_8_matsh.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fast_8_matsh_sse.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fast_8_tethra.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fast_float_15bits.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fast_float_15mats.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fast_float_cmyk.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fast_float_curves.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fast_float_matsh.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fast_float_separate.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fast_float_sup.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fast_float_tethra.Plo@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -520,10 +597,12 @@ distdir-am: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
 check: check-am
-all-am: Makefile
+all-am: Makefile $(LTLIBRARIES)
 installdirs:
+	for dir in "$(DESTDIR)$(libdir)"; do \
+	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
+	done
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -556,13 +635,23 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-checkPROGRAMS clean-generic clean-libtool \
+clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
-		-rm -f ./$(DEPDIR)/testcms2.Po
-	-rm -f ./$(DEPDIR)/testplugin.Po
-	-rm -f ./$(DEPDIR)/zoo_icc.Po
+		-rm -f ./$(DEPDIR)/fast_16_tethra.Plo
+	-rm -f ./$(DEPDIR)/fast_8_curves.Plo
+	-rm -f ./$(DEPDIR)/fast_8_matsh.Plo
+	-rm -f ./$(DEPDIR)/fast_8_matsh_sse.Plo
+	-rm -f ./$(DEPDIR)/fast_8_tethra.Plo
+	-rm -f ./$(DEPDIR)/fast_float_15bits.Plo
+	-rm -f ./$(DEPDIR)/fast_float_15mats.Plo
+	-rm -f ./$(DEPDIR)/fast_float_cmyk.Plo
+	-rm -f ./$(DEPDIR)/fast_float_curves.Plo
+	-rm -f ./$(DEPDIR)/fast_float_matsh.Plo
+	-rm -f ./$(DEPDIR)/fast_float_separate.Plo
+	-rm -f ./$(DEPDIR)/fast_float_sup.Plo
+	-rm -f ./$(DEPDIR)/fast_float_tethra.Plo
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -585,7 +674,7 @@ install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am:
+install-exec-am: install-libLTLIBRARIES
 
 install-html: install-html-am
 
@@ -608,9 +697,19 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-		-rm -f ./$(DEPDIR)/testcms2.Po
-	-rm -f ./$(DEPDIR)/testplugin.Po
-	-rm -f ./$(DEPDIR)/zoo_icc.Po
+		-rm -f ./$(DEPDIR)/fast_16_tethra.Plo
+	-rm -f ./$(DEPDIR)/fast_8_curves.Plo
+	-rm -f ./$(DEPDIR)/fast_8_matsh.Plo
+	-rm -f ./$(DEPDIR)/fast_8_matsh_sse.Plo
+	-rm -f ./$(DEPDIR)/fast_8_tethra.Plo
+	-rm -f ./$(DEPDIR)/fast_float_15bits.Plo
+	-rm -f ./$(DEPDIR)/fast_float_15mats.Plo
+	-rm -f ./$(DEPDIR)/fast_float_cmyk.Plo
+	-rm -f ./$(DEPDIR)/fast_float_curves.Plo
+	-rm -f ./$(DEPDIR)/fast_float_matsh.Plo
+	-rm -f ./$(DEPDIR)/fast_float_separate.Plo
+	-rm -f ./$(DEPDIR)/fast_float_sup.Plo
+	-rm -f ./$(DEPDIR)/fast_float_tethra.Plo
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -627,35 +726,26 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am:
+uninstall-am: uninstall-libLTLIBRARIES
 
-.MAKE: check-am install-am install-strip
+.MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS TAGS all all-am am--depfiles check check-am clean \
-	clean-checkPROGRAMS clean-generic clean-libtool cscopelist-am \
+	clean-generic clean-libLTLIBRARIES clean-libtool cscopelist-am \
 	ctags ctags-am distclean distclean-compile distclean-generic \
 	distclean-libtool distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
 	install-data-am install-dvi install-dvi-am install-exec \
 	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+	install-info-am install-libLTLIBRARIES install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags tags-am uninstall uninstall-am
+	tags tags-am uninstall uninstall-am uninstall-libLTLIBRARIES
 
 .PRECIOUS: Makefile
 
-
-check:
-	if [ $(top_srcdir) != $(top_builddir) ]; then \
-		cp $(top_srcdir)/testbed/*.ic? $(top_builddir)/testbed; \
-	fi
-	LD_LIBRARY_PATH=$(top_builddir)/src/.libs ./testcms
-	if [ $(top_srcdir) != $(top_builddir) ]; then \
-		rm -f $(top_builddir)/testbed/*.ic?; \
-	fi
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
