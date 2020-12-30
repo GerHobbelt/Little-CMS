@@ -1085,7 +1085,7 @@ _cmsFindFormatter(_cmsTRANSFORM* p, cmsUInt32Number InputFormat, cmsUInt32Number
                 return;
             case CHANNELS_SH(3) | BYTES_SH(1) | ((CHANNELS_SH(1) | BYTES_SH(1))<<6):
                 p ->xform = CachedXFORM3to1;
-		return;
+                return;
             case CHANNELS_SH(3) | BYTES_SH(2) | ((CHANNELS_SH(1) | BYTES_SH(2))<<6):
                 p ->xform = CachedXFORM3x2to1x2;
                 return;

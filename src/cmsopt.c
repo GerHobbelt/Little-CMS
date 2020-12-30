@@ -413,7 +413,8 @@ Prelin16Data* PrelinOpt16alloc(cmsContext ContextID,
 // Sampler implemented by another LUT. This is a clean way to precalculate the devicelink 3D CLUT for
 // almost any transform. We use floating point precision and then convert from floating point to 16 bits.
 static
-cmsInt32Number XFormSampler16(CMSREGISTER const cmsUInt16Number In[], 
+cmsInt32Number XFormSampler16(cmsContext ContextID,
+	                          CMSREGISTER const cmsUInt16Number In[],
                               CMSREGISTER cmsUInt16Number Out[], 
                               CMSREGISTER void* Cargo)
 {
@@ -774,7 +775,7 @@ Error:
 
     if (DataSetIn == NULL && DataSetOut == NULL) {
 
-        _cmsPipelineSetOptimizationParameters(Dest, (_cmsPipelineEval16Fn) DataCLUT->Params->Interpolation.Lerp16, DataCLUT->Params, NULL, NULL);
+        _cmsPipelineSetOptimizationParameters(ContextID, Dest, (_cmsPipelineEval16Fn) DataCLUT->Params->Interpolation.Lerp16, DataCLUT->Params, NULL, NULL);
     }
     else {
 

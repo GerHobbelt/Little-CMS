@@ -756,8 +756,8 @@ cmsPipeline*  BlackPreservingKOnlyIntents(cmsContext     ContextID,
     while (lastProfilePos > 1)
     {
         hLastProfile = hProfiles[--lastProfilePos];
-        if (cmsGetColorSpace(hLastProfile) != cmsSigCmykData ||
-            cmsGetDeviceClass(hLastProfile) != cmsSigLinkClass)
+        if (cmsGetColorSpace(ContextID, hLastProfile) != cmsSigCmykData ||
+            cmsGetDeviceClass(ContextID, hLastProfile) != cmsSigLinkClass)
             break;
     }
 
@@ -766,7 +766,7 @@ cmsPipeline*  BlackPreservingKOnlyIntents(cmsContext     ContextID,
     // Check for non-cmyk profiles
     if (cmsGetColorSpace(ContextID, hProfiles[0]) != cmsSigCmykData ||
         !(cmsGetColorSpace(ContextID, hLastProfile) == cmsSigCmykData ||
-        cmsGetDeviceClass(hLastProfile) == cmsSigOutputClass))
+        cmsGetDeviceClass(ContextID, hLastProfile) == cmsSigOutputClass))
            return DefaultICCintents(ContextID, nProfiles, ICCIntents, hProfiles, BPC, AdaptationStates, dwFlags);
 
     // Allocate an empty LUT for holding the result
@@ -818,11 +818,11 @@ cmsPipeline*  BlackPreservingKOnlyIntents(cmsContext     ContextID,
     // Insert possible devicelinks at the end
     for (i = lastProfilePos + 1; i < nProfiles; i++)
     {
-        cmsPipeline* devlink = _cmsReadDevicelinkLUT(hProfiles[i], ICCIntents[i]);
+        cmsPipeline* devlink = _cmsReadDevicelinkLUT(ContextID, hProfiles[i], ICCIntents[i]);
         if (devlink == NULL)
             goto Error;
 
-        if (!cmsPipelineCat(Result, devlink))
+        if (!cmsPipelineCat(ContextID, Result, devlink))
             goto Error;
     }
 
@@ -982,8 +982,8 @@ cmsPipeline* BlackPreservingKPlaneIntents(cmsContext     ContextID,
     while (lastProfilePos > 1)
     {   
         hLastProfile = hProfiles[--lastProfilePos];
-        if (cmsGetColorSpace(hLastProfile) != cmsSigCmykData ||
-            cmsGetDeviceClass(hLastProfile) != cmsSigLinkClass)
+        if (cmsGetColorSpace(ContextID, hLastProfile) != cmsSigCmykData ||
+            cmsGetDeviceClass(ContextID, hLastProfile) != cmsSigLinkClass)
             break;        
     } 
 
@@ -992,7 +992,7 @@ cmsPipeline* BlackPreservingKPlaneIntents(cmsContext     ContextID,
     // Check for non-cmyk profiles
     if (cmsGetColorSpace(ContextID, hProfiles[0]) != cmsSigCmykData ||
         !(cmsGetColorSpace(ContextID, hLastProfile) == cmsSigCmykData ||
-        cmsGetDeviceClass(hLastProfile) == cmsSigOutputClass))
+        cmsGetDeviceClass(ContextID, hLastProfile) == cmsSigOutputClass))
            return  DefaultICCintents(ContextID, nProfiles, ICCIntents, hProfiles, BPC, AdaptationStates, dwFlags);
 
     // Allocate an empty LUT for holding the result
@@ -1003,7 +1003,7 @@ cmsPipeline* BlackPreservingKPlaneIntents(cmsContext     ContextID,
 
     // We need the input LUT of the last profile, assuming this one is responsible of
     // black generation. This LUT will be searched in inverse order.
-    bp.LabK2cmyk = _cmsReadInputLUT(ContextID, hLastProfile, INTENT_RELATIVE_COLORIMETRIC);
+    bp.LabK2cmyk = _cmsReadInputLUT(ContextID, hLastProfile, INTENT_RELATIVE_COLORIMETRIC, 0);
     if (bp.LabK2cmyk == NULL) goto Cleanup;
 
     // Get total area coverage (in 0..1 domain)
@@ -1031,19 +1031,19 @@ cmsPipeline* BlackPreservingKPlaneIntents(cmsContext     ContextID,
     if (bp.KTone == NULL) goto Cleanup;
 
     // To measure the output, Last profile to Lab
-    hLab = cmsCreateLab4ProfileTHR(ContextID, NULL);
-    bp.hProofOutput = cmsCreateTransformTHR(ContextID, hLastProfile,
+    hLab = cmsCreateLab4Profile(ContextID, NULL);
+    bp.hProofOutput = cmsCreateTransform(ContextID, hLastProfile,
                                          CHANNELS_SH(4)|BYTES_SH(2), hLab, TYPE_Lab_DBL,
                                          INTENT_RELATIVE_COLORIMETRIC,
                                          cmsFLAGS_NOCACHE|cmsFLAGS_NOOPTIMIZE);
     if ( bp.hProofOutput == NULL) goto Cleanup;
 
     // Same as anterior, but lab in the 0..1 range
-    bp.cmyk2Lab = cmsCreateTransformTHR(ContextID, hLastProfile,
-                                         FLOAT_SH(1)|CHANNELS_SH(4)|BYTES_SH(4), hLab,
-                                         FLOAT_SH(1)|CHANNELS_SH(3)|BYTES_SH(4),
-                                         INTENT_RELATIVE_COLORIMETRIC,
-                                         cmsFLAGS_NOCACHE|cmsFLAGS_NOOPTIMIZE);
+    bp.cmyk2Lab = cmsCreateTransform(ContextID, hLastProfile,
+                                     FLOAT_SH(1)|CHANNELS_SH(4)|BYTES_SH(4), hLab,
+                                     FLOAT_SH(1)|CHANNELS_SH(3)|BYTES_SH(4),
+                                     INTENT_RELATIVE_COLORIMETRIC,
+                                     cmsFLAGS_NOCACHE|cmsFLAGS_NOOPTIMIZE);
     if (bp.cmyk2Lab == NULL) goto Cleanup;
     cmsCloseProfile(ContextID, hLab);
 
@@ -1065,11 +1065,11 @@ cmsPipeline* BlackPreservingKPlaneIntents(cmsContext     ContextID,
     // Insert possible devicelinks at the end    
     for (i = lastProfilePos + 1; i < nProfiles; i++)
     {        
-        cmsPipeline* devlink = _cmsReadDevicelinkLUT(hProfiles[i], ICCIntents[i]);
+        cmsPipeline* devlink = _cmsReadDevicelinkLUT(ContextID, hProfiles[i], ICCIntents[i]);
         if (devlink == NULL)
             goto Cleanup;
 
-        if (!cmsPipelineCat(Result, devlink))
+        if (!cmsPipelineCat(ContextID, Result, devlink))
             goto Cleanup;
     }
 

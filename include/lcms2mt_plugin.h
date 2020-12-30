@@ -550,12 +550,12 @@ typedef cmsBool  (* _cmsOPToptimizeFn)(cmsContext ContextID, cmsPipeline** Lut,
                                        cmsUInt32Number* dwFlags);
 
 // Pipeline Evaluator (in 16 bits)
-typedef void (* _cmsPipelineEval16Fn)(CMSREGISTER const cmsUInt16Number In[],
+typedef void (* _cmsPipelineEval16Fn)(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
                                      CMSREGISTER cmsUInt16Number Out[],
                                      const void* Data);
 
 // Pipeline Evaluator (in floating point)
-typedef void (* _cmsPipelineEvalFloatFn)(const cmsFloat32Number In[],
+typedef void (* _cmsPipelineEvalFloatFn)(cmsContext ContextID, const cmsFloat32Number In[],
                                          cmsFloat32Number Out[],
                                          const void* Data);
 

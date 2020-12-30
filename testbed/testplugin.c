@@ -628,7 +628,7 @@ Error:
 
 #define TYPE_RGB_565  (COLORSPACE_SH(PT_RGB)|CHANNELS_SH(3)|BYTES_SH(0) | (1 << 23))
 
-cmsUInt8Number* my_Unroll565(CMSREGISTER struct _cmstransform_struct* nfo, 
+cmsUInt8Number* my_Unroll565(cmsContext ContextID, CMSREGISTER struct _cmstransform_struct* nfo,
                             CMSREGISTER cmsUInt16Number wIn[], 
                             CMSREGISTER cmsUInt8Number* accum,
                             CMSREGISTER cmsUInt32Number Stride)
