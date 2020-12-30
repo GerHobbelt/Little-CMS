@@ -916,18 +916,12 @@ cmsStage*                          _cmsStageClipNegatives(cmsContext ContextID, 
 
 
 // For curve set only
-cmsToneCurve**     _cmsStageGetPtrToCurveSet(const cmsStage* mpe);
-
+cmsToneCurve**  _cmsStageGetPtrToCurveSet(const cmsStage* mpe);
 
 // Curve evaluation with slope limit
 cmsStage*          _cmsStageAllocToneCurvesWithSlopeLimit(cmsContext ContextID, cmsUInt32Number nChannels, cmsToneCurve* const Curves[], int SlopeLimit);
 cmsFloat32Number   _cmsEvalToneCurveFloatWithSlopeLimit(cmsContext ContextID, const cmsToneCurve* Curve, cmsFloat32Number v, int SlopeLimit);
 
-
-// Pipeline Evaluator (in floating point)
-typedef void (* _cmsPipelineEvalFloatFn)(cmsContext ContextID, const cmsFloat32Number In[],
-                                         cmsFloat32Number Out[],
-                                         const void* Data);
 
 struct _cmsPipeline_struct {
 
@@ -937,7 +931,7 @@ struct _cmsPipeline_struct {
     // Data & evaluators
     void *Data;
 
-   _cmsOPTeval16Fn         Eval16Fn;
+   _cmsPipelineEval16Fn    Eval16Fn;
    _cmsPipelineEvalFloatFn EvalFloatFn;
    _cmsFreeUserDataFn      FreeDataFn;
    _cmsDupUserDataFn       DupDataFn;

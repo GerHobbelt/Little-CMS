@@ -413,7 +413,9 @@ Prelin16Data* PrelinOpt16alloc(cmsContext ContextID,
 // Sampler implemented by another LUT. This is a clean way to precalculate the devicelink 3D CLUT for
 // almost any transform. We use floating point precision and then convert from floating point to 16 bits.
 static
-cmsInt32Number XFormSampler16(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], CMSREGISTER cmsUInt16Number Out[], CMSREGISTER void* Cargo)
+cmsInt32Number XFormSampler16(CMSREGISTER const cmsUInt16Number In[], 
+                              CMSREGISTER cmsUInt16Number Out[], 
+                              CMSREGISTER void* Cargo)
 {
     cmsPipeline* Lut = (cmsPipeline*) Cargo;
     cmsFloat32Number InFloat[cmsMAXCHANNELS], OutFloat[cmsMAXCHANNELS];
@@ -772,7 +774,7 @@ Error:
 
     if (DataSetIn == NULL && DataSetOut == NULL) {
 
-        _cmsPipelineSetOptimizationParameters(ContextID, Dest, (_cmsOPTeval16Fn) DataCLUT->Params->Interpolation.Lerp16, DataCLUT->Params, NULL, NULL);
+        _cmsPipelineSetOptimizationParameters(Dest, (_cmsPipelineEval16Fn) DataCLUT->Params->Interpolation.Lerp16, DataCLUT->Params, NULL, NULL);
     }
     else {
 
@@ -917,9 +919,10 @@ void* Prelin8dup(cmsContext ContextID, const void* ptr)
 #define DENS(i,j,k) (LutTable[(i)+(j)+(k)+OutChan])
 static CMS_NO_SANITIZE
 void PrelinEval8(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[],
-                  CMSREGISTER cmsUInt16Number Output[],
-                  CMSREGISTER const void* D)
+                 CMSREGISTER cmsUInt16Number Output[],
+                 CMSREGISTER const void* D)
 {
+
     cmsUInt8Number         r, g, b;
     cmsS15Fixed16Number    rx, ry, rz;
     cmsS15Fixed16Number    c0, c1, c2, c3, Rest;
@@ -1339,8 +1342,8 @@ Curves16Data* CurvesAlloc(cmsContext ContextID, cmsUInt32Number nCurves, cmsUInt
 
 static
 void FastEvaluateCurves8(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
-                          CMSREGISTER cmsUInt16Number Out[],
-                          CMSREGISTER const void* D)
+                         CMSREGISTER cmsUInt16Number Out[],
+                         CMSREGISTER const void* D)
 {
     Curves16Data* Data = (Curves16Data*) D;
     int x;

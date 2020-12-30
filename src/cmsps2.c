@@ -551,7 +551,7 @@ void EmitNGamma(cmsContext ContextID, cmsIOHANDLER* m, cmsUInt32Number n, cmsTon
             _cmsIOPrintf(ContextID, m, "dup ");
         }
         else {
-            snprintf(buffer, sizeof(buffer), "%s%d", nameprefix, i);
+            snprintf(buffer, sizeof(buffer), "%s%d", nameprefix, (int) i);
 		    buffer[sizeof(buffer)-1] = '\0';
             Emit1Gamma(ContextID, m, g[i], buffer);
         }
