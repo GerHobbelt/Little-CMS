@@ -166,6 +166,7 @@ XMatShaper8Data* SetMatShaper(cmsContext ContextID, cmsToneCurve* Curve1[3], cms
     return p;
 }
 
+
 // A fast matrix-shaper evaluator for 8 bits.
 static
 void MatShaperXform8SSE(cmsContext ContextID,
@@ -197,6 +198,7 @@ void MatShaperXform8SSE(cmsContext ContextID,
 
     cmsUInt32Number nalpha, strideIn, strideOut;
 
+ 
     __m128 mat0 = _mm_load_ps(p->Mat[0]);
     __m128 mat1 = _mm_load_ps(p->Mat[1]);
     __m128 mat2 = _mm_load_ps(p->Mat[2]);
@@ -238,7 +240,7 @@ void MatShaperXform8SSE(cmsContext ContextID,
            __m128 rvector = _mm_set1_ps(p->Shaper1R[*rin]);
            __m128 gvector = _mm_set1_ps(p->Shaper1G[*gin]);
            __m128 bvector = _mm_set1_ps(p->Shaper1B[*bin]);
-
+        
            for (ii = 0; ii < PixelsPerLine; ii++) {
 
                __m128 el1 = _mm_mul_ps(rvector, mat0);
@@ -271,7 +273,7 @@ void MatShaperXform8SSE(cmsContext ContextID,
                /**
                * Take next value whilst store is being performed
                */
-               if (i < PixelsPerLine - 1)
+               if (ii < PixelsPerLine - 1)
                {
                    rvector = _mm_set1_ps(p->Shaper1R[*rin]);
                    gvector = _mm_set1_ps(p->Shaper1G[*gin]);
