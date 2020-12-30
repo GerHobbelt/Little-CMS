@@ -1946,7 +1946,7 @@ cmsBool  Type_LUT8_Write(cmsContext ContextID, struct _cms_typehandler_struct* s
 	n = NewLUT->InputChannels * NewLUT->OutputChannels;
 
     if (MatMPE != NULL) {
-        
+
 		for (i = 0; i < 9; i++)
 		{
 	        if (!_cmsWrite15Fixed16Number(ContextID, io, MatMPE -> Double[i])) return FALSE;
@@ -2176,7 +2176,7 @@ Error:
 // Some empty defaults are created for missing parts
 
 static
-cmsBool  Type_LUT16_Write(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
+cmsBool Type_LUT16_Write(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
 {
     cmsUInt32Number nTabSize;
     cmsPipeline* NewLUT = (cmsPipeline*) Ptr;
@@ -2230,9 +2230,8 @@ cmsBool  Type_LUT16_Write(cmsContext ContextID, struct _cms_typehandler_struct* 
     if (!_cmsWriteUInt8Number(ContextID, io, (cmsUInt8Number) OutputChannels)) return FALSE;
     if (!_cmsWriteUInt8Number(ContextID, io, (cmsUInt8Number) clutPoints)) return FALSE;
     if (!_cmsWriteUInt8Number(ContextID, io, 0)) return FALSE; // Padding
-	
     if (MatMPE != NULL) {
-                
+
 		for (i = 0; i < 9; i++)
 		{
 	        if (!_cmsWrite15Fixed16Number(ContextID, io, MatMPE -> Double[i])) return FALSE;

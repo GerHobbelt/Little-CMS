@@ -102,7 +102,7 @@ void FloatCLUTEval(cmsContext ContextID,
 
     cmsUInt32Number nchans, nalpha;
     cmsUInt32Number strideIn, strideOut;
-                                                        
+
     _cmsComputeComponentIncrements(InputFormat, Stride->BytesPerPlaneIn, &nchans, &nalpha, SourceStartingOrder, SourceIncrements);
     _cmsComputeComponentIncrements(OutputFormat, Stride->BytesPerPlaneOut, &nchans, &nalpha, DestStartingOrder, DestIncrements);
 

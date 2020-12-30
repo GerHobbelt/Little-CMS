@@ -149,8 +149,8 @@ void FloatCMYKCLUTEval(cmsContext ContextID,
             kin += SourceIncrements[3];
 
             pk = c * p->Domain[0];  // C
-            px = m * p->Domain[1];  // M 
-            py = y * p->Domain[2];  // Y 
+            px = m * p->Domain[1];  // M
+            py = y * p->Domain[2];  // Y
             pz = k * p->Domain[3];  // K
 
 

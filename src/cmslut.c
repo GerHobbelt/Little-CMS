@@ -429,7 +429,6 @@ cmsStage*  CMSEXPORT cmsStageAllocMatrix(cmsContext ContextID, cmsUInt32Number R
     if (NewElem == NULL) goto Error;
     NewMPE->Data = (void*)NewElem;
 
-
     NewElem ->Double = (cmsFloat64Number*) _cmsCalloc(ContextID, n, sizeof(cmsFloat64Number));
     if (NewElem->Double == NULL) goto Error;
 

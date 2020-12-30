@@ -1077,7 +1077,7 @@ void Eval4InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 }
 
 #define EVAL_FNS(N,NM) static CMS_NO_SANITIZE \
-void Eval##N##Inputs(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[], CMSREGISTER cmsUInt16Number Output[], CMSREGISTER const cmsInterpParams* p16)\
+void Eval##N##Inputs(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[], CMSREGISTER cmsUInt16Number Output[], CMSREGISTER const cmsInterpParams* p16) \
 {\
        const cmsUInt16Number* LutTable = (cmsUInt16Number*) p16 -> Table;\
        cmsS15Fixed16Number fk;\
@@ -1114,7 +1114,8 @@ void Eval##N##Inputs(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Inp
        }\
 }\
 \
-static void Eval##N##InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[], \
+static void Eval##N##InputsFloat(cmsContext ContextID,\
+                                 const cmsFloat32Number Input[], \
                                  cmsFloat32Number Output[],\
                                  const cmsInterpParams * p)\
 {\
@@ -1171,7 +1172,6 @@ EVAL_FNS(12, 11)
 EVAL_FNS(13, 12)
 EVAL_FNS(14, 13)
 EVAL_FNS(15, 14)
-
 
 // The default factory
 static
@@ -1272,14 +1272,14 @@ cmsInterpFunction DefaultInterpolatorsFactory(cmsUInt32Number nInputChannels, cm
                    Interpolation.Lerp16    =  Eval8Inputs;
                break;
 
-           case 9: 
+           case 9:
                if (IsFloat)
                    Interpolation.LerpFloat = Eval9InputsFloat;
                else
                    Interpolation.Lerp16 = Eval9Inputs;
                break;
 
-           case 10: 
+           case 10:
                if (IsFloat)
                    Interpolation.LerpFloat = Eval10InputsFloat;
                else
@@ -1293,28 +1293,28 @@ cmsInterpFunction DefaultInterpolatorsFactory(cmsUInt32Number nInputChannels, cm
                    Interpolation.Lerp16 = Eval11Inputs;
                break;
 
-           case 12: 
+           case 12:
                if (IsFloat)
                    Interpolation.LerpFloat = Eval12InputsFloat;
                else
                    Interpolation.Lerp16 = Eval12Inputs;
                break;
 
-           case 13: 
+           case 13:
                if (IsFloat)
                    Interpolation.LerpFloat = Eval13InputsFloat;
                else
                    Interpolation.Lerp16 = Eval13Inputs;
                break;
 
-           case 14: 
+           case 14:
                if (IsFloat)
                    Interpolation.LerpFloat = Eval14InputsFloat;
                else
                    Interpolation.Lerp16 = Eval14Inputs;
                break;
 
-           case 15: 
+           case 15:
                if (IsFloat)
                    Interpolation.LerpFloat = Eval15InputsFloat;
                else

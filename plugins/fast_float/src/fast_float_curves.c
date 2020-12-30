@@ -58,7 +58,7 @@ static void free_aligned(cmsContext ContextID, void* Data)
 // Evaluator for float curves. This are just 1D tables
 
 static void FastEvaluateFloatRGBCurves(cmsContext ContextID,
-                            struct _cmstransform_struct *CMMcargo,
+                                        struct _cmstransform_struct *CMMcargo,
                                         const void* Input,
                                         void* Output,
                                         cmsUInt32Number PixelsPerLine,
@@ -200,7 +200,7 @@ static void FastFloatRGBIdentity(cmsContext ContextID,
         *(cmsFloat32Number*)rout = *(cmsFloat32Number*)rin;
         *(cmsFloat32Number*)gout = *(cmsFloat32Number*)gin;
         *(cmsFloat32Number*)bout = *(cmsFloat32Number*)bin;
-        
+
         rin += SourceIncrements[0];
         gin += SourceIncrements[1];
         bin += SourceIncrements[2];
@@ -225,7 +225,7 @@ static void FastFloatRGBIdentity(cmsContext ContextID,
 
 // Evaluate 1 channel only
 static void FastEvaluateFloatGrayCurves(cmsContext ContextID,
-                                    struct _cmstransform_struct *CMMcargo,
+                                        struct _cmstransform_struct *CMMcargo,
                                         const void* Input,
                                         void* Output,
                                         cmsUInt32Number PixelsPerLine,
@@ -241,7 +241,6 @@ static void FastEvaluateFloatGrayCurves(cmsContext ContextID,
     const cmsUInt8Number* ain = NULL;
     cmsUInt8Number* kout;
     cmsUInt8Number* aout = NULL;
-
     cmsUInt32Number InputFormat  = cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
     cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
 
@@ -482,4 +481,3 @@ cmsBool OptimizeFloatByJoiningCurves(cmsContext ContextID,
     return TRUE;
 
 }
-

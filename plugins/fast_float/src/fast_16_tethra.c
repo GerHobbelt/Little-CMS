@@ -114,7 +114,6 @@ void PerformanceEval16(cmsContext ContextID,
 
        cmsUInt32Number dwInFormat = cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo);
        cmsUInt32Number dwOutFormat = cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo);
-       
        _cmsComputeComponentIncrements(dwInFormat, Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
        _cmsComputeComponentIncrements(dwOutFormat, Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
 
@@ -350,7 +349,6 @@ cmsBool Optimize16BitRGBTransform(cmsContext ContextID,
     if (cmsPipelineCheckAndRetreiveStages(ContextID, *Lut, 2,
         cmsSigCurveSetElemType, cmsSigCurveSetElemType,
         NULL, NULL)) return FALSE;
-
 
    // Named color pipelines cannot be optimized either
    for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, *Lut);
