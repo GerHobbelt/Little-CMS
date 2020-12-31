@@ -1,6 +1,6 @@
 
 #include <windows.h>
-#include "lcms2_plugin.h"
+#include "lcms2mt_plugin.h"
 
 static cmsContext ctx;
 static cmsHPROFILE prof_cmyk, prof_rgb;
@@ -48,7 +48,7 @@ static DWORD WINAPI one_thread(LPVOID lpParameter)
     cmsUInt8Number cmyk[4*1000];
 
     Sleep(rand() % 500 );
-    cmsHTRANSFORM xform = cmsCreateTransformTHR(ctx, prof_rgb, TYPE_RGB_8, prof_cmyk, TYPE_CMYK_8, 0, 0);
+    cmsHTRANSFORM xform = cmsCreateTransform(ctx, prof_rgb, TYPE_RGB_8, prof_cmyk, TYPE_CMYK_8, 0, 0);
 
     for (i=0; i < 100000; i++) {
 
@@ -58,7 +58,7 @@ static DWORD WINAPI one_thread(LPVOID lpParameter)
             rgb[j * 3 + 1] = 100;
             rgb[j * 3 + 2] = 75;
         }
-        cmsDoTransform(xform, rgb, cmyk, 1000);
+        cmsDoTransform(ctx, xform, rgb, cmyk, 1000);
         for (j=0; j < 1000; j++) 
         {
             if (cmyk[j * 4 ] != 37 ||
@@ -74,7 +74,7 @@ static DWORD WINAPI one_thread(LPVOID lpParameter)
 
     }
         
-    cmsDeleteTransform(xform);
+    cmsDeleteTransform(ctx, xform);
 
     return 0;
 }
@@ -88,8 +88,8 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 
     ctx = cmsCreateContext(NULL, 0);
 
-    prof_cmyk = cmsOpenProfileFromFileTHR(ctx, "USWebCoatedSWOP.icc", "r");
-    prof_rgb = cmsOpenProfileFromFileTHR(ctx, "AdobeRGB1998.icc","r");
+    prof_cmyk = cmsOpenProfileFromFile(ctx, "USWebCoatedSWOP.icc", "r");
+    prof_rgb = cmsOpenProfileFromFile(ctx, "AdobeRGB1998.icc", "r");
    
 
 #define NWORKERS 10
@@ -110,8 +110,8 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
         CloseHandle(workers[i]);
 
 
-    cmsCloseProfile(prof_rgb);
-    cmsCloseProfile(prof_cmyk);
+    cmsCloseProfile(ctx, prof_rgb);
+    cmsCloseProfile(ctx, prof_cmyk);
     cmsDeleteContext(ctx);
 
     OutputDebugString(L"Test Done\n"); 
