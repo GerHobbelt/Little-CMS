@@ -413,7 +413,10 @@ Prelin16Data* PrelinOpt16alloc(cmsContext ContextID,
 // Sampler implemented by another LUT. This is a clean way to precalculate the devicelink 3D CLUT for
 // almost any transform. We use floating point precision and then convert from floating point to 16 bits.
 static
-cmsInt32Number XFormSampler16(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], CMSREGISTER cmsUInt16Number Out[], CMSREGISTER void* Cargo)
+cmsInt32Number XFormSampler16(cmsContext ContextID,
+	                          CMSREGISTER const cmsUInt16Number In[],
+                              CMSREGISTER cmsUInt16Number Out[], 
+                              CMSREGISTER void* Cargo)
 {
     cmsPipeline* Lut = (cmsPipeline*) Cargo;
     cmsFloat32Number InFloat[cmsMAXCHANNELS], OutFloat[cmsMAXCHANNELS];
@@ -772,7 +775,7 @@ Error:
 
     if (DataSetIn == NULL && DataSetOut == NULL) {
 
-        _cmsPipelineSetOptimizationParameters(ContextID, Dest, (_cmsOPTeval16Fn) DataCLUT->Params->Interpolation.Lerp16, DataCLUT->Params, NULL, NULL);
+        _cmsPipelineSetOptimizationParameters(ContextID, Dest, (_cmsPipelineEval16Fn) DataCLUT->Params->Interpolation.Lerp16, DataCLUT->Params, NULL, NULL);
     }
     else {
 
@@ -917,9 +920,10 @@ void* Prelin8dup(cmsContext ContextID, const void* ptr)
 #define DENS(i,j,k) (LutTable[(i)+(j)+(k)+OutChan])
 static CMS_NO_SANITIZE
 void PrelinEval8(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[],
-                  CMSREGISTER cmsUInt16Number Output[],
-                  CMSREGISTER const void* D)
+                 CMSREGISTER cmsUInt16Number Output[],
+                 CMSREGISTER const void* D)
 {
+
     cmsUInt8Number         r, g, b;
     cmsS15Fixed16Number    rx, ry, rz;
     cmsS15Fixed16Number    c0, c1, c2, c3, Rest;
@@ -935,9 +939,9 @@ void PrelinEval8(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[]
     g = (cmsUInt8Number) (Input[1] >> 8);
     b = (cmsUInt8Number) (Input[2] >> 8);
 
-    X0 = X1 = (cmsS15Fixed16Number) p8->X0[r];
-    Y0 = Y1 = (cmsS15Fixed16Number) p8->Y0[g];
-    Z0 = Z1 = (cmsS15Fixed16Number) p8->Z0[b];
+    X0 = (cmsS15Fixed16Number) p8->X0[r];
+    Y0 = (cmsS15Fixed16Number) p8->Y0[g];
+    Z0 = (cmsS15Fixed16Number) p8->Z0[b];
 
     rx = p8 ->rx[r];
     ry = p8 ->ry[g];
@@ -1339,8 +1343,8 @@ Curves16Data* CurvesAlloc(cmsContext ContextID, cmsUInt32Number nCurves, cmsUInt
 
 static
 void FastEvaluateCurves8(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
-                          CMSREGISTER cmsUInt16Number Out[],
-                          CMSREGISTER const void* D)
+                         CMSREGISTER cmsUInt16Number Out[],
+                         CMSREGISTER const void* D)
 {
     Curves16Data* Data = (Curves16Data*) D;
     int x;
@@ -1902,7 +1906,7 @@ cmsBool  _cmsRegisterOptimizationPlugin(cmsContext ContextID, cmsPluginBase* Dat
 }
 
 // The entry point for LUT optimization
-cmsBool _cmsOptimizePipeline(cmsContext ContextID,
+cmsBool CMSEXPORT _cmsOptimizePipeline(cmsContext ContextID,
                              cmsPipeline**    PtrLut,
                              cmsUInt32Number  Intent,
                              cmsUInt32Number* InputFormat,
@@ -1934,6 +1938,11 @@ cmsBool _cmsOptimizePipeline(cmsContext ContextID,
         _cmsPipelineSetOptimizationParameters(ContextID, *PtrLut, FastIdentity16, (void*) *PtrLut, NULL, NULL);
         return TRUE;
     }
+    
+    // Tone Curve Stages with a slope limit cannot be optimized. The following line switches off optimization
+    // completely and is a workaround until _cmsStage_struct.Implements correctly signifies that this
+    // stage cannot be optimized
+    if (*dwFlags & (cmsFLAGS_SLOPE_LIMIT_16 | cmsFLAGS_SLOPE_LIMIT_32)) *dwFlags |= cmsFLAGS_NOOPTIMIZE;
 
     // Do not optimize, keep all precision
     if (*dwFlags & cmsFLAGS_NOOPTIMIZE)

@@ -59,11 +59,11 @@ static cmsFloat64Number DefaultEvalParametricFn(cmsContext ContextID, cmsInt32Nu
 
 // The built-in list
 static _cmsParametricCurvesCollection DefaultCurves = {
-    9,                                  // # of curve types
-    { 1, 2, 3, 4, 5, 6, 7, 8, 108 },    // Parametric curve ID
-    { 1, 3, 4, 5, 7, 4, 5, 5, 1 },      // Parameters by type
-    DefaultEvalParametricFn,            // Evaluator
-    NULL                                // Next in chain
+    10,                                      // # of curve types
+    { 1, 2, 3, 4, 5, 6, 7, 8, 108, 109 },    // Parametric curve ID
+    { 1, 3, 4, 5, 7, 4, 5, 5,   1,   1 },    // Parameters by type
+    DefaultEvalParametricFn,                 // Evaluator
+    NULL                                     // Next in chain
 };
 
 // Duplicates the zone of memory used by the plug-in in the new context
@@ -300,12 +300,37 @@ cmsToneCurve* AllocateToneCurveStruct(cmsContext ContextID, cmsUInt32Number nEnt
         return p;
 
 Error:
-    if (p->SegInterp) _cmsFree(ContextID, p->SegInterp);
     if (p -> Segments) _cmsFree(ContextID, p -> Segments);
     if (p -> Evals) _cmsFree(ContextID, p -> Evals);
     if (p ->Table16) _cmsFree(ContextID, p ->Table16);
     _cmsFree(ContextID, p);
     return NULL;
+}
+
+
+// Generates a sigmoidal function with desired steepness.
+cmsINLINE double sigmoid_base(double k, double t)
+{
+    return (1.0 / (1.0 + exp(-k * t))) - 0.5;
+}
+
+cmsINLINE double inverted_sigmoid_base(double k, double t)
+{
+    return -log((1.0 / (t + 0.5)) - 1.0) / k;
+}
+
+cmsINLINE double sigmoid_factory(double k, double t)
+{
+    double correction = 0.5 / sigmoid_base(k, 1);
+
+    return correction * sigmoid_base(k, 2.0 * t - 1.0) + 0.5;
+}
+
+cmsINLINE double inverse_sigmoid_factory(double k, double t)
+{
+    double correction = 0.5 / sigmoid_base(k, 1);
+
+    return (inverted_sigmoid_base(k, (t - 0.5) / correction) + 1.0) / 2.0;
 }
 
 
@@ -641,6 +666,7 @@ cmsFloat64Number DefaultEvalParametricFn(cmsContext ContextID, cmsInt32Number Ty
        }
        break;
 
+
    // S-Shaped: (1 - (1-x)^1/g)^1/g
    case 108:
        if (fabs(Params[0]) < MATRIX_DET_TOLERANCE)
@@ -656,6 +682,15 @@ cmsFloat64Number DefaultEvalParametricFn(cmsContext ContextID, cmsInt32Number Ty
     // 1 - (1 - y^g)^g
     case -108:
         Val = 1 - pow(1 - pow(R, Params[0]), Params[0]);
+        break;
+
+    // Sigmoidals
+    case 109:
+        Val = sigmoid_factory(Params[0], R);
+        break;
+
+    case -109:
+        Val = inverse_sigmoid_factory(Params[0], R);
         break;
 
     default:
@@ -1155,6 +1190,7 @@ cmsBool  CMSEXPORT cmsSmoothToneCurve(cmsContext ContextID, cmsToneCurve* Tab, c
     cmsBool SuccessStatus = TRUE;
     cmsFloat32Number *w, *y, *z;
     cmsUInt32Number i, nItems, Zeros, Poles;
+    cmsBool notCheck = FALSE;
 
     if (Tab != NULL && Tab->InterpParams != NULL)
     {
@@ -1180,6 +1216,12 @@ cmsBool  CMSEXPORT cmsSmoothToneCurve(cmsContext ContextID, cmsToneCurve* Tab, c
                         w[i + 1] = 1.0;
                     }
 
+                    if (lambda < 0)
+                    {
+                        notCheck = TRUE;
+                        lambda = -lambda;
+                    }
+
                     if (smooth2(ContextID, w, y, z, (cmsFloat32Number)lambda, (int)nItems))
                     {
                         // Do some reality - checking...
@@ -1192,7 +1234,7 @@ cmsBool  CMSEXPORT cmsSmoothToneCurve(cmsContext ContextID, cmsToneCurve* Tab, c
                             if (z[i] < z[i - 1])
                             {
                                 cmsSignalError(ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: Non-Monotonic.");
-                                SuccessStatus = FALSE;
+                                SuccessStatus = notCheck;
                                 break;
                             }
                         }
@@ -1200,13 +1242,13 @@ cmsBool  CMSEXPORT cmsSmoothToneCurve(cmsContext ContextID, cmsToneCurve* Tab, c
                         if (SuccessStatus && Zeros > (nItems / 3))
                         {
                             cmsSignalError(ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: Degenerated, mostly zeros.");
-                            SuccessStatus = FALSE;
+                            SuccessStatus = notCheck;
                         }
 
                         if (SuccessStatus && Poles > (nItems / 3))
                         {
                             cmsSignalError(ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: Degenerated, mostly poles.");
-                            SuccessStatus = FALSE;
+                            SuccessStatus = notCheck;
                         }
 
                         if (SuccessStatus) // Seems ok
@@ -1352,7 +1394,14 @@ cmsInt32Number  CMSEXPORT cmsGetToneCurveParametricType(cmsContext ContextID, co
 // We need accuracy this time
 cmsFloat32Number CMSEXPORT cmsEvalToneCurveFloat(cmsContext ContextID, const cmsToneCurve* Curve, cmsFloat32Number v)
 {
+    return _cmsEvalToneCurveFloatWithSlopeLimit(ContextID, Curve, v, 0);
+}
+
+cmsFloat32Number _cmsEvalToneCurveFloatWithSlopeLimit(cmsContext ContextID, const cmsToneCurve* Curve, cmsFloat32Number v, int SlopeLimit)
+{
     _cmsAssert(Curve != NULL);
+
+    cmsFloat32Number result;
 
     // Check for 16 bits table. If so, this is a limited-precision tone curve
     if (Curve ->nSegments == 0) {
@@ -1362,10 +1411,23 @@ cmsFloat32Number CMSEXPORT cmsEvalToneCurveFloat(cmsContext ContextID, const cms
         In = (cmsUInt16Number) _cmsQuickSaturateWord(v * 65535.0);
         Out = cmsEvalToneCurve16(ContextID, Curve, In);
 
-        return (cmsFloat32Number) (Out / 65535.0);
+        result = (cmsFloat32Number) (Out / 65535.0);
+    }
+    else result = (cmsFloat32Number) EvalSegmentedFn(ContextID, Curve, v);
+
+    // Apply slope limit, if set to do so
+    if (SlopeLimit < 0) {       // < 0 means input tone curve
+
+        cmsFloat32Number factor = (cmsFloat32Number)(-SlopeLimit);
+        result = fmaxf(result, v / factor);
+    }
+    else if (SlopeLimit > 0) {  // > 0 means output tone curve
+
+        cmsFloat32Number factor = (cmsFloat32Number)(SlopeLimit);
+        result = fminf(result, v * factor);
     }
 
-    return (cmsFloat32Number) EvalSegmentedFn(ContextID, Curve, v);
+    return result;
 }
 
 // We need xput over here

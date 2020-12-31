@@ -571,7 +571,7 @@ void _cmsHandleExtraChannels(cmsContext ContextID, _cmsTRANSFORM* p, const void*
 
     // Check for conversions 8, 16, half, float, dbl
     copyValueFn = _cmsGetFormatterAlpha(ContextID, p->InputFormat, p->OutputFormat);
-    if (copyValueFn == NULL) 
+    if (copyValueFn == NULL)
         return;
 
     if (nExtra == 1) { // Optimized routine for copying a single extra channel quickly

@@ -8145,7 +8145,7 @@ int CheckProofingIntersection(cmsContext ContextID)
 }
 
 /**
-* In 2.11: When I create a RGB profile, set the copyright data with an empty string, 
+* In 2.11: When I create a RGB profile, set the copyright data with an empty string,
 * then call cmsMD5computeID on said profile, the program crashes.
 */
 static
@@ -8165,14 +8165,14 @@ int CheckEmptyMLUC(cmsContext ctx)
     cmsToneCurve* toneCurves[3] = { toneCurve, toneCurve, toneCurve };
 
     cmsHPROFILE profile = cmsCreateRGBProfile(ContextID, &white, &primaries, toneCurves);
-    
+
     cmsSetLogErrorHandler(ContextID, FatalErrorQuit);
 
     cmsFreeToneCurve(ContextID, toneCurve);
 
     // Set an empty copyright tag. This should log an error.
     cmsMLU* mlu = cmsMLUalloc(ContextID, 1);
-    
+
     cmsMLUsetASCII(ContextID, mlu, "en", "AU", "");
     cmsMLUsetWide(ContextID, mlu,  "en", "EN", L"");
     cmsWriteTag(ContextID, profile, cmsSigCopyrightTag, mlu);

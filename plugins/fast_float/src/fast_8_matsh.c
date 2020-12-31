@@ -31,7 +31,7 @@ typedef cmsInt32Number cmsS1Fixed14Number;   // Note that this may hold more tha
 typedef struct {
 
     // Alignment makes it faster
-    
+
     cmsS1Fixed14Number Mat[4][4];     // n.14 to n.14 (needs a saturation after that)
 
     void * real_ptr;
@@ -39,8 +39,7 @@ typedef struct {
     cmsS1Fixed14Number Shaper1R[256];  // from 0..255 to 1.14  (0.0...1.0)
     cmsS1Fixed14Number Shaper1G[256];
     cmsS1Fixed14Number Shaper1B[256];
-    
-    cmsUInt8Number Shaper2R[0x4001];    // 1.14 to 0..255 
+    cmsUInt8Number Shaper2R[0x4001];    // 1.14 to 0..255
     cmsUInt8Number Shaper2G[0x4001];
     cmsUInt8Number Shaper2B[0x4001];    
 
@@ -133,11 +132,11 @@ XMatShaper8Data* SetMatShaper(cmsContext ContextID, cmsToneCurve* Curve1[3], cms
     FillSecondShaper(ContextID, p ->Shaper2G, Curve2[1]);
     FillSecondShaper(ContextID, p ->Shaper2B, Curve2[2]);
 
-        
+
     // Convert matrix to nFixed14. Note that those values may take more than 16 bits as
     for (i=0; i < 3; i++) {
         for (j=0; j < 3; j++) {
-            p ->Mat[j][i] = DOUBLE_TO_1FIXED14(Mat->v[i].n[j]);            
+            p ->Mat[j][i] = DOUBLE_TO_1FIXED14(Mat->v[i].n[j]);
         }
     }
 
@@ -145,10 +144,10 @@ XMatShaper8Data* SetMatShaper(cmsContext ContextID, cmsToneCurve* Curve1[3], cms
     for (i=0; i < 3; i++) {
 
         if (Off == NULL) {
-            
+
             p->Mat[3][i] = DOUBLE_TO_1FIXED14(0.5);
         }
-        else {                              
+        else {
             p->Mat[3][i] = DOUBLE_TO_1FIXED14(Off->n[i] + 0.5);
         }
     }
@@ -172,7 +171,7 @@ void MatShaperXform8(cmsContext ContextID,
 {
     XMatShaper8Data* p = (XMatShaper8Data*) _cmsGetTransformUserData(CMMcargo);
 
-    register cmsS1Fixed14Number l1, l2, l3;
+    cmsS1Fixed14Number l1, l2, l3;
     cmsS1Fixed14Number r, g, b;
     cmsUInt32Number ri, gi, bi;
     cmsUInt32Number i, ii;
@@ -197,6 +196,9 @@ void MatShaperXform8(cmsContext ContextID,
     _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
     _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
 
+    if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
+        nalpha = 0;
+
     strideIn = strideOut = 0;
     for (i = 0; i < LineCount; i++) {
 
@@ -211,10 +213,10 @@ void MatShaperXform8(cmsContext ContextID,
            gout = (cmsUInt8Number*)Output + DestStartingOrder[1] + strideOut;
            bout = (cmsUInt8Number*)Output + DestStartingOrder[2] + strideOut;
            if (nalpha)
-                  aout = (cmsUInt8Number*)Output + DestStartingOrder[3] + strideOut;          
+                  aout = (cmsUInt8Number*)Output + DestStartingOrder[3] + strideOut;
 
            for (ii = 0; ii < PixelsPerLine; ii++) {
-                            
+
                   // Across first shaper, which also converts to 1.14 fixed point. 16 bits guaranteed.
                   r = p->Shaper1R[*rin];
                   g = p->Shaper1G[*gin];

@@ -62,7 +62,11 @@
 // even though sizeof(void *) is only four: for greatest flexibility
 // allow the build to specify ptr alignment.
 #ifndef CMS_PTR_ALIGNMENT
-# define CMS_PTR_ALIGNMENT sizeof(void *)
+# if defined(sparc) || defined(__sparc) || defined(__sparc__)
+#  define CMS_PTR_ALIGNMENT 8
+# else
+#  define CMS_PTR_ALIGNMENT sizeof(void *)
+# endif
 #endif
 
 #define _cmsALIGNMEM(x)  (((x)+(CMS_PTR_ALIGNMENT - 1)) & ~(CMS_PTR_ALIGNMENT - 1))
@@ -886,6 +890,9 @@ struct _cmsStage_struct {
     // A generic pointer to whatever memory needed by the stage
     void*               Data;
 
+    // Slope limit setting for tone curves (used internally)
+    int                 SlopeLimit;
+
     // Maintains linked list (used internally)
     struct _cmsStage_struct* Next;
 };
@@ -909,13 +916,12 @@ cmsStage*                          _cmsStageClipNegatives(cmsContext ContextID, 
 
 
 // For curve set only
-cmsToneCurve**     _cmsStageGetPtrToCurveSet(const cmsStage* mpe);
+cmsToneCurve**  _cmsStageGetPtrToCurveSet(const cmsStage* mpe);
 
+// Curve evaluation with slope limit
+cmsStage*          _cmsStageAllocToneCurvesWithSlopeLimit(cmsContext ContextID, cmsUInt32Number nChannels, cmsToneCurve* const Curves[], int SlopeLimit);
+cmsFloat32Number   _cmsEvalToneCurveFloatWithSlopeLimit(cmsContext ContextID, const cmsToneCurve* Curve, cmsFloat32Number v, int SlopeLimit);
 
-// Pipeline Evaluator (in floating point)
-typedef void (* _cmsPipelineEvalFloatFn)(cmsContext ContextID, const cmsFloat32Number In[],
-                                         cmsFloat32Number Out[],
-                                         const void* Data);
 
 struct _cmsPipeline_struct {
 
@@ -925,7 +931,7 @@ struct _cmsPipeline_struct {
     // Data & evaluators
     void *Data;
 
-   _cmsOPTeval16Fn         Eval16Fn;
+   _cmsPipelineEval16Fn    Eval16Fn;
    _cmsPipelineEvalFloatFn EvalFloatFn;
    _cmsFreeUserDataFn      FreeDataFn;
    _cmsDupUserDataFn       DupDataFn;
@@ -938,8 +944,8 @@ struct _cmsPipeline_struct {
 // Read tags using low-level function, provide necessary glue code to adapt versions, etc. All those return a brand new copy
 // of the LUTS, since ownership of original is up to the profile. The user should free allocated resources.
 
-CMSCHECKPOINT cmsPipeline* CMSEXPORT _cmsReadInputLUT(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number Intent);
-CMSCHECKPOINT cmsPipeline* CMSEXPORT _cmsReadOutputLUT(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number Intent);
+CMSCHECKPOINT cmsPipeline* CMSEXPORT _cmsReadInputLUT(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number Intent, int SlopeLimit);
+CMSCHECKPOINT cmsPipeline* CMSEXPORT _cmsReadOutputLUT(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number Intent, int SlopeLimit);
 CMSCHECKPOINT cmsPipeline* CMSEXPORT _cmsReadDevicelinkLUT(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number Intent);
 
 // Special values
@@ -969,14 +975,15 @@ cmsSEQ* _cmsCompileProfileSequence(cmsContext ContextID, cmsUInt32Number nProfil
 // LUT optimization ------------------------------------------------------------------------------------------------
 
 CMSCHECKPOINT cmsUInt16Number  CMSEXPORT _cmsQuantizeVal(cmsFloat64Number i, cmsUInt32Number MaxSamples);
-cmsUInt32Number  _cmsReasonableGridpointsByColorspace(cmsContext ContextID, cmsColorSpaceSignature Colorspace, cmsUInt32Number dwFlags);
+
+CMSAPI cmsUInt32Number  CMSEXPORT _cmsReasonableGridpointsByColorspace(cmsContext ContextID, cmsColorSpaceSignature Colorspace, cmsUInt32Number dwFlags);
 
 cmsBool          _cmsEndPointsBySpace(cmsColorSpaceSignature Space,
                                       cmsUInt16Number **White,
                                       cmsUInt16Number **Black,
                                       cmsUInt32Number *nOutputs);
 
-cmsBool          _cmsOptimizePipeline(cmsContext ContextID,
+CMSAPI cmsBool CMSEXPORT _cmsOptimizePipeline(cmsContext ContextID,
                                       cmsPipeline**    Lut,
                                       cmsUInt32Number  Intent,
                                       cmsUInt32Number* InputFormat,

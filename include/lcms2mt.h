@@ -23,7 +23,7 @@
 //
 //---------------------------------------------------------------------------------
 //
-// Version 2.11
+// Version 2.12rc0
 //
 
 #ifndef _lcms2mt_H
@@ -86,7 +86,7 @@ extern "C" {
 // use OUR numbers with a mainline LCMS to fail, so
 // we have to go under 2000-2100. Let's subtract
 // 2000 from the mainline release.
-#define LCMS_VERSION              (2110 - 2000)
+#define LCMS_VERSION              (2120 - 2000)
 
 // We expect any LCMS2MT release to fall within the
 // following range.
@@ -162,7 +162,7 @@ typedef double               cmsFloat64Number;
 #endif
 
 // Handle "register" keyword
-#if defined(CMS_NO_REGISTER_KEYWORD) && !defined(CMS_DLL) && !defined(CMS_DLL_BUILD)
+#if (defined(CMS_NO_REGISTER_KEYWORD) && !defined(CMS_DLL) && !defined(CMS_DLL_BUILD)) || defined(_HAS_CXX17)
 #  define CMSREGISTER
 #else
 #  define CMSREGISTER register
@@ -1642,6 +1642,10 @@ CMSAPI cmsUInt32Number  CMSEXPORT cmsGetSupportedIntents(cmsContext ContextID,
 #define cmsFLAGS_NOWHITEONWHITEFIXUP      0x0004    // Don't fix scum dot
 #define cmsFLAGS_HIGHRESPRECALC           0x0400    // Use more memory to give better accuracy
 #define cmsFLAGS_LOWRESPRECALC            0x0800    // Use less memory to minimize resources
+
+// Slope Limit
+#define cmsFLAGS_SLOPE_LIMIT_16       0x40000000    // Enable Slope Limit 16 (emulate ColorSync & Kodak CMM)
+#define cmsFLAGS_SLOPE_LIMIT_32       0x80000000    // Enable Slope Limit 32 (emulate Adobe CMM)
 
 // For devicelink creation
 #define cmsFLAGS_8BITS_DEVICELINK         0x0008   // Create 8 bits devicelinks

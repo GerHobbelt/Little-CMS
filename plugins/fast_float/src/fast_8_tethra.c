@@ -146,9 +146,11 @@ void PerformanceEval8(cmsContext ContextID,
 
        cmsUInt32Number nalpha, strideIn, strideOut;
 
-
        _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
        _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
+
+       if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
+           nalpha = 0;
 
        strideIn = strideOut = 0;
        for (i = 0; i < LineCount; i++) {

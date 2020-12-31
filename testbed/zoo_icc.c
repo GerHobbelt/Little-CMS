@@ -105,31 +105,29 @@ void ReadAllLUTS(cmsContext ContextID, cmsHPROFILE h)
     cmsPipeline* a;
     cmsCIEXYZ Black;
 
-    a = _cmsReadInputLUT(ContextID, h, INTENT_PERCEPTUAL);
+    a = _cmsReadInputLUT(ContextID, h, INTENT_PERCEPTUAL, 0);
     if (a) cmsPipelineFree(ContextID, a);
 
-    a = _cmsReadInputLUT(ContextID, h, INTENT_RELATIVE_COLORIMETRIC);
+    a = _cmsReadInputLUT(ContextID, h, INTENT_RELATIVE_COLORIMETRIC, 0);
     if (a) cmsPipelineFree(ContextID, a);
 
-    a = _cmsReadInputLUT(ContextID, h, INTENT_SATURATION);
+    a = _cmsReadInputLUT(ContextID, h, INTENT_SATURATION, 0);
     if (a) cmsPipelineFree(ContextID, a);
 
-    a = _cmsReadInputLUT(ContextID, h, INTENT_ABSOLUTE_COLORIMETRIC);
+    a = _cmsReadInputLUT(ContextID, h, INTENT_ABSOLUTE_COLORIMETRIC, 0);
     if (a) cmsPipelineFree(ContextID, a);
 
-
-    a = _cmsReadOutputLUT(ContextID, h, INTENT_PERCEPTUAL);
+    a = _cmsReadOutputLUT(ContextID, h, INTENT_PERCEPTUAL, 0);
     if (a) cmsPipelineFree(ContextID, a);
 
-    a = _cmsReadOutputLUT(ContextID, h, INTENT_RELATIVE_COLORIMETRIC);
+    a = _cmsReadOutputLUT(ContextID, h, INTENT_RELATIVE_COLORIMETRIC, 0);
     if (a) cmsPipelineFree(ContextID, a);
 
-    a = _cmsReadOutputLUT(ContextID, h, INTENT_SATURATION);
+    a = _cmsReadOutputLUT(ContextID, h, INTENT_SATURATION, 0);
     if (a) cmsPipelineFree(ContextID, a);
 
-    a = _cmsReadOutputLUT(ContextID, h, INTENT_ABSOLUTE_COLORIMETRIC);
+    a = _cmsReadOutputLUT(ContextID, h, INTENT_ABSOLUTE_COLORIMETRIC, 0);
     if (a) cmsPipelineFree(ContextID, a);
-
 
     a = _cmsReadDevicelinkLUT(ContextID, h, INTENT_PERCEPTUAL);
     if (a) cmsPipelineFree(ContextID, a);

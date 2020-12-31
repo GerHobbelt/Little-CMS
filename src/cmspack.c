@@ -2807,7 +2807,7 @@ cmsUInt8Number* UnrollHalfTo16(cmsContext ContextID, CMSREGISTER _cmsTRANSFORM* 
 
         if (Reverse) v = maximum - v;
 
-        wIn[index] = _cmsQuickSaturateWord(v * maximum);
+        wIn[index] = _cmsQuickSaturateWord((cmsFloat64Number) v * maximum);
     }
 
 

@@ -28,14 +28,16 @@
 
 
 // Allocates an empty multi profile element
-cmsStage* CMSEXPORT _cmsStageAllocPlaceholder(cmsContext ContextID,
+static
+cmsStage* _cmsStageAllocPlaceholderWithSlopeLimit(cmsContext ContextID,
                                 cmsStageSignature Type,
                                 cmsUInt32Number InputChannels,
                                 cmsUInt32Number OutputChannels,
                                 _cmsStageEvalFn     EvalPtr,
                                 _cmsStageDupElemFn  DupElemPtr,
                                 _cmsStageFreeElemFn FreePtr,
-                                void*             Data)
+                                void*               Data,
+                                int                 SlopeLimit)
 {
     cmsStage* ph = (cmsStage*) _cmsMallocZero(ContextID, sizeof(cmsStage));
 
@@ -50,8 +52,30 @@ cmsStage* CMSEXPORT _cmsStageAllocPlaceholder(cmsContext ContextID,
     ph ->DupElemPtr     = DupElemPtr;
     ph ->FreePtr        = FreePtr;
     ph ->Data           = Data;
+    ph ->SlopeLimit     = SlopeLimit;
 
     return ph;
+}
+
+
+cmsStage* CMSEXPORT _cmsStageAllocPlaceholder(cmsContext ContextID,
+                                cmsStageSignature   Type,
+                                cmsUInt32Number     InputChannels,
+                                cmsUInt32Number     OutputChannels,
+                                _cmsStageEvalFn     EvalPtr,
+                                _cmsStageDupElemFn  DupElemPtr,
+                                _cmsStageFreeElemFn FreePtr,
+                                void*               Data)
+{
+    return _cmsStageAllocPlaceholderWithSlopeLimit(ContextID,
+                                    Type,
+                                    InputChannels,
+                                    OutputChannels,
+                                    EvalPtr,
+                                    DupElemPtr,
+                                    FreePtr,
+                                    Data,
+                                    0);
 }
 
 
@@ -177,7 +201,7 @@ void EvaluateCurves(cmsContext ContextID, const cmsFloat32Number In[],
     if (Data ->TheCurves == NULL) return;
 
     for (i=0; i < Data ->nCurves; i++) {
-        Out[i] = cmsEvalToneCurveFloat(ContextID, Data ->TheCurves[i], In[i]);
+        Out[i] = _cmsEvalToneCurveFloatWithSlopeLimit(ContextID, Data ->TheCurves[i], In[i], mpe ->SlopeLimit);
     }
 }
 
@@ -245,13 +269,19 @@ Error:
 // Curves == NULL forces identity curves
 cmsStage* CMSEXPORT cmsStageAllocToneCurves(cmsContext ContextID, cmsUInt32Number nChannels, cmsToneCurve* const Curves[])
 {
+    return _cmsStageAllocToneCurvesWithSlopeLimit(ContextID, nChannels, Curves, 0);
+}
+
+
+cmsStage* _cmsStageAllocToneCurvesWithSlopeLimit(cmsContext ContextID, cmsUInt32Number nChannels, cmsToneCurve* const Curves[], int SlopeLimit)
+{
     cmsUInt32Number i;
     _cmsStageToneCurvesData* NewElem;
     cmsStage* NewMPE;
 
 
-    NewMPE = _cmsStageAllocPlaceholder(ContextID, cmsSigCurveSetElemType, nChannels, nChannels,
-                                     EvaluateCurves, CurveSetDup, CurveSetElemTypeFree, NULL );
+    NewMPE = _cmsStageAllocPlaceholderWithSlopeLimit(ContextID, cmsSigCurveSetElemType, nChannels, nChannels,
+                                     EvaluateCurves, CurveSetDup, CurveSetElemTypeFree, NULL, SlopeLimit );
     if (NewMPE == NULL) return NULL;
 
     NewElem = (_cmsStageToneCurvesData*) _cmsMallocZero(ContextID, sizeof(_cmsStageToneCurvesData));
@@ -399,10 +429,9 @@ cmsStage*  CMSEXPORT cmsStageAllocMatrix(cmsContext ContextID, cmsUInt32Number R
     if (NewElem == NULL) goto Error;
     NewMPE->Data = (void*)NewElem;
 
-
     NewElem ->Double = (cmsFloat64Number*) _cmsCalloc(ContextID, n, sizeof(cmsFloat64Number));
     if (NewElem->Double == NULL) goto Error;
-   
+
     for (i=0; i < n; i++) {
         NewElem ->Double[i] = Matrix[i];
     }
@@ -411,12 +440,12 @@ cmsStage*  CMSEXPORT cmsStageAllocMatrix(cmsContext ContextID, cmsUInt32Number R
 
         NewElem ->Offset = (cmsFloat64Number*) _cmsCalloc(ContextID, Rows, sizeof(cmsFloat64Number));
         if (NewElem->Offset == NULL) goto Error;
-           
+
         for (i=0; i < Rows; i++) {
                 NewElem ->Offset[i] = Offset[i];
         }
     }
-    
+
     return NewMPE;
 
 Error:
@@ -1245,14 +1274,15 @@ cmsStage* CMSEXPORT cmsStageDup(cmsContext ContextID, cmsStage* mpe)
     cmsStage* NewMPE;
 
     if (mpe == NULL) return NULL;
-    NewMPE = _cmsStageAllocPlaceholder(ContextID,
+    NewMPE = _cmsStageAllocPlaceholderWithSlopeLimit(ContextID,
                                      mpe ->Type,
                                      mpe ->InputChannels,
                                      mpe ->OutputChannels,
                                      mpe ->EvalPtr,
                                      mpe ->DupElemPtr,
                                      mpe ->FreePtr,
-                                     NULL);
+                                     NULL,
+                                     mpe ->SlopeLimit);
     if (NewMPE == NULL) return NULL;
 
     NewMPE ->Implements = mpe ->Implements;
@@ -1344,7 +1374,7 @@ void _LUTeval16(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], CM
 
 // Does evaluate the LUT on cmsFloat32Number-basis.
 static
-void _LUTevalFloat(cmsContext ContextID, CMSREGISTER const cmsFloat32Number In[], CMSREGISTER cmsFloat32Number Out[], const void* D)
+void _LUTevalFloat(cmsContext ContextID, const cmsFloat32Number In[], cmsFloat32Number Out[], const void* D)
 {
     cmsPipeline* lut = (cmsPipeline*) D;
     cmsStage *mpe;
@@ -1662,7 +1692,7 @@ cmsUInt32Number CMSEXPORT cmsPipelineStageCount(cmsContext ContextID, const cmsP
 // This function may be used to set the optional evaluator and a block of private data. If private data is being used, an optional
 // duplicator and free functions should also be specified in order to duplicate the LUT construct. Use NULL to inhibit such functionality.
 void CMSEXPORT _cmsPipelineSetOptimizationParameters(cmsContext ContextID, cmsPipeline* Lut,
-                                        _cmsOPTeval16Fn Eval16,
+                                        _cmsPipelineEval16Fn Eval16,
                                         void* PrivateData,
                                         _cmsFreeUserDataFn FreePrivateDataFn,
                                         _cmsDupUserDataFn  DupPrivateDataFn)

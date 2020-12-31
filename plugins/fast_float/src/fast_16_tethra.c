@@ -22,7 +22,7 @@
 #include "fast_float_internal.h"
 
 // lcms internal
-cmsBool  _cmsOptimizePipeline(cmsContext ContextID,
+CMSAPI cmsBool  CMSEXPORT _cmsOptimizePipeline(cmsContext ContextID,
                               cmsPipeline** Lut,
                               cmsUInt32Number  Intent,
                               cmsUInt32Number* InputFormat,
@@ -114,12 +114,14 @@ void PerformanceEval16(cmsContext ContextID,
 
        cmsUInt32Number dwInFormat = cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo);
        cmsUInt32Number dwOutFormat = cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo);
-
        _cmsComputeComponentIncrements(dwInFormat, Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
        _cmsComputeComponentIncrements(dwOutFormat, Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
 
        in16  = (T_BYTES(dwInFormat) == 2);
        out16 = (T_BYTES(dwOutFormat) == 2);
+
+       if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
+           nalpha = 0;
 
        strideIn = strideOut = 0;
        for (i = 0; i < LineCount; i++) {
@@ -347,7 +349,6 @@ cmsBool Optimize16BitRGBTransform(cmsContext ContextID,
     if (cmsPipelineCheckAndRetreiveStages(ContextID, *Lut, 2,
         cmsSigCurveSetElemType, cmsSigCurveSetElemType,
         NULL, NULL)) return FALSE;
-
 
    // Named color pipelines cannot be optimized either
    for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, *Lut);

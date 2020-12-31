@@ -10,7 +10,7 @@ static volatile int rc = 0;
 static
 void* MyMtxCreate(cmsContext id)
 {
-   return (void*) CreateMutex( NULL, FALSE, NULL);   
+   return (void*) CreateMutex( NULL, FALSE, NULL);
 }
 
 static
@@ -34,10 +34,10 @@ void MyMtxUnlock(cmsContext id, void* mtx)
 
 
 static cmsPluginMutex MutexPluginSample = {
-                           
-     { cmsPluginMagicNumber, 2060, cmsPluginMutexSig, NULL}, 
 
-     MyMtxCreate,  MyMtxDestroy,  MyMtxLock,  MyMtxUnlock                       
+     { cmsPluginMagicNumber, 2060, cmsPluginMutexSig, NULL},
+
+     MyMtxCreate,  MyMtxDestroy,  MyMtxLock,  MyMtxUnlock
 };
 
 
@@ -52,28 +52,28 @@ static DWORD WINAPI one_thread(LPVOID lpParameter)
 
     for (i=0; i < 100000; i++) {
 
-        for (j=0; j < 1000; j++) 
+        for (j=0; j < 1000; j++)
         {
             rgb[j * 3    ] = 189;
             rgb[j * 3 + 1] = 100;
             rgb[j * 3 + 2] = 75;
         }
         cmsDoTransform(ctx, xform, rgb, cmyk, 1000);
-        for (j=0; j < 1000; j++) 
+        for (j=0; j < 1000; j++)
         {
             if (cmyk[j * 4 ] != 37 ||
                 cmyk[j * 4 + 1 ] != 188 ||
                 cmyk[j * 4 + 2 ] != 195 ||
-                cmyk[j * 4 + 3 ] != 7) 
+                cmyk[j * 4 + 3 ] != 7)
             {
-                OutputDebugString(L"ERROR\n"); 
+                OutputDebugString(L"ERROR\n");
                 rc = 1;
             }
 
         }
 
     }
-        
+
     cmsDeleteTransform(ctx, xform);
 
     return 0;
@@ -82,15 +82,14 @@ static DWORD WINAPI one_thread(LPVOID lpParameter)
 int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,int nCmdShow)
 {
     int i;
-    cmsContext ctx;
 
-    OutputDebugString(L"Test in progress...\n"); 
+    OutputDebugString(L"Test in progress...\n");
 
     ctx = cmsCreateContext(NULL, 0);
 
     prof_cmyk = cmsOpenProfileFromFile(ctx, "USWebCoatedSWOP.icc", "r");
     prof_rgb = cmsOpenProfileFromFile(ctx, "AdobeRGB1998.icc", "r");
-   
+
 
 #define NWORKERS 10
 
@@ -114,7 +113,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
     cmsCloseProfile(ctx, prof_cmyk);
     cmsDeleteContext(ctx);
 
-    OutputDebugString(L"Test Done\n"); 
+    OutputDebugString(L"Test Done\n");
 
     return rc;
 }
