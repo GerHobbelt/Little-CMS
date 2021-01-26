@@ -807,7 +807,7 @@ int EmitCIEBasedDEF(cmsContext ContextID, cmsIOHANDLER* m, cmsPipeline* Pipeline
 
     if (cmsStageType(ContextID, mpe) == cmsSigCurveSetElemType) {
 
-        numchans = cmsStageOutputChannels(ContextID, mpe);
+        numchans = (int) cmsStageOutputChannels(ContextID, mpe);
         for (i = 0; i < numchans; ++i) {
             snprintf(buffer, sizeof(buffer), "lcms2gammaproc%d", i);
             buffer[sizeof(buffer) - 1] = '\0';
