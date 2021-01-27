@@ -3760,64 +3760,64 @@ Error:
 
 // For educational purposes ONLY. No error checking is performed!
 static
-cmsInt32Number CreateNamedColorProfile(void)
+cmsInt32Number CreateNamedColorProfile(cmsContext ContextID)
 {     
     // Color list database
-    cmsNAMEDCOLORLIST* colors = cmsAllocNamedColorList(0, 10, 4, "PANTONE", "TCX");
+    cmsNAMEDCOLORLIST* colors = cmsAllocNamedColorList(ContextID, 0, 10, 4, "PANTONE", "TCX");
 
     // Containers for names
     cmsMLU* DescriptionMLU, *CopyrightMLU;
 
     // Create n empty profile
-    cmsHPROFILE hProfile = cmsOpenProfileFromFile("named.icc", "w");
+    cmsHPROFILE hProfile = cmsOpenProfileFromFile(ContextID, "named.icc", "w");
     
     // Values
     cmsCIELab Lab;
     cmsUInt16Number PCS[3], Colorant[4];
 
     // Set profile class
-    cmsSetProfileVersion(hProfile, 4.3);
-    cmsSetDeviceClass(hProfile, cmsSigNamedColorClass);
-    cmsSetColorSpace(hProfile, cmsSigCmykData);
-    cmsSetPCS(hProfile, cmsSigLabData);
-    cmsSetHeaderRenderingIntent(hProfile, INTENT_PERCEPTUAL);
+    cmsSetProfileVersion(ContextID, hProfile, 4.3);
+    cmsSetDeviceClass(ContextID, hProfile, cmsSigNamedColorClass);
+    cmsSetColorSpace(ContextID, hProfile, cmsSigCmykData);
+    cmsSetPCS(ContextID, hProfile, cmsSigLabData);
+    cmsSetHeaderRenderingIntent(ContextID, hProfile, INTENT_PERCEPTUAL);
         
     // Add description and copyright only in english/US
-    DescriptionMLU = cmsMLUalloc(0, 1);
-    CopyrightMLU   = cmsMLUalloc(0, 1);
+    DescriptionMLU = cmsMLUalloc(ContextID, 0, 1);
+    CopyrightMLU   = cmsMLUalloc(ContextID, 0, 1);
 
-    cmsMLUsetWide(DescriptionMLU, "en", "US", L"Profile description");
-    cmsMLUsetWide(CopyrightMLU,   "en", "US", L"Profile copyright");
+    cmsMLUsetWide(ContextID, DescriptionMLU, "en", "US", L"Profile description");
+    cmsMLUsetWide(ContextID, CopyrightMLU,   "en", "US", L"Profile copyright");
 
-    cmsWriteTag(hProfile, cmsSigProfileDescriptionTag, DescriptionMLU);
-    cmsWriteTag(hProfile, cmsSigCopyrightTag, CopyrightMLU);
+    cmsWriteTag(ContextID, hProfile, cmsSigProfileDescriptionTag, DescriptionMLU);
+    cmsWriteTag(ContextID, hProfile, cmsSigCopyrightTag, CopyrightMLU);
 
     // Set the media white point
-    cmsWriteTag(hProfile, cmsSigMediaWhitePointTag, cmsD50_XYZ());
+    cmsWriteTag(ContextID, hProfile, cmsSigMediaWhitePointTag, cmsD50_XYZ(ContextID));
 
 
     // Populate one value, Colorant = CMYK values in 16 bits, PCS[] = Encoded Lab values (in V2 format!!)
     Lab.L = 50; Lab.a = 10; Lab.b = -10;
-    cmsFloat2LabEncodedV2(PCS, &Lab); 
+    cmsFloat2LabEncodedV2(ContextID, PCS, &Lab);
     Colorant[0] = 10 * 257; Colorant[1] = 20 * 257; Colorant[2] = 30 * 257; Colorant[3] = 40 * 257;
-    cmsAppendNamedColor(colors, "Hazelnut 14-1315", PCS, Colorant);
+    cmsAppendNamedColor(ContextID, colors, "Hazelnut 14-1315", PCS, Colorant);
 
     // Another one. Consider to write a routine for that
     Lab.L = 40; Lab.a = -5; Lab.b = 8;
-    cmsFloat2LabEncodedV2(PCS, &Lab);
+    cmsFloat2LabEncodedV2(ContextID, PCS, &Lab);
     Colorant[0] = 10 * 257; Colorant[1] = 20 * 257; Colorant[2] = 30 * 257; Colorant[3] = 40 * 257;
-    cmsAppendNamedColor(colors, "Kale 18-0107", PCS, Colorant);
+    cmsAppendNamedColor(ContextID, colors, "Kale 18-0107", PCS, Colorant);
 
     // Write the colors database
-    cmsWriteTag(hProfile, cmsSigNamedColor2Tag, colors);
+    cmsWriteTag(ContextID, hProfile, cmsSigNamedColor2Tag, colors);
 
     // That will create the file
-    cmsCloseProfile(hProfile);
+    cmsCloseProfile(ContextID, hProfile);
 
     // Free resources
-    cmsFreeNamedColorList(colors);
-    cmsMLUfree(DescriptionMLU);
-    cmsMLUfree(CopyrightMLU);
+    cmsFreeNamedColorList(ContextID, colors);
+    cmsMLUfree(ContextID, DescriptionMLU);
+    cmsMLUfree(ContextID, CopyrightMLU);
 
     remove("named.icc");
 
