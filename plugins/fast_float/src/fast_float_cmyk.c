@@ -330,7 +330,6 @@ cmsBool OptimizeCLUTCMYKTransform(cmsContext ContextID,
     int nGridPoints;
     cmsPipeline* OptimizedLUT = NULL;
     cmsStage* OptimizedCLUTmpe;
-    cmsColorSpaceSignature OutputColorSpace;
     cmsStage* mpe;
     FloatCMYKData* pcmyk;
     _cmsStageCLutData* data;
@@ -356,8 +355,7 @@ cmsBool OptimizeCLUTCMYKTransform(cmsContext ContextID,
             if (cmsStageType(ContextID, mpe) == cmsSigNamedColorElemType) return FALSE;
     }
 
-    OutputColorSpace = _cmsICCcolorSpace(ContextID, T_COLORSPACE(*OutputFormat));
-    nGridPoints      = _cmsReasonableGridpointsByColorspace(cmsSigRgbData, *dwFlags);
+    nGridPoints = _cmsReasonableGridpointsByColorspace(cmsSigRgbData, *dwFlags);
 
     // Create the result LUT
     OptimizedLUT = cmsPipelineAlloc(ContextID, 4, cmsPipelineOutputChannels(ContextID, OriginalLut));
