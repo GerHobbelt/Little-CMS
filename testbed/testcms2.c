@@ -3761,16 +3761,16 @@ Error:
 // For educational purposes ONLY. No error checking is performed!
 static
 cmsInt32Number CreateNamedColorProfile(cmsContext ContextID)
-{     
+{
     // Color list database
-    cmsNAMEDCOLORLIST* colors = cmsAllocNamedColorList(ContextID, 0, 10, 4, "PANTONE", "TCX");
+    cmsNAMEDCOLORLIST* colors = cmsAllocNamedColorList(ContextID, 10, 4, "PANTONE", "TCX");
 
     // Containers for names
     cmsMLU* DescriptionMLU, *CopyrightMLU;
 
     // Create n empty profile
     cmsHPROFILE hProfile = cmsOpenProfileFromFile(ContextID, "named.icc", "w");
-    
+
     // Values
     cmsCIELab Lab;
     cmsUInt16Number PCS[3], Colorant[4];
@@ -3781,10 +3781,10 @@ cmsInt32Number CreateNamedColorProfile(cmsContext ContextID)
     cmsSetColorSpace(ContextID, hProfile, cmsSigCmykData);
     cmsSetPCS(ContextID, hProfile, cmsSigLabData);
     cmsSetHeaderRenderingIntent(ContextID, hProfile, INTENT_PERCEPTUAL);
-        
+
     // Add description and copyright only in english/US
-    DescriptionMLU = cmsMLUalloc(ContextID, 0, 1);
-    CopyrightMLU   = cmsMLUalloc(ContextID, 0, 1);
+    DescriptionMLU = cmsMLUalloc(ContextID, 1);
+    CopyrightMLU   = cmsMLUalloc(ContextID, 1);
 
     cmsMLUsetWide(ContextID, DescriptionMLU, "en", "US", L"Profile description");
     cmsMLUsetWide(ContextID, CopyrightMLU,   "en", "US", L"Profile copyright");
@@ -8218,7 +8218,7 @@ int CheckProofingIntersection(cmsContext ContextID)
 static
 int CheckEmptyMLUC(cmsContext ctx)
 {
-    cmsContext ContextID = cmsCreateContext(NULL, NULL);    
+    cmsContext ContextID = cmsCreateContext(NULL, NULL);
     cmsCIExyY white = { 0.31271, 0.32902, 1.0 };
     cmsCIExyYTRIPLE primaries =
     {
@@ -8975,7 +8975,7 @@ int main(int argc, char* argv[])
     }
 
 #ifdef LCMS_FAST_EXTENSIONS
-   printf("Installing fast float extension ...");   
+   printf("Installing fast float extension ...");
    cmsPlugin(cmsFastFloatExtensions());
    printf("done.\n");
 #endif
