@@ -72,10 +72,9 @@ static
 void HandleSwitches(int argc, char *argv[])
 {
        int s;
-      
        while ((s = xgetopt(argc,argv,"uUbBI:i:O:o:T:t:c:C:n:N:-:")) != EOF) {
 
-       switch (s) 
+       switch (s)
        {
 
        case '-':
@@ -88,7 +87,7 @@ void HandleSwitches(int argc, char *argv[])
                FatalError("Unknown option - run without args to see valid ones.\n");
            }
            break;
-	 
+
        case 'i':
        case 'I':
             cInProf = xoptarg;
@@ -246,5 +245,3 @@ int main(int argc, char *argv[])
 
       return 0;
 }
-
-

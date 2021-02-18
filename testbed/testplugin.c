@@ -236,7 +236,8 @@ void Fake1Dfloat(cmsContext ContextID, const cmsFloat32Number Value[],
 
 // This fake interpolation just uses scrambled negated indexes for output
 static
-void Fake3D16(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[],
+void Fake3D16(cmsContext ContextID,
+              CMSREGISTER const cmsUInt16Number Input[],
               CMSREGISTER cmsUInt16Number Output[],
               CMSREGISTER const struct _cms_interp_struc* p)
 {
@@ -628,8 +629,9 @@ Error:
 
 #define TYPE_RGB_565  (COLORSPACE_SH(PT_RGB)|CHANNELS_SH(3)|BYTES_SH(0) | (1 << 23))
 
-cmsUInt8Number* my_Unroll565(cmsContext ContextID, CMSREGISTER struct _cmstransform_struct* nfo,
-                            CMSREGISTER cmsUInt16Number wIn[], 
+cmsUInt8Number* my_Unroll565(cmsContext ContextID,
+                            CMSREGISTER struct _cmstransform_struct* nfo,
+                            CMSREGISTER cmsUInt16Number wIn[],
                             CMSREGISTER cmsUInt8Number* accum,
                             CMSREGISTER cmsUInt32Number Stride)
 {
@@ -646,7 +648,8 @@ cmsUInt8Number* my_Unroll565(cmsContext ContextID, CMSREGISTER struct _cmstransf
     return accum + 2;
 }
 
-cmsUInt8Number* my_Pack565(cmsContext ContextID, CMSREGISTER _cmsTRANSFORM* info, 
+cmsUInt8Number* my_Pack565(cmsContext ContextID,
+                           CMSREGISTER _cmsTRANSFORM* info,
                            CMSREGISTER cmsUInt16Number wOut[],
                            CMSREGISTER cmsUInt8Number* output,
                            CMSREGISTER cmsUInt32Number Stride)
@@ -1100,7 +1103,8 @@ Error:
 // --------------------------------------------------------------------------------------------------
 
 static
-void FastEvaluateCurves(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
+void FastEvaluateCurves(cmsContext ContextID,
+                        CMSREGISTER const cmsUInt16Number In[],
                         CMSREGISTER cmsUInt16Number Out[],
                         CMSREGISTER const void* Data)
 {
@@ -1517,4 +1521,3 @@ cmsInt32Number CheckMethodPackDoublesFromFloat(cmsContext ContextID)
 
     return 1;
 }
-

@@ -94,8 +94,8 @@ void Help()
     fprintf(stderr, "\nflags:\n\n");
 
 
-    fprintf(stderr, "-o<tiff>   - Output TIFF file\n");   
-    fprintf(stderr, "-g<CGATS>  - Output results in CGATS file\n");       
+    fprintf(stderr, "-o<tiff>   - Output TIFF file\n");
+    fprintf(stderr, "-g<CGATS>  - Output results in CGATS file\n");
 
     fprintf(stderr, "\n");
 
@@ -705,5 +705,3 @@ int main(int argc, char* argv[])
 
       return 0;
 }
-
-

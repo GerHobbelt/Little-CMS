@@ -1725,7 +1725,8 @@ cmsUInt16Number Fn8D3(cmsUInt16Number a1, cmsUInt16Number a2, cmsUInt16Number a3
 
 
 static
-cmsInt32Number Sampler3D(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
+cmsInt32Number Sampler3D(cmsContext ContextID,
+               CMSREGISTER const cmsUInt16Number In[],
                CMSREGISTER cmsUInt16Number Out[],
                CMSREGISTER void * Cargo)
 {
@@ -1741,7 +1742,8 @@ cmsInt32Number Sampler3D(cmsContext ContextID, CMSREGISTER const cmsUInt16Number
 }
 
 static
-cmsInt32Number Sampler4D(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
+cmsInt32Number Sampler4D(cmsContext ContextID,
+               CMSREGISTER const cmsUInt16Number In[],
                CMSREGISTER cmsUInt16Number Out[],
                CMSREGISTER void * Cargo)
 {
@@ -1756,7 +1758,8 @@ cmsInt32Number Sampler4D(cmsContext ContextID, CMSREGISTER const cmsUInt16Number
 }
 
 static
-cmsInt32Number Sampler5D(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
+cmsInt32Number Sampler5D(cmsContext ContextID,
+               CMSREGISTER const cmsUInt16Number In[],
                CMSREGISTER cmsUInt16Number Out[],
                CMSREGISTER void * Cargo)
 {
@@ -1771,7 +1774,8 @@ cmsInt32Number Sampler5D(cmsContext ContextID, CMSREGISTER const cmsUInt16Number
 }
 
 static
-cmsInt32Number Sampler6D(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
+cmsInt32Number Sampler6D(cmsContext ContextID,
+               CMSREGISTER const cmsUInt16Number In[],
                CMSREGISTER cmsUInt16Number Out[],
                CMSREGISTER void * Cargo)
 {
@@ -1786,7 +1790,8 @@ cmsInt32Number Sampler6D(cmsContext ContextID, CMSREGISTER const cmsUInt16Number
 }
 
 static
-cmsInt32Number Sampler7D(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
+cmsInt32Number Sampler7D(cmsContext ContextID,
+               CMSREGISTER const cmsUInt16Number In[],
                CMSREGISTER cmsUInt16Number Out[],
                CMSREGISTER void * Cargo)
 {
@@ -1801,7 +1806,8 @@ cmsInt32Number Sampler7D(cmsContext ContextID, CMSREGISTER const cmsUInt16Number
 }
 
 static
-cmsInt32Number Sampler8D(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
+cmsInt32Number Sampler8D(cmsContext ContextID,
+               CMSREGISTER const cmsUInt16Number In[],
                CMSREGISTER cmsUInt16Number Out[],
                CMSREGISTER void * Cargo)
 {
@@ -3763,7 +3769,7 @@ static
 cmsInt32Number CreateNamedColorProfile(cmsContext ContextID)
 {
     // Color list database
-    cmsNAMEDCOLORLIST* colors = cmsAllocNamedColorList(ContextID, 10, 4, "PANTONE", "TCX");
+    cmsNAMEDCOLORLIST* colors = cmsAllocNamedColorList(ContextID, 0, 10, 4, "PANTONE", "TCX");
 
     // Containers for names
     cmsMLU* DescriptionMLU, *CopyrightMLU;
@@ -3793,7 +3799,7 @@ cmsInt32Number CreateNamedColorProfile(cmsContext ContextID)
     cmsWriteTag(ContextID, hProfile, cmsSigCopyrightTag, CopyrightMLU);
 
     // Set the media white point
-    cmsWriteTag(ContextID, hProfile, cmsSigMediaWhitePointTag, cmsD50_XYZ(ContextID));
+    cmsWriteTag(ContextID, hProfile, cmsSigMediaWhitePointTag, cmsD50_XYZ());
 
 
     // Populate one value, Colorant = CMYK values in 16 bits, PCS[] = Encoded Lab values (in V2 format!!)

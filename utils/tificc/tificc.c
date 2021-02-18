@@ -926,7 +926,7 @@ int TransformImage(cmsContext ContextID, TIFF* in, TIFF* out, const char *cDefIn
 
 // Print help
 static
-void Help(int level)
+void Help(cmsContext ContextID, int level)
 {
     UTILS_UNUSED_PARAMETER(level);
 
@@ -940,7 +940,7 @@ void Help(int level)
 
     PrintBuiltins();
 
-    PrintRenderingIntents();
+    PrintRenderingIntents(ContextID);
 
     fprintf(stderr, "-b - Black point compensation\n");
     fprintf(stderr, "-d<0..1> - Observer adaptation state (abs.col. only)\n");
@@ -965,7 +965,6 @@ void Help(int level)
 
     fprintf(stderr, "-k<0..400> - Ink-limiting in %% (CMYK only)\n");
     fprintf(stderr, "\n");
-    
 
     fprintf(stderr, "Examples:\n\n"
         "To color correct from scanner to sRGB:\n"
@@ -994,7 +993,7 @@ void Help(int level)
 // The toggles stuff
 
 static
-void HandleSwitches(int argc, char *argv[])
+void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
 {
     int s;
 
@@ -1006,7 +1005,7 @@ void HandleSwitches(int argc, char *argv[])
         case '-':
             if (strcmp(xoptarg, "help") == 0)
             {
-                Help(0);
+                Help(ContextID, 0);
             }
             else
             {
@@ -1120,7 +1119,7 @@ void HandleSwitches(int argc, char *argv[])
         case 'h':  {
 
             int a =  atoi(xoptarg);
-            Help(a);
+            Help(ContextID, a);
             }
             break;
 
@@ -1150,11 +1149,11 @@ int main(int argc, char* argv[])
 
     InitUtils(ContextID, "tificc");
 
-    HandleSwitches(argc, argv);
+    HandleSwitches(ContextID, argc, argv);
 
     if ((argc - xoptind) != 2) {
 
-        Help(0);
+        Help(ContextID, 0);
     }
 
 

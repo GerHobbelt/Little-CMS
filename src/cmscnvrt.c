@@ -749,7 +749,7 @@ cmsPipeline*  BlackPreservingKOnlyIntents(cmsContext     ContextID,
         ICCIntents[i] = TranslateNonICCIntents(TheIntents[i]);
 
 
-    // Trim all CMYK devicelinks at the end  
+    // Trim all CMYK devicelinks at the end
     lastProfilePos = nProfiles - 1;
     hLastProfile = hProfiles[lastProfilePos];
 
@@ -814,7 +814,7 @@ cmsPipeline*  BlackPreservingKOnlyIntents(cmsContext     ContextID,
     if (!cmsStageSampleCLut16bit(ContextID, CLUT, BlackPreservingGrayOnlySampler, (void*) &bp, 0))
         goto Error;
 
-    
+
     // Insert possible devicelinks at the end
     for (i = lastProfilePos + 1; i < nProfiles; i++)
     {
@@ -975,17 +975,17 @@ cmsPipeline* BlackPreservingKPlaneIntents(cmsContext     ContextID,
     for (i=0; i < nProfiles; i++)
         ICCIntents[i] = TranslateNonICCIntents(TheIntents[i]);
 
-    // Trim all CMYK devicelinks at the end  
+    // Trim all CMYK devicelinks at the end
     lastProfilePos = nProfiles - 1;
     hLastProfile = hProfiles[lastProfilePos];
 
     while (lastProfilePos > 1)
-    {   
+    {
         hLastProfile = hProfiles[--lastProfilePos];
         if (cmsGetColorSpace(ContextID, hLastProfile) != cmsSigCmykData ||
             cmsGetDeviceClass(ContextID, hLastProfile) != cmsSigLinkClass)
-            break;        
-    } 
+            break;
+    }
 
     preservationProfilesCount = lastProfilePos + 1;
 
@@ -1062,9 +1062,9 @@ cmsPipeline* BlackPreservingKPlaneIntents(cmsContext     ContextID,
 
     cmsStageSampleCLut16bit(ContextID, CLUT, BlackPreservingSampler, (void*) &bp, 0);
 
-    // Insert possible devicelinks at the end    
+    // Insert possible devicelinks at the end
     for (i = lastProfilePos + 1; i < nProfiles; i++)
-    {        
+    {
         cmsPipeline* devlink = _cmsReadDevicelinkLUT(ContextID, hProfiles[i], ICCIntents[i]);
         if (devlink == NULL)
             goto Cleanup;

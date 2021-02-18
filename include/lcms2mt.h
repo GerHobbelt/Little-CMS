@@ -81,7 +81,7 @@ extern "C" {
 #endif
 
 // Version/release
-// Vanilla LCMS2 uses values from 2000-2100. This is
+// Vanilla LCMS2 uses values from 2000-2120. This is
 // used as an unsigned number. We want any attempt to
 // use OUR numbers with a mainline LCMS to fail, so
 // we have to go under 2000-2100. Let's subtract

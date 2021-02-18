@@ -205,7 +205,6 @@ cmsInt32Number checkSingleComputeIncrements(cmsUInt32Number Format, cmsUInt32Num
               return 0;
 
        nTotal = nAlpha + nChannels;
-     
        for (i = 0; i < nTotal; i++)
        {
               cmsUInt32Number so = va_arg(args, cmsUInt32Number);
@@ -786,9 +785,6 @@ void CheckChangeFormat(cmsContext ContextID)
 
     xform = cmsCreateTransform(ContextID, hsRGB, TYPE_RGB_16, hLab, TYPE_Lab_16, INTENT_PERCEPTUAL, 0);
 
-    cmsCloseProfile(ContextID, hsRGB);
-    cmsCloseProfile(ContextID, hLab);
-
     cmsDoTransform(ContextID, xform, rgb16, lab16_1, 1);
 
     xform2 = cmsCloneTransformChangingFormats(ContextID, xform, TYPE_RGB_8, TYPE_Lab_16);
@@ -935,14 +931,14 @@ cmsFloat32Number distance(cmsFloat32Number rgb1[], cmsFloat32Number rgb2[])
 }
 
 static
-void CheckLab2RGB(void)
+void CheckLab2RGB(cmsContext plugin)
 {
-    cmsHPROFILE hLab = cmsCreateLab4Profile(NULL);
-    cmsHPROFILE hRGB = cmsOpenProfileFromFile("test3.icc", "r");
+    cmsHPROFILE hLab = cmsCreateLab4Profile(plugin);
+    cmsHPROFILE hRGB = cmsOpenProfileFromFile(plugin, "test3.icc", "r");
     cmsContext noPlugin = cmsCreateContext(0, 0);
 
-    cmsHTRANSFORM hXformNoPlugin = cmsCreateTransformTHR(noPlugin, hLab, TYPE_Lab_FLT, hRGB, TYPE_RGB_FLT, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_NOCACHE);
-    cmsHTRANSFORM hXformPlugin = cmsCreateTransformTHR(0, hLab, TYPE_Lab_FLT, hRGB, TYPE_RGB_FLT, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_NOCACHE);
+    cmsHTRANSFORM hXformNoPlugin = cmsCreateTransform(noPlugin, hLab, TYPE_Lab_FLT, hRGB, TYPE_RGB_FLT, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_NOCACHE);
+    cmsHTRANSFORM hXformPlugin = cmsCreateTransform(plugin, hLab, TYPE_Lab_FLT, hRGB, TYPE_RGB_FLT, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_NOCACHE);
 
     cmsFloat32Number Lab[3], RGB[3], RGB2[3];
 
@@ -962,7 +958,7 @@ void CheckLab2RGB(void)
 
                 d = distance(RGB, RGB2);
                 if (d > maxInside)
-                    maxInside = d;                   
+                    maxInside = d;
             }
     }
 
@@ -991,7 +987,7 @@ void CheckLab2RGB(void)
     cmsDeleteTransform(hXformNoPlugin);
     cmsDeleteTransform(hXformPlugin);
 
-    cmsDeleteContext(noPlugin);    
+    cmsDeleteContext(noPlugin);
 }
 
 
@@ -1026,24 +1022,24 @@ cmsHPROFILE loadProfile(const char* name)
     {
         if (strcmp(name, "*lab") == 0)
         {
-            return cmsCreateLab4Profile(NULL);
+            return cmsCreateLab4Profile(ct);
         }
         else
             if (strcmp(name, "*xyz") == 0)
             {
-                return cmsCreateXYZProfile();
+                return cmsCreateXYZProfile(ct);
             }
             else
                 if (strcmp(name, "*curves") == 0)
                 {
-                    return CreateCurves();
+                    return CreateCurves(ct);
                 }
                 else
                     Fail("Unknown builtin '%s'", name);
 
     }
-    
-    return cmsOpenProfileFromFile(name, "r");
+
+    return cmsOpenProfileFromFile(ct, name, "r");
 }
 
 
@@ -1052,7 +1048,7 @@ cmsFloat64Number Performance(const char* Title, perf_fn fn, cmsContext ct, const
 {
        cmsHPROFILE hlcmsProfileIn = loadProfile(inICC);
        cmsHPROFILE hlcmsProfileOut = loadProfile(outICC);
-                 
+
        cmsFloat64Number n = fn(ct, hlcmsProfileIn, hlcmsProfileOut);
 
        printf("%-30s: ", Title); fflush(stdout);
@@ -1471,9 +1467,9 @@ void SpeedTest15(cmsContext ct)
        printf(    "===============================================================\n\n");
 
        PerformanceHeader();
-       Performance("15 bits on CLUT profiles         ", SpeedTest15bitsRGB, ct, "test5.icc", "test3.icc", sizeof(Scanline_rgb15bits), 0);
-       Performance("15 bits on Matrix-Shaper profiles", SpeedTest15bitsRGB, ct, "test5.icc", "test0.icc", sizeof(Scanline_rgb15bits), 0);
-       Performance("15 bits on same Matrix-Shaper    ", SpeedTest15bitsRGB, ct, "test0.icc", "test0.icc", sizeof(Scanline_rgb15bits), 0);
+       Performance("15 bits on CLUT profiles         ", SpeedTest15bitsRGB, ct, "test5.icc", "test3.icc",  sizeof(Scanline_rgb15bits), 0);
+       Performance("15 bits on Matrix-Shaper profiles", SpeedTest15bitsRGB, ct, "test5.icc", "test0.icc",  sizeof(Scanline_rgb15bits), 0);
+       Performance("15 bits on same Matrix-Shaper    ", SpeedTest15bitsRGB, ct, "test0.icc", "test0.icc",  sizeof(Scanline_rgb15bits), 0);
        Performance("15 bits on curves                ", SpeedTest15bitsRGB, ct, "*curves",   "*curves",    sizeof(Scanline_rgb15bits), 0);
        Performance("15 bits on CMYK CLUT profiles    ", SpeedTest15bitsCMYK, ct, "test1.icc", "test2.icc", sizeof(Scanline_rgba15bits), 0);
 }
@@ -1500,11 +1496,11 @@ void SpeedTest16(cmsContext ct)
     printf("===============================================================\n\n");
 
     PerformanceHeader();
-    Performance("16 bits on CLUT profiles         ", SpeedTest16bitsRGB,  0, "test5.icc", "test3.icc", sizeof(Scanline_rgb16bits), 0);
-    Performance("16 bits on Matrix-Shaper profiles", SpeedTest16bitsRGB,  0, "test5.icc", "test0.icc", sizeof(Scanline_rgb16bits), 0);
-    Performance("16 bits on same Matrix-Shaper    ", SpeedTest16bitsRGB,  0, "test0.icc", "test0.icc", sizeof(Scanline_rgb16bits), 0);
-    Performance("16 bits on curves                ", SpeedTest16bitsRGB,  0, "*curves",   "*curves",   sizeof(Scanline_rgb16bits), 0);
-    Performance("16 bits on CMYK CLUT profiles    ", SpeedTest16bitsCMYK, 0, "test1.icc", "test2.icc", sizeof(Scanline_cmyk16bits), 0);
+    Performance("16 bits on CLUT profiles         ", SpeedTest16bitsRGB,  ct, "test5.icc", "test3.icc", sizeof(Scanline_rgb16bits), 0);
+    Performance("16 bits on Matrix-Shaper profiles", SpeedTest16bitsRGB,  ct, "test5.icc", "test0.icc", sizeof(Scanline_rgb16bits), 0);
+    Performance("16 bits on same Matrix-Shaper    ", SpeedTest16bitsRGB,  ct, "test0.icc", "test0.icc", sizeof(Scanline_rgb16bits), 0);
+    Performance("16 bits on curves                ", SpeedTest16bitsRGB,  ct, "*curves",   "*curves",   sizeof(Scanline_rgb16bits), 0);
+    Performance("16 bits on CMYK CLUT profiles    ", SpeedTest16bitsCMYK, ct, "test1.icc", "test2.icc", sizeof(Scanline_cmyk16bits), 0);
 }
 
 // The worst case is used, no cache and all rgb combinations
@@ -1528,7 +1524,7 @@ cmsFloat64Number SpeedTestFloatRGB(cmsContext ct, cmsHPROFILE hlcmsProfileIn, cm
        {
        case cmsSigRgbData: inFormatter = TYPE_RGB_FLT; break;
        case cmsSigLabData: inFormatter = TYPE_Lab_FLT; break;
-       
+
        default:
            Fail("Invalid colorspace");
        }
@@ -1547,7 +1543,7 @@ cmsFloat64Number SpeedTestFloatRGB(cmsContext ct, cmsHPROFILE hlcmsProfileIn, cm
        cmsCloseProfile(ct, hlcmsProfileIn);
        cmsCloseProfile(ct, hlcmsProfileOut);
 
- 
+
 
        j = 0;
 
@@ -1555,7 +1551,7 @@ cmsFloat64Number SpeedTestFloatRGB(cmsContext ct, cmsHPROFILE hlcmsProfileIn, cm
        {
            cmsInt32Number r, g, b;
            Scanline_rgbFloat* fill;
-           
+
            size = 256 * 256 * 256;
            Mb = size * sizeof(Scanline_rgbFloat);
            In = malloc(Mb);
@@ -1603,9 +1599,9 @@ cmsFloat64Number SpeedTestFloatRGB(cmsContext ct, cmsHPROFILE hlcmsProfileIn, cm
        free(In);
 
        cmsDeleteTransform(ct, hlcmsxform);
-       
+
        seconds = (cmsFloat64Number)diff / (cmsFloat64Number)CLOCKS_PER_SEC;
-       return ((cmsFloat64Number)size) / (1024.0 * 1024.0 * seconds);       
+       return ((cmsFloat64Number)size) / (1024.0 * 1024.0 * seconds);
 }
 
 
@@ -1618,12 +1614,12 @@ cmsFloat64Number SpeedTestFloatCMYK(cmsContext ct, cmsHPROFILE hlcmsProfileIn, c
     cmsHTRANSFORM hlcmsxform;
     Scanline_cmykFloat* In;
     cmsUInt32Number Mb;
-    
+
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Fail("Unable to open profiles");
 
-    
-    hlcmsxform = cmsCreateTransformTHR(ct, hlcmsProfileIn, TYPE_CMYK_FLT, hlcmsProfileOut, TYPE_CMYK_FLT, INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE);
+
+    hlcmsxform = cmsCreateTransform(ct, hlcmsProfileIn, TYPE_CMYK_FLT, hlcmsProfileOut, TYPE_CMYK_FLT, INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE);
     cmsCloseProfile(ct, hlcmsProfileIn);
     cmsCloseProfile(ct, hlcmsProfileOut);
 
@@ -1646,7 +1642,7 @@ cmsFloat64Number SpeedTestFloatCMYK(cmsContext ct, cmsHPROFILE hlcmsProfileIn, c
 
     atime = clock();
 
-    cmsDoTransform(hlcmsxform, In, In, 64 * 64 * 64 * 64);
+    cmsDoTransform(ct, hlcmsxform, In, In, 64 * 64 * 64 * 64);
 
     diff = clock() - atime;
     free(In);
@@ -1711,7 +1707,7 @@ cmsFloat64Number SpeedTestFloatLab(cmsContext ct, cmsHPROFILE hlcmsProfileIn, cm
 
                 j++;
             }
-    
+
 
     atime = clock();
 
@@ -1731,6 +1727,8 @@ cmsFloat64Number SpeedTestFloatLab(cmsContext ct, cmsHPROFILE hlcmsProfileIn, cm
 static
 void SpeedTestFloat(cmsContext noPlugin, cmsContext plugin)
 {
+       cmsContext noPlugin = cmsCreateContext(0, 0);
+
        cmsFloat64Number t[10] = { 0 };
 
        printf("\n\n");
@@ -1765,6 +1763,8 @@ void SpeedTestFloat(cmsContext noPlugin, cmsContext plugin)
        Performance("Floating point on RGB->XYZ       ", SpeedTestFloatRGB, plugin, "test3.icc", "*xyz",      sizeof(Scanline_rgbFloat), t[5]);
        Performance("Floating point on CMYK->CMYK     ", SpeedTestFloatCMYK, plugin, "test1.icc", "test2.icc", sizeof(Scanline_cmykFloat), t[6]);
        Performance("Floating point on Lab->RGB       ", SpeedTestFloatLab,  plugin, "*lab",      "test3.icc", sizeof(Scanline_LabFloat), t[7]);
+
+       cmsDeleteContext(noPlugin);
 }
 
 
@@ -2122,7 +2122,7 @@ int main()
        CheckAccuracy16Bits(raw, plugin);
 
        // Lab to whatever
-       CheckLab2RGB();
+       CheckLab2RGB(plugin);
 
        // Change format
        CheckChangeFormat(plugin);

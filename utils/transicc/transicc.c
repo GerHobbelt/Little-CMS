@@ -96,19 +96,19 @@ void Help(void)
     fprintf(stderr, "usage: transicc [flags] [CGATS input] [CGATS output]\n\n");
 
     fprintf(stderr, "flags:\n\n");
-    fprintf(stderr, "-v<0..3> - Verbosity level\n"); 
+    fprintf(stderr, "-v<0..3> - Verbosity level\n");
 
     fprintf(stderr, "-e[op] - Encoded representation of numbers\n");
-    fprintf(stderr, "\t-w - use 16 bits\n");     
+    fprintf(stderr, "\t-w - use 16 bits\n");
     fprintf(stderr, "\t-x - Hexadecimal\n\n");
 
     fprintf(stderr, "-s - bounded mode (clip negatives and highlights)\n");
     fprintf(stderr, "-q - Quantize (round decimals)\n\n");
 
     fprintf(stderr, "-i<profile> - Input profile (defaults to sRGB)\n");
-    fprintf(stderr, "-o<profile> - Output profile (defaults to sRGB)\n");   
-    fprintf(stderr, "-l<profile> - Transform by device-link profile\n");   
-   
+    fprintf(stderr, "-o<profile> - Output profile (defaults to sRGB)\n");
+    fprintf(stderr, "-l<profile> - Transform by device-link profile\n");
+
     PrintBuiltins();
 
     PrintRenderingIntents(NULL);
@@ -119,7 +119,7 @@ void Help(void)
 
     fprintf(stderr, "-b - Black point compensation\n");
 
-    fprintf(stderr, "-c<0,1,2,3> Precalculates transform (0=Off, 1=Normal, 2=Hi-res, 3=LoRes)\n\n");     
+    fprintf(stderr, "-c<0,1,2,3> Precalculates transform (0=Off, 1=Normal, 2=Hi-res, 3=LoRes)\n\n");
     fprintf(stderr, "-n - Terse output, intended for pipe usage\n");
 
     fprintf(stderr, "-p<profile> - Soft proof profile\n");
@@ -161,7 +161,7 @@ void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
                 FatalError("Unknown option - run without args to see valid ones.\n");
             }
             break;
-            
+
         case '!':
             IncludePart = xoptarg;
             break;
@@ -1328,5 +1328,3 @@ int main(int argc, char *argv[])
     // All is ok
     return 0;
 }
-
-

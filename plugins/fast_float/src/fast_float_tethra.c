@@ -38,7 +38,7 @@ FloatCLUTData* FloatCLUTAlloc(cmsContext ContextID, const cmsInterpParams* p)
     if (fd == NULL) return NULL;
 
     fd ->p = p;
-    
+
     return fd;
 }
 
@@ -132,11 +132,11 @@ void FloatCLUTEval(cmsContext ContextID,
             px = r * p->Domain[0];
             py = g * p->Domain[1];
             pz = b * p->Domain[2];
-            
+
             x0 = _cmsQuickFloor(px); rx = (px - (cmsFloat32Number)x0);
             y0 = _cmsQuickFloor(py); ry = (py - (cmsFloat32Number)y0);
             z0 = _cmsQuickFloor(pz); rz = (pz - (cmsFloat32Number)z0);
-            
+
 
             X0 = p->opta[2] * x0;
             X1 = X0 + (r >= 1.0 ? 0 : p->opta[2]);
@@ -248,7 +248,7 @@ cmsBool OptimizeCLUTRGBTransform(cmsContext ContextID,
     if (!T_FLOAT(*InputFormat) || !T_FLOAT(*OutputFormat)) return FALSE;
 
     // Only on floats
-    if (T_BYTES(*InputFormat) != sizeof(cmsFloat32Number) || 
+    if (T_BYTES(*InputFormat) != sizeof(cmsFloat32Number) ||
         T_BYTES(*OutputFormat) != sizeof(cmsFloat32Number)) return FALSE;
 
     // Input has to be RGB, Output may be any
@@ -281,13 +281,13 @@ cmsBool OptimizeCLUTRGBTransform(cmsContext ContextID,
     data = (_cmsStageCLutData*) cmsStageData(ContextID, OptimizedCLUTmpe);
 
     pfloat = FloatCLUTAlloc(ContextID, data ->Params);
-    if (pfloat == NULL) return FALSE;   
+    if (pfloat == NULL) return FALSE;
 
     // And return the obtained LUT
     cmsPipelineFree(ContextID, OriginalLut);
 
     *Lut = OptimizedLUT;
-    *TransformFn = FloatCLUTEval;
+    *TransformFn = (_cmsTransformFn)FloatCLUTEval;
     *UserData   = pfloat;
     *FreeDataFn = _cmsFree;
     *dwFlags &= ~cmsFLAGS_CAN_CHANGE_FORMATTER;

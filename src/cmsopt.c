@@ -414,8 +414,8 @@ Prelin16Data* PrelinOpt16alloc(cmsContext ContextID,
 // almost any transform. We use floating point precision and then convert from floating point to 16 bits.
 static
 cmsInt32Number XFormSampler16(cmsContext ContextID,
-	                          CMSREGISTER const cmsUInt16Number In[],
-                              CMSREGISTER cmsUInt16Number Out[], 
+                              CMSREGISTER const cmsUInt16Number In[],
+                              CMSREGISTER cmsUInt16Number Out[],
                               CMSREGISTER void* Cargo)
 {
     cmsPipeline* Lut = (cmsPipeline*) Cargo;
@@ -919,7 +919,8 @@ void* Prelin8dup(cmsContext ContextID, const void* ptr)
 // A optimized interpolation for 8-bit input.
 #define DENS(i,j,k) (LutTable[(i)+(j)+(k)+OutChan])
 static CMS_NO_SANITIZE
-void PrelinEval8(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[],
+void PrelinEval8(cmsContext ContextID,
+                 CMSREGISTER const cmsUInt16Number Input[],
                  CMSREGISTER cmsUInt16Number Output[],
                  CMSREGISTER const void* D)
 {
@@ -1342,7 +1343,8 @@ Curves16Data* CurvesAlloc(cmsContext ContextID, cmsUInt32Number nCurves, cmsUInt
 }
 
 static
-void FastEvaluateCurves8(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
+void FastEvaluateCurves8(cmsContext ContextID,
+                         CMSREGISTER const cmsUInt16Number In[],
                          CMSREGISTER cmsUInt16Number Out[],
                          CMSREGISTER const void* D)
 {

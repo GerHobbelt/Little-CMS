@@ -1029,7 +1029,7 @@ int TransformImage(cmsContext ContextID, char *cDefInpProf, char *cOutputProf)
 
 
 static
-void Help(int level)
+void Help(cmsContext ContextID, int level)
 {
 
     UTILS_UNUSED_PARAMETER(level);
@@ -1043,7 +1043,7 @@ void Help(int level)
 
     PrintBuiltins();
 
-    PrintRenderingIntents();
+    PrintRenderingIntents(ContextID);
 
 
     fprintf(stderr, "-b - Black point compensation\n");
@@ -1091,7 +1091,7 @@ void Help(int level)
 // The toggles stuff
 
 static
-void HandleSwitches(int argc, char *argv[])
+void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
 {
     int s;
 
@@ -1103,7 +1103,7 @@ void HandleSwitches(int argc, char *argv[])
         case '-':
             if (strcmp(xoptarg, "help") == 0)
             {
-                Help(0);
+                Help(ContextID, 0);
             }
             else
             {
@@ -1190,7 +1190,7 @@ void HandleSwitches(int argc, char *argv[])
         case 'h':  {
 
             int a =  atoi(xoptarg);
-            Help(a);
+            Help(ContextID, a);
                    }
             break;
 
@@ -1236,12 +1236,12 @@ int main(int argc, char* argv[])
     fprintf(stderr, "Copyright (c) 1998-2020 Marti Maria Saguer. See COPYING file for details.\n");
     fflush(stderr);
 
-    InitUtils(NULL, "jpgicc");
+    InitUtils(ContextID, "jpgicc");
 
-    HandleSwitches(argc, argv);
+    HandleSwitches(ContextID, argc, argv);
 
     if ((argc - xoptind) != 2) {
-        Help(0);
+        Help(ContextID, 0);
     }
 
     OpenInput(argv[xoptind]);
@@ -1258,6 +1258,3 @@ int main(int argc, char* argv[])
 
     return 0;
 }
-
-
-

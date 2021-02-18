@@ -745,7 +745,7 @@ void TetrahedralInterp16(cmsContext ContextID, CMSREGISTER const cmsUInt16Number
 
     Z0 = p -> opta[0] * z0;
     Z1 = (Input[2] == 0xFFFFU ? 0 : p->opta[0]);
-    
+
     LutTable += X0+Y0+Z0;
 
     // Output should be computed as x = ROUND_FIXED_TO_INT(_cmsToFixedDomain(Rest))

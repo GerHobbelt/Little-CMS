@@ -65,6 +65,8 @@ cmsBool Floating_Point_Transforms_Dispatcher(cmsContext ContextID,
     // Try to optimize using prelinearization plus tetrahedral
     if (OptimizeCLUTCMYKTransform(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
 
+    // Try to optimize for Lab float as input
+    if (OptimizeCLUTLabTransform(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
 
     // Cannot optimize, use lcms normal process
     return FALSE;

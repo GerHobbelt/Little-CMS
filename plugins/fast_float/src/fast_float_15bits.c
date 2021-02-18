@@ -598,6 +598,3 @@ CMSCHECKPOINT cmsFormatter CMSEXPORT Formatter_15Bit_Factory(cmsContext ContextI
 
        return Result;
 }
-
-
-

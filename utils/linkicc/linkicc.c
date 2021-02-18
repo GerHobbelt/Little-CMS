@@ -47,7 +47,7 @@ static cmsFloat64Number Version    = 4.3;
 
 // The manual
 static
-int Help(int level)
+int Help(cmsContext ContextID, int level)
 {
     UTILS_UNUSED_PARAMETER(level);
 
@@ -58,7 +58,7 @@ int Help(int level)
     fprintf(stderr, "flags:\n\n");
     fprintf(stderr, "-o<profile> - Output devicelink profile. [defaults to 'devicelink.icc']\n");
 
-    PrintRenderingIntents();
+    PrintRenderingIntents(ContextID);
 
     fprintf(stderr, "-c<0,1,2> - Precision (0=LowRes, 1=Normal, 2=Hi-res) [defaults to 1]\n");
     fprintf(stderr, "-n<gridpoints> - Alternate way to set precision, number of CLUT points\n");
@@ -104,7 +104,7 @@ int Help(int level)
 
 // The toggles stuff
 static
-void HandleSwitches(int argc, char *argv[])
+void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
 {
     int s;
 
@@ -115,7 +115,7 @@ void HandleSwitches(int argc, char *argv[])
     case '-':
         if (strcmp(xoptarg, "help") == 0)
         {
-            Help(0);
+            Help(ContextID, 0);
         }
         else
         {
@@ -153,7 +153,7 @@ void HandleSwitches(int argc, char *argv[])
 
     case 'h':
     case 'H':
-        Help(atoi(xoptarg));
+        Help(ContextID, atoi(xoptarg));
         return;
 
     case 'k':
@@ -279,12 +279,12 @@ int main(int argc, char *argv[])
     rc = 0;
 
     // Get the options
-    HandleSwitches(argc, argv);
+    HandleSwitches(ContextID, argc, argv);
 
     // How many profiles to link?
     nargs = (argc - xoptind);
     if (nargs < 1)
-        return Help(0);
+        return Help(ContextID, 0);
 
     if (nargs > 255) {
         FatalError("Holy profile! what are you trying to do with so many profiles!?");

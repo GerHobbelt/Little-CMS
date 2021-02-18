@@ -922,7 +922,6 @@ cmsToneCurve**  _cmsStageGetPtrToCurveSet(const cmsStage* mpe);
 cmsStage*          _cmsStageAllocToneCurvesWithSlopeLimit(cmsContext ContextID, cmsUInt32Number nChannels, cmsToneCurve* const Curves[], int SlopeLimit);
 cmsFloat32Number   _cmsEvalToneCurveFloatWithSlopeLimit(cmsContext ContextID, const cmsToneCurve* Curve, cmsFloat32Number v, int SlopeLimit);
 
-
 struct _cmsPipeline_struct {
 
     cmsStage* Elements;                                // Points to elements chain

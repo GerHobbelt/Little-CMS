@@ -375,13 +375,13 @@ cmsBool OptimizeCLUTCMYKTransform(cmsContext ContextID,
     data = (_cmsStageCLutData*) cmsStageData(ContextID, OptimizedCLUTmpe);
 
     pcmyk = FloatCMYKAlloc(ContextID, data ->Params);
-    if (pcmyk == NULL) return FALSE;   
+    if (pcmyk == NULL) return FALSE;
 
     // And return the obtained LUT
     cmsPipelineFree(ContextID, OriginalLut);
 
     *Lut = OptimizedLUT;
-    *TransformFn = FloatCMYKCLUTEval;
+    *TransformFn = (_cmsTransformFn)FloatCMYKCLUTEval;
     *UserData   = pcmyk;
     *FreeDataFn = _cmsFree;
     *dwFlags &= ~cmsFLAGS_CAN_CHANGE_FORMATTER;
