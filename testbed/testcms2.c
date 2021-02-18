@@ -3799,7 +3799,7 @@ cmsInt32Number CreateNamedColorProfile(cmsContext ContextID)
     cmsWriteTag(ContextID, hProfile, cmsSigCopyrightTag, CopyrightMLU);
 
     // Set the media white point
-    cmsWriteTag(ContextID, hProfile, cmsSigMediaWhitePointTag, cmsD50_XYZ());
+    cmsWriteTag(ContextID, hProfile, cmsSigMediaWhitePointTag, cmsD50_XYZ(ContextID));
 
 
     // Populate one value, Colorant = CMYK values in 16 bits, PCS[] = Encoded Lab values (in V2 format!!)
