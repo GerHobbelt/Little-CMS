@@ -3769,7 +3769,7 @@ static
 cmsInt32Number CreateNamedColorProfile(cmsContext ContextID)
 {
     // Color list database
-    cmsNAMEDCOLORLIST* colors = cmsAllocNamedColorList(ContextID, 0, 10, 4, "PANTONE", "TCX");
+    cmsNAMEDCOLORLIST* colors = cmsAllocNamedColorList(ContextID, 10, 4, "PANTONE", "TCX");
 
     // Containers for names
     cmsMLU* DescriptionMLU, *CopyrightMLU;
