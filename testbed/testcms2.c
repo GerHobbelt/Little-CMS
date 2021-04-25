@@ -8318,6 +8318,10 @@ int Check_sRGB_Rountrips(cmsContext ctx)
     cmsDeleteTransform(ContextID, hBack);
     cmsDeleteTransform(ContextID, hForth);
 
+	// Cleanup
+	DebugMemDontCheckThis(ContextID);
+	cmsDeleteContext(ContextID);
+
     if (maxErr > 20.0)
     {
         printf("Maximum sRGB roundtrip error %f!\n", maxErr);
