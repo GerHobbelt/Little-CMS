@@ -1261,6 +1261,11 @@ void* CMSEXPORT cmsStageData(cmsContext ContextID, const cmsStage* mpe)
     return mpe -> Data;
 }
 
+cmsContext CMSEXPORT cmsGetStageContextID(const cmsStage* mpe)
+{
+    return mpe -> ContextID;
+}
+
 cmsStage*  CMSEXPORT cmsStageNext(cmsContext ContextID, const cmsStage* mpe)
 {
     cmsUNUSED_PARAMETER(ContextID);

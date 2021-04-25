@@ -23,7 +23,7 @@
 //
 //---------------------------------------------------------------------------------
 //
-// Version 2.12
+// Version 2.13alpha
 //
 
 #ifndef _lcms2mt_H
@@ -1263,6 +1263,7 @@ CMSAPI cmsUInt32Number   CMSEXPORT cmsStageInputChannels(cmsContext ContextID, c
 CMSAPI cmsUInt32Number   CMSEXPORT cmsStageOutputChannels(cmsContext ContextID, const cmsStage* mpe);
 CMSAPI cmsStageSignature CMSEXPORT cmsStageType(cmsContext ContextID, const cmsStage* mpe);
 CMSAPI void*             CMSEXPORT cmsStageData(cmsContext ContextID, const cmsStage* mpe);
+CMSAPI cmsContext        CMSEXPORT cmsGetStageContextID(const cmsStage* mpe);
 
 // Sampling
 typedef cmsInt32Number (* cmsSAMPLER16)   (cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
