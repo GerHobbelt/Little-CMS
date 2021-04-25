@@ -8277,20 +8277,21 @@ double distance(const cmsUInt16Number* a, const cmsUInt16Number* b)
 * when rountripping again and again
 */
 static
-int Check_sRGB_Rountrips(void)
+int Check_sRGB_Rountrips(cmsContext ctx)
 {
     cmsUInt16Number rgb[3], seed[3];
     cmsCIELab Lab;
     int i, r, g, b;
     double err, maxErr;
-    cmsHPROFILE hsRGB = cmsCreate_sRGBProfile();
-    cmsHPROFILE hLab = cmsCreateLab4Profile(NULL);
+	cmsContext ContextID = cmsCreateContext(NULL, NULL);
+	cmsHPROFILE hsRGB = cmsCreate_sRGBProfile(ContextID);
+    cmsHPROFILE hLab = cmsCreateLab4Profile(ContextID, NULL);
 
-    cmsHTRANSFORM hBack = cmsCreateTransform(hLab, TYPE_Lab_DBL, hsRGB, TYPE_RGB_16, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsHTRANSFORM hForth = cmsCreateTransform(hsRGB, TYPE_RGB_16, hLab, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsHTRANSFORM hBack = cmsCreateTransform(ContextID, hLab, TYPE_Lab_DBL, hsRGB, TYPE_RGB_16, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsHTRANSFORM hForth = cmsCreateTransform(ContextID, hsRGB, TYPE_RGB_16, hLab, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
 
-    cmsCloseProfile(hLab);
-    cmsCloseProfile(hsRGB);
+    cmsCloseProfile(ContextID, hLab);
+    cmsCloseProfile(ContextID, hsRGB);
 
     maxErr = 0.0;
     for (r = 0; r <= 255; r += 16)
@@ -8303,8 +8304,8 @@ int Check_sRGB_Rountrips(void)
 
                 for (i = 0; i < 50; i++)
                 {
-                    cmsDoTransform(hForth, rgb, &Lab, 1);
-                    cmsDoTransform(hBack, &Lab, rgb, 1);
+                    cmsDoTransform(ContextID, hForth, rgb, &Lab, 1);
+                    cmsDoTransform(ContextID, hBack, &Lab, rgb, 1);
                 }
 
                 err = distance(seed, rgb);
@@ -8314,8 +8315,8 @@ int Check_sRGB_Rountrips(void)
             }
 
 
-    cmsDeleteTransform(hBack);
-    cmsDeleteTransform(hForth);
+    cmsDeleteTransform(ContextID, hBack);
+    cmsDeleteTransform(ContextID, hForth);
 
     if (maxErr > 20.0)
     {
