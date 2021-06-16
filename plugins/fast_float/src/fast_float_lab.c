@@ -317,7 +317,10 @@ void LabCLUTEval(cmsContext ContextID,
             }
 
             if (xin)
-                *out[TotalOut] = *xin;
+            {
+                *(cmsFloat32Number*) (out[TotalOut]) = *xin;
+                out[TotalOut] += DestIncrements[TotalOut];
+            }
         }
 
         strideIn  += Stride->BytesPerLineIn;
