@@ -615,8 +615,8 @@ cmsFloat64Number CMSEXPORT cmsDetectRGBProfileGamma(cmsContext ContextID, cmsHPR
         cl != cmsSigOutputClass && cl != cmsSigColorSpaceClass)
         return -1;
 
-    hXYZ = cmsCreateXYZProfileTHR(ContextID);
-    xform = cmsCreateTransformTHR(ContextID, hProfile, TYPE_RGB_16, hXYZ, TYPE_XYZ_DBL, 
+    hXYZ = cmsCreateXYZProfile(ContextID);
+    xform = cmsCreateTransform(ContextID, hProfile, TYPE_RGB_16, hXYZ, TYPE_XYZ_DBL, 
                                     INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_NOOPTIMIZE);
 
     if (xform == NULL) { // If not RGB or forward direction is not supported, regret with the previous error

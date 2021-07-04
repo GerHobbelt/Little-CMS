@@ -531,7 +531,7 @@ void ChangeInterpolationToTrilinear(cmsContext ContextID, cmsPipeline* Lut)
 }
 
 
-// Read the DToAX tag, adjusting the encoding of Lab or XYZ if neded
+// Read the DToAX tag, adjusting the encoding of Lab or XYZ if needed
 static
 cmsPipeline* _cmsReadFloatOutputTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSignature tagFloat)
 {
@@ -574,7 +574,7 @@ Error:
     return NULL;
 }
 
-// Create an output MPE LUT from agiven profile. Version mismatches are handled here
+// Create an output MPE LUT from a given profile. Version mismatches are handled here
 cmsPipeline* CMSEXPORT _cmsReadOutputLUT(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number Intent, int SlopeLimit)
 {
     cmsTagTypeSignature OriginalType;
@@ -653,7 +653,7 @@ Error:
 
 // ---------------------------------------------------------------------------------------------------------------
 
-// Read the AToD0 tag, adjusting the encoding of Lab or XYZ if neded
+// Read the AToD0 tag, adjusting the encoding of Lab or XYZ if needed
 static
 cmsPipeline* _cmsReadFloatDevicelinkTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSignature tagFloat)
 {

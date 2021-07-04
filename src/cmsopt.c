@@ -1918,10 +1918,10 @@ cmsBool CMSEXPORT _cmsOptimizePipeline(cmsContext ContextID,
     }
 
     // Named color pipelines cannot be optimized 
-    for (mpe = cmsPipelineGetPtrToFirstStage(*PtrLut);
+    for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, *PtrLut);
         mpe != NULL;
-        mpe = cmsStageNext(mpe)) {
-        if (cmsStageType(mpe) == cmsSigNamedColorElemType) return FALSE;
+        mpe = cmsStageNext(ContextID, mpe)) {
+	        if (cmsStageType(ContextID, mpe) == cmsSigNamedColorElemType) return FALSE;
     }
 
     // Try to get rid of identities and trivial conversions.
