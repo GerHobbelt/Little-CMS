@@ -8332,9 +8332,9 @@ int Check_sRGB_Rountrips(cmsContext ctx)
 }
 
 static
-cmsHPROFILE createRgbGamma(cmsFloat64Number g)
+cmsHPROFILE createRgbGamma(cmsContext ContextID, cmsFloat64Number g)
 {
-    cmsCIExyY       D65 = { 0.3127, 0.3290, 1.0 };
+	cmsCIExyY       D65 = { 0.3127, 0.3290, 1.0 };
     cmsCIExyYTRIPLE Rec709Primaries = {
                                 {0.6400, 0.3300, 1.0},
                                 {0.3000, 0.6000, 1.0},
@@ -8343,11 +8343,11 @@ cmsHPROFILE createRgbGamma(cmsFloat64Number g)
     cmsToneCurve* Gamma[3];
     cmsHPROFILE  hRGB;
     
-    Gamma[0] = Gamma[1] = Gamma[2] = cmsBuildGamma(0, g);
+    Gamma[0] = Gamma[1] = Gamma[2] = cmsBuildGamma(ContextID, g);
     if (Gamma[0] == NULL) return NULL;
 
-    hRGB = cmsCreateRGBProfile(&D65, &Rec709Primaries, Gamma);
-    cmsFreeToneCurve(Gamma[0]);    
+    hRGB = cmsCreateRGBProfile(ContextID, &D65, &Rec709Primaries, Gamma);
+    cmsFreeToneCurve(ContextID, Gamma[0]);
     return hRGB;
 }
 
@@ -8355,15 +8355,16 @@ cmsHPROFILE createRgbGamma(cmsFloat64Number g)
 static
 int CheckGammaSpaceDetection(void)
 {
-    cmsFloat64Number i;
+	cmsContext ContextID = cmsCreateContext(NULL, NULL);
+	cmsFloat64Number i;
 
     for (i = 0.5; i < 3; i += 0.1)
     {                
-        cmsHPROFILE hProfile = createRgbGamma(i);
+        cmsHPROFILE hProfile = createRgbGamma(ContextID, i);
 
-        cmsFloat64Number gamma = cmsDetectRGBProfileGamma(hProfile, 0.01);
+        cmsFloat64Number gamma = cmsDetectRGBProfileGamma(ContextID, hProfile, 0.01);
 
-        cmsCloseProfile(hProfile);
+        cmsCloseProfile(ContextID, hProfile);
 
         if (fabs(gamma - i) > 0.1)
         {
