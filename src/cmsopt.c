@@ -642,7 +642,6 @@ cmsBool OptimizeByResampling(cmsContext ContextID, cmsPipeline** Lut, cmsUInt32N
 {
     cmsPipeline* Src = NULL;
     cmsPipeline* Dest = NULL;
-    cmsStage* mpe;
     cmsStage* CLUT;
     cmsStage *KeepPreLin = NULL, *KeepPostLin = NULL;
     cmsUInt32Number nGridPoints;
@@ -664,20 +663,13 @@ cmsBool OptimizeByResampling(cmsContext ContextID, cmsPipeline** Lut, cmsUInt32N
     if (ColorSpace == (cmsColorSpaceSignature)0 ||
         OutputColorSpace == (cmsColorSpaceSignature)0) return FALSE;
 
-    nGridPoints      = _cmsReasonableGridpointsByColorspace(ContextID, ColorSpace, *dwFlags);
+    nGridPoints = _cmsReasonableGridpointsByColorspace(ContextID, ColorSpace, *dwFlags);
 
     // For empty LUTs, 2 points are enough
     if (cmsPipelineStageCount(ContextID, *Lut) == 0)
         nGridPoints = 2;
 
     Src = *Lut;
-
-    // Named color pipelines cannot be optimized either
-    for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, Src);
-        mpe != NULL;
-        mpe = cmsStageNext(ContextID, mpe)) {
-            if (cmsStageType(ContextID, mpe) == cmsSigNamedColorElemType) return FALSE;
-    }
 
     // Allocate an empty LUT
     Dest =  cmsPipelineAlloc(ContextID, Src ->InputChannels, Src ->OutputChannels);
@@ -1048,7 +1040,6 @@ cmsBool OptimizeByComputingLinearization(cmsContext ContextID, cmsPipeline** Lut
     cmsStage* OptimizedCLUTmpe;
     cmsColorSpaceSignature ColorSpace, OutputColorSpace;
     cmsStage* OptimizedPrelinMpe;
-    cmsStage* mpe;
     cmsToneCurve** OptimizedPrelinCurves;
     _cmsStageCLutData* OptimizedPrelinCLUT;
 
@@ -1069,14 +1060,7 @@ cmsBool OptimizeByComputingLinearization(cmsContext ContextID, cmsPipeline** Lut
     }
 
     OriginalLut = *Lut;
-
-   // Named color pipelines cannot be optimized either
-   for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, OriginalLut);
-         mpe != NULL;
-         mpe = cmsStageNext(ContextID, mpe)) {
-            if (cmsStageType(ContextID, mpe) == cmsSigNamedColorElemType) return FALSE;
-    }
-
+   
     ColorSpace       = _cmsICCcolorSpace(ContextID, (int) T_COLORSPACE(*InputFormat));
     OutputColorSpace = _cmsICCcolorSpace(ContextID, (int) T_COLORSPACE(*OutputFormat));
 
@@ -1918,6 +1902,7 @@ cmsBool CMSEXPORT _cmsOptimizePipeline(cmsContext ContextID,
     _cmsOptimizationPluginChunkType* ctx = ( _cmsOptimizationPluginChunkType*) _cmsContextGetClientChunk(ContextID, OptimizationPlugin);
     _cmsOptimizationCollection* Opts;
     cmsBool AnySuccess = FALSE;
+    cmsStage* mpe;
 
     // A CLUT is being asked, so force this specific optimization
     if (*dwFlags & cmsFLAGS_FORCE_CLUT) {
@@ -1930,6 +1915,13 @@ cmsBool CMSEXPORT _cmsOptimizePipeline(cmsContext ContextID,
     if ((*PtrLut) ->Elements == NULL) {
         _cmsPipelineSetOptimizationParameters(ContextID, *PtrLut, FastIdentity16, (void*) *PtrLut, NULL, NULL);
         return TRUE;
+    }
+
+    // Named color pipelines cannot be optimized 
+    for (mpe = cmsPipelineGetPtrToFirstStage(*PtrLut);
+        mpe != NULL;
+        mpe = cmsStageNext(mpe)) {
+        if (cmsStageType(mpe) == cmsSigNamedColorElemType) return FALSE;
     }
 
     // Try to get rid of identities and trivial conversions.

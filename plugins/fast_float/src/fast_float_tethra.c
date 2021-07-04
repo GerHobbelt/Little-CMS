@@ -239,7 +239,6 @@ cmsBool OptimizeCLUTRGBTransform(cmsContext ContextID,
     int nGridPoints;
     cmsPipeline* OptimizedLUT = NULL;
     cmsStage* OptimizedCLUTmpe;
-    cmsStage* mpe;
     FloatCLUTData* pfloat;
     _cmsStageCLutData* data;
 
@@ -257,14 +256,7 @@ cmsBool OptimizeCLUTRGBTransform(cmsContext ContextID,
     if (T_COLORSPACE(*InputFormat) != PT_RGB) return FALSE;
 
     OriginalLut = *Lut;
-
-   // Named color pipelines cannot be optimized either
-   for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, OriginalLut);
-         mpe != NULL;
-         mpe = cmsStageNext(ContextID, mpe)) {
-            if (cmsStageType(ContextID, mpe) == cmsSigNamedColorElemType) return FALSE;
-    }
-
+   
     nGridPoints      = _cmsReasonableGridpointsByColorspace(cmsSigRgbData, *dwFlags);
 
     // Create the result LUT

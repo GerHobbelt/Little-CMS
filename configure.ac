@@ -33,6 +33,7 @@ AM_INIT_AUTOMAKE([foreign 1.9 tar-ustar no-define dist-zip subdir-objects])
 AC_PROG_CC_STDC
 AC_PROG_CPP
 AC_PROG_CXX
+LT_INIT
 
 #AM_PROG_LD
 #AC_SUBST(LD)
@@ -177,6 +178,19 @@ then
   fi
 fi
 
+# check if compiler supports SSE2 intrinsics
+AC_LANG_PUSH([C])
+
+AC_MSG_CHECKING([whether compiler supports SSE2])
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+    #include <emmintrin.h>
+    main() { __m128i n = _mm_set1_epi8(42); }]])],
+  [ac_compiler_supports_sse2=yes], [ac_compiler_supports_sse2=no])
+AC_MSG_RESULT([$ac_compiler_supports_sse2])
+AS_IF([test "x$ac_compiler_supports_sse2" != "xyes"],
+  [AC_DEFINE([CMS_DONT_USE_SSE2], [1], [Define if compiler does not support SSE2 intrinsics])])
+
+AC_LANG_POP([C])
 
 #
 # Find math library

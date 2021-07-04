@@ -345,7 +345,6 @@ cmsBool Optimize8BitRGBTransform( cmsContext ContextID,
     cmsPipeline* OptimizedLUT = NULL, *LutPlusCurves = NULL;
     cmsStage* OptimizedCLUTmpe;
     cmsStage* OptimizedPrelinMpe;
-    cmsStage* mpe;
     Performance8Data* p8;
     cmsUInt16Number* MyTable[3];
     _cmsStageCLutData* data;
@@ -363,14 +362,7 @@ cmsBool Optimize8BitRGBTransform( cmsContext ContextID,
     if (T_COLORSPACE(*InputFormat)  != PT_RGB) return FALSE;
 
     OriginalLut = *Lut;
-
-   // Named color pipelines cannot be optimized either
-   for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, OriginalLut);
-         mpe != NULL;
-         mpe = cmsStageNext(ContextID, mpe)) {
-            if (cmsStageType(ContextID, mpe) == cmsSigNamedColorElemType) return FALSE;
-    }
-
+   
     nGridPoints      = _cmsReasonableGridpointsByColorspace(cmsSigRgbData, *dwFlags);
 
     // Empty gamma containers

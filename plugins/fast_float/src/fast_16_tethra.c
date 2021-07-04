@@ -315,7 +315,6 @@ cmsBool Optimize16BitRGBTransform(cmsContext ContextID,
                                   cmsUInt32Number* OutputFormat,
                                   cmsUInt32Number* dwFlags)
 {
-    cmsStage* mpe;
     Performance16Data* p16;
     _cmsStageCLutData* data;
     cmsUInt32Number newFlags;
@@ -350,13 +349,7 @@ cmsBool Optimize16BitRGBTransform(cmsContext ContextID,
         cmsSigCurveSetElemType, cmsSigCurveSetElemType,
         NULL, NULL)) return FALSE;
 
-   // Named color pipelines cannot be optimized either
-   for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, *Lut);
-         mpe != NULL;
-         mpe = cmsStageNext(ContextID, mpe)) {
-            if (cmsStageType(ContextID, mpe) == cmsSigNamedColorElemType) return FALSE;
-    }
-
+   
     newFlags = *dwFlags | cmsFLAGS_FORCE_CLUT;
 
     if (!_cmsOptimizePipeline(ContextID,
