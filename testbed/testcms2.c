@@ -8337,7 +8337,7 @@ cmsHPROFILE createRgbGamma(cmsContext contextID, cmsFloat64Number g)
     cmsToneCurve* Gamma[3];
     cmsHPROFILE  hRGB;
 
-    Gamma[0] = Gamma[1] = Gamma[2] = cmsBuildGamma(ContextID, g);
+    Gamma[0] = Gamma[1] = Gamma[2] = cmsBuildGamma(contextID, g);
     if (Gamma[0] == NULL) return NULL;
 
     hRGB = cmsCreateRGBProfile(contextID, &D65, &Rec709Primaries, Gamma);
