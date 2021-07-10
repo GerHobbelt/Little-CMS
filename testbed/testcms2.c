@@ -8222,9 +8222,8 @@ int CheckProofingIntersection(cmsContext ContextID)
 * then call cmsMD5computeID on said profile, the program crashes.
 */
 static
-int CheckEmptyMLUC(cmsContext ctx)
+int CheckEmptyMLUC(cmsContext ContextID)
 {
-    cmsContext ContextID = cmsCreateContext(NULL, NULL);
     cmsCIExyY white = { 0.31271, 0.32902, 1.0 };
     cmsCIExyYTRIPLE primaries =
     {
@@ -8277,21 +8276,20 @@ double distance(const cmsUInt16Number* a, const cmsUInt16Number* b)
 * when rountripping again and again
 */
 static
-int Check_sRGB_Rountrips(cmsContext ctx)
+int Check_sRGB_Rountrips(cmsContext contextID)
 {
     cmsUInt16Number rgb[3], seed[3];
     cmsCIELab Lab;
     int i, r, g, b;
     double err, maxErr;
-	cmsContext ContextID = cmsCreateContext(NULL, NULL);
-	cmsHPROFILE hsRGB = cmsCreate_sRGBProfile(ContextID);
-    cmsHPROFILE hLab = cmsCreateLab4Profile(ContextID, NULL);
+    cmsHPROFILE hsRGB = cmsCreate_sRGBProfile(contextID);
+    cmsHPROFILE hLab = cmsCreateLab4Profile(contextID, NULL);
 
-    cmsHTRANSFORM hBack = cmsCreateTransform(ContextID, hLab, TYPE_Lab_DBL, hsRGB, TYPE_RGB_16, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsHTRANSFORM hForth = cmsCreateTransform(ContextID, hsRGB, TYPE_RGB_16, hLab, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsHTRANSFORM hBack = cmsCreateTransform(contextID, hLab, TYPE_Lab_DBL, hsRGB, TYPE_RGB_16, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsHTRANSFORM hForth = cmsCreateTransform(contextID, hsRGB, TYPE_RGB_16, hLab, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
 
-    cmsCloseProfile(ContextID, hLab);
-    cmsCloseProfile(ContextID, hsRGB);
+    cmsCloseProfile(contextID, hLab);
+    cmsCloseProfile(contextID, hsRGB);
 
     maxErr = 0.0;
     for (r = 0; r <= 255; r += 16)
@@ -8304,8 +8302,8 @@ int Check_sRGB_Rountrips(cmsContext ctx)
 
                 for (i = 0; i < 50; i++)
                 {
-                    cmsDoTransform(ContextID, hForth, rgb, &Lab, 1);
-                    cmsDoTransform(ContextID, hBack, &Lab, rgb, 1);
+                    cmsDoTransform(contextID, hForth, rgb, &Lab, 1);
+                    cmsDoTransform(contextID, hBack, &Lab, rgb, 1);
                 }
 
                 err = distance(seed, rgb);
@@ -8315,24 +8313,20 @@ int Check_sRGB_Rountrips(cmsContext ctx)
             }
 
 
-    cmsDeleteTransform(ContextID, hBack);
-    cmsDeleteTransform(ContextID, hForth);
-
-	// Cleanup
-	DebugMemDontCheckThis(ContextID);
-	cmsDeleteContext(ContextID);
+    cmsDeleteTransform(contextID, hBack);
+    cmsDeleteTransform(contextID, hForth);
 
     if (maxErr > 20.0)
     {
         printf("Maximum sRGB roundtrip error %f!\n", maxErr);
         return 0;
     }
-    
+
     return 1;
 }
 
 static
-cmsHPROFILE createRgbGamma(cmsContext ContextID, cmsFloat64Number g)
+cmsHPROFILE createRgbGamma(cmsContext contextID, cmsFloat64Number g)
 {
 	cmsCIExyY       D65 = { 0.3127, 0.3290, 1.0 };
     cmsCIExyYTRIPLE Rec709Primaries = {
@@ -8342,29 +8336,28 @@ cmsHPROFILE createRgbGamma(cmsContext ContextID, cmsFloat64Number g)
     };
     cmsToneCurve* Gamma[3];
     cmsHPROFILE  hRGB;
-    
+
     Gamma[0] = Gamma[1] = Gamma[2] = cmsBuildGamma(ContextID, g);
     if (Gamma[0] == NULL) return NULL;
 
-    hRGB = cmsCreateRGBProfile(ContextID, &D65, &Rec709Primaries, Gamma);
-    cmsFreeToneCurve(ContextID, Gamma[0]);
+    hRGB = cmsCreateRGBProfile(contextID, &D65, &Rec709Primaries, Gamma);
+    cmsFreeToneCurve(contextID, Gamma[0]);
     return hRGB;
 }
 
 
 static
-int CheckGammaSpaceDetection(void)
+int CheckGammaSpaceDetection(cmsContext contextID)
 {
-	cmsContext ContextID = cmsCreateContext(NULL, NULL);
 	cmsFloat64Number i;
 
     for (i = 0.5; i < 3; i += 0.1)
-    {                
-        cmsHPROFILE hProfile = createRgbGamma(ContextID, i);
+    {
+        cmsHPROFILE hProfile = createRgbGamma(contextID, i);
 
-        cmsFloat64Number gamma = cmsDetectRGBProfileGamma(ContextID, hProfile, 0.01);
+        cmsFloat64Number gamma = cmsDetectRGBProfileGamma(contextID, hProfile, 0.01);
 
-        cmsCloseProfile(ContextID, hProfile);
+        cmsCloseProfile(contextID, hProfile);
 
         if (fabs(gamma - i) > 0.1)
         {
@@ -8390,14 +8383,14 @@ void uint16toFloat(cmsUInt16Number* src, cmsFloat32Number* dst)
 }
 
 static
-int CheckLinearSpacesOptimization(void)
+int CheckLinearSpacesOptimization(cmsContext contextID)
 {
-    cmsHPROFILE lcms_sRGB = cmsCreate_sRGBProfile();
-    cmsHPROFILE elle_sRGB = cmsOpenProfileFromFile("sRGB-elle-V4-srgbtrc.icc", "r");
-    cmsHPROFILE elle_linear = cmsOpenProfileFromFile("sRGB-elle-V4-g10.icc", "r");
-    cmsHTRANSFORM transform1 = cmsCreateTransform(elle_sRGB, TYPE_RGB_16, elle_linear, TYPE_RGB_16, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsHTRANSFORM transform2 = cmsCreateTransform(elle_linear, TYPE_RGB_16, lcms_sRGB, TYPE_RGB_16, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsHTRANSFORM transform2a = cmsCreateTransform(elle_linear, TYPE_RGB_FLT, lcms_sRGB, TYPE_RGB_16, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsHPROFILE lcms_sRGB = cmsCreate_sRGBProfile(contextID);
+    cmsHPROFILE elle_sRGB = cmsOpenProfileFromFile(contextID, "sRGB-elle-V4-srgbtrc.icc", "r");
+    cmsHPROFILE elle_linear = cmsOpenProfileFromFile(contextID, "sRGB-elle-V4-g10.icc", "r");
+    cmsHTRANSFORM transform1 = cmsCreateTransform(contextID, elle_sRGB, TYPE_RGB_16, elle_linear, TYPE_RGB_16, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsHTRANSFORM transform2 = cmsCreateTransform(contextID, elle_linear, TYPE_RGB_16, lcms_sRGB, TYPE_RGB_16, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsHTRANSFORM transform2a = cmsCreateTransform(contextID, elle_linear, TYPE_RGB_FLT, lcms_sRGB, TYPE_RGB_16, INTENT_RELATIVE_COLORIMETRIC, 0);
 
     cmsUInt16Number sourceCol[3] = { 43 * 257, 27 * 257, 6 * 257 };
     cmsUInt16Number linearCol[3] = { 0 };
@@ -8406,10 +8399,10 @@ int CheckLinearSpacesOptimization(void)
     int difR, difG, difB;
     int difR2, difG2, difB2;
 
-    cmsDoTransform(transform1, sourceCol, linearCol, 1);
-    cmsDoTransform(transform2, linearCol, finalCol, 1);
+    cmsDoTransform(contextID, transform1, sourceCol, linearCol, 1);
+    cmsDoTransform(contextID, transform2, linearCol, finalCol, 1);
 
-    cmsCloseProfile(lcms_sRGB); cmsCloseProfile(elle_sRGB); cmsCloseProfile(elle_linear);
+    cmsCloseProfile(contextID, lcms_sRGB); cmsCloseProfile(contextID, elle_sRGB); cmsCloseProfile(contextID, elle_linear);
 
 
     difR = (int)sourceCol[0] - finalCol[0];
@@ -8418,15 +8411,15 @@ int CheckLinearSpacesOptimization(void)
 
 
     uint16toFloat(linearCol, linearColF);
-    cmsDoTransform(transform2a, linearColF, finalCol, 1);
+    cmsDoTransform(contextID, transform2a, linearColF, finalCol, 1);
 
     difR2 = (int)sourceCol[0] - finalCol[0];
     difG2 = (int)sourceCol[1] - finalCol[1];
     difB2 = (int)sourceCol[2] - finalCol[2];
 
-    cmsDeleteTransform(transform1);
-    cmsDeleteTransform(transform2);
-    cmsDeleteTransform(transform2a);
+    cmsDeleteTransform(contextID, transform1);
+    cmsDeleteTransform(contextID, transform2);
+    cmsDeleteTransform(contextID, transform2a);
 
     if (abs(difR2 - difR) > 5 || abs(difG2 - difG) > 5 || abs(difB2 - difB) > 5)
     {

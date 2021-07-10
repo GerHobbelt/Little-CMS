@@ -256,7 +256,6 @@ cmsBool OptimizeCLUTRGBTransform(cmsContext ContextID,
     if (T_COLORSPACE(*InputFormat) != PT_RGB) return FALSE;
 
     OriginalLut = *Lut;
-   
     nGridPoints      = _cmsReasonableGridpointsByColorspace(cmsSigRgbData, *dwFlags);
 
     // Create the result LUT

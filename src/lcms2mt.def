@@ -309,4 +309,3 @@ cmsDupContext                            =   cmsDupContext
 cmsDeleteContext                         =   cmsDeleteContext
 cmsGetContextUserData                    =   cmsGetContextUserData
 cmsGetToneCurveParams                    =   cmsGetToneCurveParams
-cmsDetectRGBProfileGamma                 =   cmsDetectRGBProfileGamma

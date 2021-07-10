@@ -1510,14 +1510,14 @@ const char* satob(const char* v)
     cmsUInt32Number x;
     static char buf[33];
     char *s = buf + 33;
-    
+
     if (v == NULL) return "0";
-    
+
     x = atoi(v);
     *--s = 0;
     if (!x) *--s = '0';
     for (; x; x /= 2) *--s = '0' + x%2;
-    
+
     return s;
 }
 
@@ -1708,7 +1708,7 @@ void WriteHeader(cmsContext ContextID, cmsIT8* it8, SAVESTREAM* fp)
                     break;
 
             case WRITE_BINARY:
-                    Writef(ContextID, fp, "\t0x%s", satob(p ->Value));
+                    Writef(ContextID, fp, "\t0b%s", satob(p ->Value));
                     break;
 
             case WRITE_PAIR:

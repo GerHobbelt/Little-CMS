@@ -1060,7 +1060,6 @@ cmsBool OptimizeByComputingLinearization(cmsContext ContextID, cmsPipeline** Lut
     }
 
     OriginalLut = *Lut;
-   
     ColorSpace       = _cmsICCcolorSpace(ContextID, (int) T_COLORSPACE(*InputFormat));
     OutputColorSpace = _cmsICCcolorSpace(ContextID, (int) T_COLORSPACE(*OutputFormat));
 
@@ -1917,7 +1916,7 @@ cmsBool CMSEXPORT _cmsOptimizePipeline(cmsContext ContextID,
         return TRUE;
     }
 
-    // Named color pipelines cannot be optimized 
+    // Named color pipelines cannot be optimized
     for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, *PtrLut);
         mpe != NULL;
         mpe = cmsStageNext(ContextID, mpe)) {

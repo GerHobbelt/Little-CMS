@@ -82,12 +82,12 @@ static
 void ConsoleErrorHandler(const char* module, const char* fmt, va_list ap)
 {
     if (Verbose) {
-        
+
         fprintf(stderr, "Error: ");
 
         if (module != NULL)
             fprintf(stderr, "[%s] ", module);
-      
+
         vfprintf(stderr, fmt, ap);
         fprintf(stderr, "\n");
         fflush(stderr);

@@ -49,7 +49,7 @@ typedef struct { cmsFloat32Number L, a, b; }     Scanline_LabFloat;
 #define EPSILON_FLOAT_TESTS 0.005
 
 // A flushed printf
-static 
+static
 void trace(const char* frm, ...)
 {
 	va_list args;
@@ -544,7 +544,7 @@ void CheckAccuracy16Bits(cmsContext Raw, cmsContext Plugin)
 // Try values that are denormalized, not-a-number and out of range
 static
 void CheckUncommonValues(cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
-{   
+{
     union
     {
         cmsFloat32Number subnormal;
@@ -561,7 +561,7 @@ void CheckUncommonValues(cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut
 
     cmsHTRANSFORM xformPlugin = cmsCreateTransformTHR(Plugin, hlcmsProfileIn, TYPE_RGB_FLT, hlcmsProfileOut, TYPE_RGB_FLT, Intent, 0);
 
-  
+
     sub_pos.Int = 0x00000002;
     sub_neg.Int = 0x80000002;
 
@@ -605,12 +605,12 @@ void CheckUncommonValues(cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut
 
     cmsDoTransform(xformPlugin, bufferIn, bufferPluginOut, 4);
 
-    free(bufferIn); 
+    free(bufferIn);
     free(bufferPluginOut);
 
     cmsDeleteTransform(xformPlugin);
 
-    cmsDeleteContext(Plugin);    
+    cmsDeleteContext(Plugin);
 }
 
 
@@ -974,6 +974,7 @@ void CheckConversionFloat(cmsContext Raw, cmsContext Plugin)
        TryAllValuesFloatAlpha(Raw, Plugin, cmsOpenProfileFromFile(Raw, "test5.icc", "r"), cmsOpenProfileFromFile(Raw, "test0.icc", "r"), INTENT_PERCEPTUAL, TRUE);
        trace("Ok\n");
 
+
        trace("Crash (II) test.");
        TryAllValuesFloatAlpha(Raw, Plugin, cmsOpenProfileFromFile(Raw, "test0.icc", "r"), cmsOpenProfileFromFile(Raw, "test0.icc", "r"), INTENT_PERCEPTUAL, FALSE);
        trace("..");
@@ -983,13 +984,13 @@ void CheckConversionFloat(cmsContext Raw, cmsContext Plugin)
 
        /*
        * FIXME!!
-       */       
+       */
        trace("Crash (III) test.");
        CheckUncommonValues(cmsOpenProfileFromFile("test5.icc", "r"), cmsOpenProfileFromFile("test3.icc", "r"), INTENT_PERCEPTUAL);
        trace("..");
        CheckUncommonValues(cmsOpenProfileFromFile("test5.icc", "r"), cmsOpenProfileFromFile("test0.icc", "r"), INTENT_PERCEPTUAL);
        trace("Ok\n");
-       
+
 
        // Matrix-shaper should be accurate
        trace("Checking accuracy on Matrix-shaper...");
@@ -1945,7 +1946,7 @@ void ComparativeFloatVs16bits(cmsContext Raw, cmsContext Plugin)
        trace("\n\n");
        trace("C O M P A R A T I V E  converting to 16 bit vs. using float plug-in.\n");
        trace("                              values given in MegaPixels per second.\n");
-       trace("====================================================================\n");       
+       trace("====================================================================\n");
        trace("                                  16 bits tmp.  Float plugin\n");
        fflush(stdout);
 
@@ -2207,7 +2208,7 @@ int main()
        trace("Installing plug-in ... ");
        cmsPlugin(plugin, cmsFastFloatExtensions());
        trace("done.\n\n");
-      
+
        CheckComputeIncrements();
 
        // 15 bit functionality

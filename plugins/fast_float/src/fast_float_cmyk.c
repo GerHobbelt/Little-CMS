@@ -62,7 +62,7 @@ cmsINLINE cmsFloat32Number LinearInterpInt(cmsFloat32Number a, cmsFloat32Number 
 // To prevent out of bounds indexing
 cmsINLINE cmsFloat32Number fclamp100(cmsFloat32Number v)
 {
-       return ((v < 1.0e-9f) || isnan(v)) ? 0.0f : (v > 100.0f ? 100.0f : v);       
+       return ((v < 1.0e-9f) || isnan(v)) ? 0.0f : (v > 100.0f ? 100.0f : v);
 }
 
 
@@ -346,7 +346,6 @@ cmsBool OptimizeCLUTCMYKTransform(cmsContext ContextID,
     if (T_COLORSPACE(*InputFormat)  != PT_CMYK) return FALSE;
 
     OriginalLut = *Lut;
-   
     nGridPoints = _cmsReasonableGridpointsByColorspace(cmsSigRgbData, *dwFlags);
 
     // Create the result LUT

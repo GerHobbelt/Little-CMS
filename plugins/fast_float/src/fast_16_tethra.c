@@ -349,7 +349,7 @@ cmsBool Optimize16BitRGBTransform(cmsContext ContextID,
         cmsSigCurveSetElemType, cmsSigCurveSetElemType,
         NULL, NULL)) return FALSE;
 
-   
+
     newFlags = *dwFlags | cmsFLAGS_FORCE_CLUT;
 
     if (!_cmsOptimizePipeline(ContextID,

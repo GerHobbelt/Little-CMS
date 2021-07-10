@@ -362,7 +362,6 @@ cmsBool Optimize8BitRGBTransform( cmsContext ContextID,
     if (T_COLORSPACE(*InputFormat)  != PT_RGB) return FALSE;
 
     OriginalLut = *Lut;
-   
     nGridPoints      = _cmsReasonableGridpointsByColorspace(cmsSigRgbData, *dwFlags);
 
     // Empty gamma containers
