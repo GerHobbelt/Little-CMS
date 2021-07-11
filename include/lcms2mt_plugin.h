@@ -527,7 +527,6 @@ typedef struct {
     union {                       // Can have only one of both representations at same time
         cmsUInt16Number*  T;      // Points to the table 16 bits table
         cmsFloat32Number* TFloat; // Points to the cmsFloat32Number table
-
     } Tab;
 
     cmsInterpParams* Params;
