@@ -9136,11 +9136,10 @@ int main(int argc, char* argv[])
     _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 #endif
 
-
     // First of all, check for the right header
-   if (cmsGetEncodedCMMversion() != LCMS_VERSION) {
-          Die("Oops, you are mixing header and shared lib!\nHeader version reports to be '%d' and shared lib '%d'\n", LCMS_VERSION, cmsGetEncodedCMMversion());
-   }
+    if (cmsGetEncodedCMMversion() != LCMS_VERSION) {
+        Die("Oops, you are mixing header and shared lib!\nHeader version reports to be '%d' and shared lib '%d'\n", LCMS_VERSION, cmsGetEncodedCMMversion());
+    }
 
     printf("LittleCMS %2.2f test bed %s %s\n\n", LCMS_VERSION / 1000.0, __DATE__, __TIME__);
 
