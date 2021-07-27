@@ -564,9 +564,9 @@ cmsInt32Number CheckParametricCurvePlugin(cmsContext ContextID)
     cmsPlugin(cpy, &CurvePluginSample2);
 
     cpy2 =  DupContext(cpy, NULL);
-    
+
     cmsPlugin(cpy2, &Rec709Plugin);
-    
+
 
     sinus = cmsBuildParametricToneCurve(cpy, TYPE_SIN, &scale);
     cosinus = cmsBuildParametricToneCurve(cpy, TYPE_COS, &scale);
@@ -734,7 +734,7 @@ cmsInt32Number CheckFormattersPlugin(cmsContext ContextID)
     cmsPlugin(cpy, &FormattersPluginSample2);
 
     cpy2 = DupContext(cpy, NULL);
-    
+
     xform = cmsCreateTransform(cpy, NULL, TYPE_RGB_565, NULL, TYPE_RGB_565, INTENT_PERCEPTUAL, cmsFLAGS_NULLTRANSFORM);
 
     cmsDoTransform(cpy, xform, stream, result, 4);
@@ -972,7 +972,6 @@ cmsInt32Number CheckMPEPlugin(cmsContext ContextID)
     cmsContext cpy = NULL;
     cmsContext cpy2 = NULL;
     cmsHPROFILE h = NULL;
-    cmsUInt32Number myTag = 1234;
     cmsUInt32Number rc = 0;
     char* data = NULL;
     cmsUInt32Number clen = 0;
