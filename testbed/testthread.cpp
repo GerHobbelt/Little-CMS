@@ -96,7 +96,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
     HANDLE workers[NWORKERS];
 
 
-    for (int i=0; i<NWORKERS; ++i)
+    for (i=0; i<NWORKERS; ++i)
     {
         DWORD threadid;
 
