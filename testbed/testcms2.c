@@ -5203,7 +5203,7 @@ cmsInt32Number CheckDictionary16(cmsContext ContextID, cmsInt32Number Pass,  cms
              if (memcmp(e ->Value, L"12",  sizeof(wchar_t) * 2) != 0) return 0;
              e = cmsDictNextEntry(ContextID, e);
              if (memcmp(e ->Name, L"Name", sizeof(wchar_t) * 4) != 0) return 0;
-             if (memcmp(e ->Value, L"String",  sizeof(wchar_t) * 5) != 0) return 0;
+             if (memcmp(e ->Value, L"String",  sizeof(wchar_t) * 6) != 0) return 0;
              e = cmsDictNextEntry(ContextID, e);
              if (memcmp(e ->Name, L"Name1", sizeof(wchar_t) *5) != 0) return 0;
              if (e ->Value == NULL) return 0;
@@ -5263,7 +5263,7 @@ cmsInt32Number CheckDictionary24(cmsContext ContextID, cmsInt32Number Pass,  cms
         if (memcmp(e ->Value, L"12",  sizeof(wchar_t) * 2) != 0) return 0;
         e = cmsDictNextEntry(ContextID, e);
         if (memcmp(e ->Name, L"Name", sizeof(wchar_t) * 4) != 0) return 0;
-        if (memcmp(e ->Value, L"String",  sizeof(wchar_t) * 5) != 0) return 0;
+        if (memcmp(e ->Value, L"String",  sizeof(wchar_t) * 6) != 0) return 0;
 
         cmsMLUgetASCII(ContextID, e->DisplayName, "en", "US", Buffer, 256);
         if (strcmp(Buffer, "Hello, world") != 0) rc = 0;
