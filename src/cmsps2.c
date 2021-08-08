@@ -553,7 +553,7 @@ void EmitNGamma(cmsContext ContextID, cmsIOHANDLER* m, cmsUInt32Number n, cmsTon
         }
         else {
             snprintf(buffer, sizeof(buffer), "%s%d", nameprefix, (int) i);
-		    buffer[sizeof(buffer)-1] = '\0';
+		    buffer[sizeof(buffer) - 1] = '\0';
             Emit1Gamma(ContextID, m, g[i], buffer);
         }
     }
