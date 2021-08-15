@@ -251,6 +251,7 @@ void PerformanceEval8(cmsContext ContextID,
 
                      if (ain) {
                          *out[TotalOut] = *ain;
+                         ain += SourceIncrements[TotalOut];
                          out[TotalOut] += DestIncrements[TotalOut];
                      }
 

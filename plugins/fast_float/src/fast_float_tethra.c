@@ -211,6 +211,7 @@ void FloatCLUTEval(cmsContext ContextID,
 
             if (ain) {
                 *(cmsFloat32Number*)(out[TotalOut]) = *ain;
+                ain += SourceIncrements[TotalOut];
                 out[TotalOut] += DestIncrements[TotalOut];
             }
         }
