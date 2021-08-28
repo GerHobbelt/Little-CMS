@@ -8255,7 +8255,7 @@ int CheckEmptyMLUC(cmsContext ContextID)
 
     // Cleanup
     cmsCloseProfile(ContextID, profile);
-    DebugMemDontCheckThis(ContextID);
+    //DebugMemDontCheckThis(ContextID);
     cmsDeleteContext(ContextID);
 
     return 1;
