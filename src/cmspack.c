@@ -1089,7 +1089,7 @@ cmsUInt8Number* UnrollDouble1Chan(cmsContext ContextID, CMSREGISTER _cmsTRANSFOR
 
 // For anything going from cmsUInt8Number
 static
-cmsUInt8Number* Unroll8ToFloat(_cmsTRANSFORM* info,
+cmsUInt8Number* Unroll8ToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
                                cmsFloat32Number wIn[],
                                cmsUInt8Number* accum,
                                cmsUInt32Number Stride)
@@ -1104,7 +1104,7 @@ cmsUInt8Number* Unroll8ToFloat(_cmsTRANSFORM* info,
     cmsUInt32Number Planar = T_PLANAR(info->InputFormat);
     cmsFloat32Number v;
     cmsUInt32Number i, start = 0;
-    
+
     Stride /= PixelSize(info->InputFormat);
 
     if (ExtraFirst)
@@ -1141,7 +1141,7 @@ cmsUInt8Number* Unroll8ToFloat(_cmsTRANSFORM* info,
 
 // For anything going from cmsUInt16Number
 static
-cmsUInt8Number* Unroll16ToFloat(_cmsTRANSFORM* info,
+cmsUInt8Number* Unroll16ToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
                                 cmsFloat32Number wIn[],
                                 cmsUInt8Number* accum,
                                 cmsUInt32Number Stride)
@@ -1421,11 +1421,11 @@ cmsUInt8Number* UnrollXYZFloatToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
 
 
 cmsINLINE void lab4toFloat(cmsFloat32Number wIn[], cmsUInt16Number lab4[3])
-{        
+{
     cmsFloat32Number L = (cmsFloat32Number) lab4[0] / 655.35F;
     cmsFloat32Number a = ((cmsFloat32Number) lab4[1] / 257.0F) - 128.0F;
     cmsFloat32Number b = ((cmsFloat32Number) lab4[2] / 257.0F) - 128.0F;
-    
+
     wIn[0] = (L / 100.0F);                    // from 0..100 to 0..1
     wIn[1] = ((a + 128.0F) / 255.0F);         // form -128..+127 to 0..1
     wIn[2] = ((b + 128.0F) / 255.0F);
@@ -1433,7 +1433,7 @@ cmsINLINE void lab4toFloat(cmsFloat32Number wIn[], cmsUInt16Number lab4[3])
 }
 
 static
-cmsUInt8Number* UnrollLabV2_8ToFloat(_cmsTRANSFORM* info,
+cmsUInt8Number* UnrollLabV2_8ToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
                                       cmsFloat32Number wIn[],
                                       cmsUInt8Number* accum,
                                       cmsUInt32Number Stride)
@@ -1453,7 +1453,7 @@ cmsUInt8Number* UnrollLabV2_8ToFloat(_cmsTRANSFORM* info,
 }
 
 static
-cmsUInt8Number* UnrollALabV2_8ToFloat(_cmsTRANSFORM* info,
+cmsUInt8Number* UnrollALabV2_8ToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
                                       cmsFloat32Number wIn[],
                                       cmsUInt8Number* accum,
                                       cmsUInt32Number Stride)
@@ -1474,7 +1474,7 @@ cmsUInt8Number* UnrollALabV2_8ToFloat(_cmsTRANSFORM* info,
 }
 
 static
-cmsUInt8Number* UnrollLabV2_16ToFloat(_cmsTRANSFORM* info,
+cmsUInt8Number* UnrollLabV2_16ToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
                                       cmsFloat32Number wIn[],
                                       cmsUInt8Number* accum,
                                       cmsUInt32Number Stride)
