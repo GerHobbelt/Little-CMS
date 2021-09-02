@@ -6065,8 +6065,10 @@ cmsInt32Number CheckEncodedLabTransforms(cmsContext ContextID)
 {
     cmsHTRANSFORM xform;
     cmsUInt16Number In[3];
+    cmsUInt16Number wLab[3];
     cmsCIELab Lab;
     cmsCIELab White = { 100, 0, 0 };
+    cmsCIELab Color = { 7.11070, -76, 26 };
     cmsHPROFILE hLab1 = cmsCreateLab4Profile(ContextID, NULL);
     cmsHPROFILE hLab2 = cmsCreateLab4Profile(ContextID, NULL);
 
@@ -6081,6 +6083,17 @@ cmsInt32Number CheckEncodedLabTransforms(cmsContext ContextID)
     cmsDoTransform(ContextID, xform, In, &Lab, 1);
 
     if (cmsDeltaE(ContextID, &Lab, &White) > 0.0001) return 0;
+   
+
+    In[0] = 0x1234;
+    In[1] = 0x3434;
+    In[2] = 0x9A9A;
+
+    cmsDoTransform(xform, In, &Lab, 1);
+    cmsFloat2LabEncoded(wLab, &Lab);
+    if (memcmp(In, wLab, sizeof(wLab)) != 0) return 0;
+    if (cmsDeltaE(&Lab, &Color) > 0.0001) return 0;
+
     cmsDeleteTransform(ContextID, xform);
 
     hLab1 = cmsCreateLab2Profile(ContextID, NULL);
@@ -6088,7 +6101,6 @@ cmsInt32Number CheckEncodedLabTransforms(cmsContext ContextID)
 
     xform = cmsCreateTransform(ContextID, hLab1, TYPE_LabV2_16, hLab2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(ContextID, hLab1); cmsCloseProfile(ContextID, hLab2);
-
 
     In[0] = 0xFF00;
     In[1] = 0x8000;
@@ -8372,7 +8384,7 @@ int CheckGammaSpaceDetection(cmsContext contextID)
 
 #if 0
 
-// You need to download folowing profilies to execute this test: sRGB-elle-V4-srgbtrc.icc, sRGB-elle-V4-g10.icc
+// You need to download folowing profiles to execute this test: sRGB-elle-V4-srgbtrc.icc, sRGB-elle-V4-g10.icc
 // The include this line in the checks list:  Check("KInear spaces detection", CheckLinearSpacesOptimization);
 static
 void uint16toFloat(cmsUInt16Number* src, cmsFloat32Number* dst)
@@ -8431,6 +8443,31 @@ int CheckLinearSpacesOptimization(cmsContext contextID)
 }
 #endif
 
+
+static
+int CheckIntToFloatTransform(void)
+{
+    cmsHPROFILE hAbove = Create_AboveRGB();
+    cmsHPROFILE hsRGB = cmsCreate_sRGBProfile();
+
+    cmsHTRANSFORM xform = cmsCreateTransform(hAbove, TYPE_RGB_8, hsRGB, TYPE_RGB_DBL, INTENT_PERCEPTUAL, 0);
+
+    cmsUInt8Number rgb8[3] = { 12, 253, 21 };
+    cmsFloat64Number rgbDBL[3] = { 0 };
+
+    cmsCloseProfile(hAbove); cmsCloseProfile(hsRGB);
+
+    cmsDoTransform(xform, rgb8, rgbDBL, 1);
+
+    
+    cmsDeleteTransform(xform);
+
+    if (rgbDBL[0] < 0 && rgbDBL[2] < 0) return 1;
+
+    Fail("Unbounded transforms with integer input failed");
+
+    return 0;
+}
 
 // --------------------------------------------------------------------------------------------------
 // P E R F O R M A N C E   C H E C K S
@@ -9371,6 +9408,7 @@ int main(int argc, char* argv[])
     Check(ctx, "Empty MLUC", CheckEmptyMLUC);
     Check(ctx, "sRGB round-trips", Check_sRGB_Rountrips);
     Check(ctx, "Gamma space detection", CheckGammaSpaceDetection);
+    Check(ctx, "Unbounded mode w/ integer output", CheckIntToFloatTransform);
     }
 
     if (DoPluginTests)
