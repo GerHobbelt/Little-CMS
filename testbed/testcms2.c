@@ -6083,16 +6083,16 @@ cmsInt32Number CheckEncodedLabTransforms(cmsContext ContextID)
     cmsDoTransform(ContextID, xform, In, &Lab, 1);
 
     if (cmsDeltaE(ContextID, &Lab, &White) > 0.0001) return 0;
-   
+
 
     In[0] = 0x1234;
     In[1] = 0x3434;
     In[2] = 0x9A9A;
 
-    cmsDoTransform(xform, In, &Lab, 1);
-    cmsFloat2LabEncoded(wLab, &Lab);
+    cmsDoTransform(ContextID, xform, In, &Lab, 1);
+    cmsFloat2LabEncoded(ContextID, wLab, &Lab);
     if (memcmp(In, wLab, sizeof(wLab)) != 0) return 0;
-    if (cmsDeltaE(&Lab, &Color) > 0.0001) return 0;
+    if (cmsDeltaE(ContextID, &Lab, &Color) > 0.0001) return 0;
 
     cmsDeleteTransform(ContextID, xform);
 
@@ -8445,22 +8445,22 @@ int CheckLinearSpacesOptimization(cmsContext contextID)
 
 
 static
-int CheckIntToFloatTransform(void)
+int CheckIntToFloatTransform(cmsContext ContextID)
 {
-    cmsHPROFILE hAbove = Create_AboveRGB();
-    cmsHPROFILE hsRGB = cmsCreate_sRGBProfile();
+    cmsHPROFILE hAbove = Create_AboveRGB(ContextID);
+    cmsHPROFILE hsRGB = cmsCreate_sRGBProfile(ContextID);
 
-    cmsHTRANSFORM xform = cmsCreateTransform(hAbove, TYPE_RGB_8, hsRGB, TYPE_RGB_DBL, INTENT_PERCEPTUAL, 0);
+    cmsHTRANSFORM xform = cmsCreateTransform(ContextID, hAbove, TYPE_RGB_8, hsRGB, TYPE_RGB_DBL, INTENT_PERCEPTUAL, 0);
 
     cmsUInt8Number rgb8[3] = { 12, 253, 21 };
     cmsFloat64Number rgbDBL[3] = { 0 };
 
-    cmsCloseProfile(hAbove); cmsCloseProfile(hsRGB);
+    cmsCloseProfile(ContextID, hAbove);
+	cmsCloseProfile(ContextID, hsRGB);
 
-    cmsDoTransform(xform, rgb8, rgbDBL, 1);
+    cmsDoTransform(ContextID, xform, rgb8, rgbDBL, 1);
 
-    
-    cmsDeleteTransform(xform);
+    cmsDeleteTransform(ContextID, xform);
 
     if (rgbDBL[0] < 0 && rgbDBL[2] < 0) return 1;
 
