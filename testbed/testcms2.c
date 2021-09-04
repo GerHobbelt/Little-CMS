@@ -9160,7 +9160,12 @@ void PrintSupportedIntents(void)
 
 // ---------------------------------------------------------------------------------------
 
-int main(int argc, char* argv[])
+
+#if defined(BUILD_MONOLITHIC)
+#define main(cnt, arr)      lcms2_test_main(cnt, arr)
+#endif
+
+int main(int argc, const char** argv)
 {
     cmsInt32Number Exhaustive = 0;
     cmsInt32Number DoSpeedTests = 1;
