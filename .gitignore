@@ -59,3 +59,7 @@ DerivedData
 *.tlog
 *.ipdb
 *.iobj
+
+# SSE
+_rez_build
+.vscode
