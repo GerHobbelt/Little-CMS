@@ -4025,41 +4025,44 @@ cmsToneCurve* ReadSegmentedCurve(cmsContext ContextID, struct _cms_typehandler_s
 
            switch (ElementSig) {
 
-            case cmsSigFormulaCurveSeg: {
+           case cmsSigFormulaCurveSeg: {
 
-                cmsUInt16Number Type;
-                cmsUInt32Number ParamsByType[] = {4, 5, 5 };
+               cmsUInt16Number Type;
+               cmsUInt32Number ParamsByType[] = { 4, 5, 5 };
 
                 if (!_cmsReadUInt16Number(ContextID, io, &Type)) goto Error;
                 if (!_cmsReadUInt16Number(ContextID, io, NULL)) goto Error;
 
-                Segments[i].Type = Type + 6;
-                if (Type > 2) goto Error;
+               Segments[i].Type = Type + 6;
+               if (Type > 2) goto Error;
 
-                for (j=0; j < ParamsByType[Type]; j++) {
+               for (j = 0; j < ParamsByType[Type]; j++) {
 
-                    cmsFloat32Number f;
-                    if (!_cmsReadFloat32Number(ContextID, io, &f)) goto Error;
-                    Segments[i].Params[j] = f;
-                }
-                }
-                break;
+                   cmsFloat32Number f;
+                   if (!_cmsReadFloat32Number(ContextID, io, &f)) goto Error;
+                   Segments[i].Params[j] = f;
+               }
+           }
+           break;
 
 
-            case cmsSigSampledCurveSeg: {
-                cmsUInt32Number Count;
+           case cmsSigSampledCurveSeg: {
+               cmsUInt32Number Count;
 
-                if (!_cmsReadUInt32Number(ContextID, io, &Count)) goto Error;
+               if (!_cmsReadUInt32Number(ContextID, io, &Count)) goto Error;
 
-                Segments[i].nGridPoints = Count;
-                Segments[i].SampledPoints = (cmsFloat32Number*) _cmsCalloc(ContextID, Count, sizeof(cmsFloat32Number));
-                if (Segments[i].SampledPoints == NULL) goto Error;
+               // The first point is implicit in the last stage, we allocate an extra note to be populated latter on
+               Count++;
+               Segments[i].nGridPoints = Count;
+               Segments[i].SampledPoints = (cmsFloat32Number*) _cmsCalloc(ContextID, Count, sizeof(cmsFloat32Number));
+               if (Segments[i].SampledPoints == NULL) goto Error;
 
-                for (j=0; j < Count; j++) {
-                    if (!_cmsReadFloat32Number(ContextID, io, &Segments[i].SampledPoints[j])) goto Error;
-                }
-                }
-                break;
+               Segments[i].SampledPoints[0] = 0;
+               for (j = 1; j < Count; j++) {
+                   if (!_cmsReadFloat32Number(ContextID, io, &Segments[i].SampledPoints[j])) goto Error;
+               }
+           }
+           break;
 
             default:
                 {
@@ -4079,6 +4082,17 @@ cmsToneCurve* ReadSegmentedCurve(cmsContext ContextID, struct _cms_typehandler_s
          if (Segments[i].SampledPoints) _cmsFree(ContextID, Segments[i].SampledPoints);
      }
      _cmsFree(ContextID, Segments);
+
+     // Explore for missing implicit points 
+     for (i = 0; i < nSegments; i++) {
+
+         // If sampled curve, fix it
+         if (Curve->Segments[i].Type == 0) {
+
+             Curve->Segments[i].SampledPoints[0] = cmsEvalToneCurveFloat(Curve, Curve->Segments[i].x0);
+         }
+     }
+
      return Curve;
 
 Error:
@@ -4173,12 +4187,12 @@ cmsBool WriteSegmentedCurve(cmsContext ContextID, cmsIOHANDLER* io, cmsToneCurve
 
         if (ActualSeg -> Type == 0) {
 
-            // This is a sampled curve
+            // This is a sampled curve. First point is implicit in the ICC format, but not in our representation
             if (!_cmsWriteUInt32Number(ContextID, io, (cmsUInt32Number) cmsSigSampledCurveSeg)) goto Error;
             if (!_cmsWriteUInt32Number(ContextID, io, 0)) goto Error;
-            if (!_cmsWriteUInt32Number(ContextID, io, ActualSeg -> nGridPoints)) goto Error;
+            if (!_cmsWriteUInt32Number(ContextID, io, ActualSeg -> nGridPoints - 1)) goto Error;
 
-            for (j=0; j < g ->Segments[i].nGridPoints; j++) {
+            for (j=1; j < g ->Segments[i].nGridPoints; j++) {
                 if (!_cmsWriteFloat32Number(ContextID, io, ActualSeg -> SampledPoints[j])) goto Error;
             }
 
