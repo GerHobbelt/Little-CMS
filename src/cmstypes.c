@@ -4089,7 +4089,7 @@ cmsToneCurve* ReadSegmentedCurve(cmsContext ContextID, struct _cms_typehandler_s
          // If sampled curve, fix it
          if (Curve->Segments[i].Type == 0) {
 
-             Curve->Segments[i].SampledPoints[0] = cmsEvalToneCurveFloat(Curve, Curve->Segments[i].x0);
+             Curve->Segments[i].SampledPoints[0] = cmsEvalToneCurveFloat(ContextID, Curve, Curve->Segments[i].x0);
          }
      }
 
