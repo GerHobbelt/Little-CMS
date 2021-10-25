@@ -290,7 +290,7 @@ void PerformanceEval16(cmsContext ContextID,
                   {
                       res16 = *(const cmsUInt16Number*)ain;
                       TO_OUTPUT(out[OutChan], res16);
-                      ain += SourceIncrements[TotalOut];
+                      ain += SourceIncrements[3];
                       out[TotalOut] += DestIncrements[TotalOut];
                   }
 
