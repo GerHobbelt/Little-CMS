@@ -34,6 +34,8 @@ cmsBool Floating_Point_Transforms_Dispatcher(cmsContext ContextID,
                                   cmsUInt32Number* OutputFormat,
                                   cmsUInt32Number* dwFlags)
 {
+    // Softproofing & gamut check does not use plugin, both are activated via following flag.
+    if (*dwFlags & cmsFLAGS_SOFTPROOFING) return FALSE;
     // Try to optimize as a set of curves plus a matrix plus a set of curves
     if (OptimizeMatrixShaper15(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
 
