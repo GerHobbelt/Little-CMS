@@ -301,10 +301,11 @@ void FloatCMYKCLUTEval(cmsContext ContextID,
                 out[OutChan] += DestIncrements[OutChan];
             }
 
-            if (ain)
+            if (ain) {
                 *(cmsFloat32Number*)(out[TotalOut]) = *(cmsFloat32Number*)ain;
                 ain += SourceIncrements[4];
                 out[TotalOut] += DestIncrements[TotalOut];
+            }
         }
 
         strideIn += Stride->BytesPerLineIn;
