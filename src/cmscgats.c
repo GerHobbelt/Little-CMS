@@ -677,6 +677,42 @@ cmsFloat64Number ParseFloatNumber(const char *Buffer)
 }
 
 
+// Reads a string, special case to avoid infinite recursion on .include
+static
+void InStringSymbol(cmsContext ContextID, cmsIT8* it8)
+{
+    while (isseparator(it8->ch))
+        NextCh(it8);
+
+    if (it8->ch == '\'' || it8->ch == '\"')
+    {
+        CMSREGISTER char* idptr;
+        int k, sng;
+
+        idptr = it8->str;
+        sng = it8->ch;
+        k = 0;
+        NextCh(it8);
+
+        while (k < (MAXSTR - 1) && it8->ch != sng) {
+
+            if (it8->ch == '\n' || it8->ch == '\r') k = MAXSTR + 1;
+            else {
+                *idptr++ = (char)it8->ch;
+                NextCh(it8);
+                k++;
+            }
+        }
+
+        it8->sy = SSTRING;
+        *idptr = '\0';
+        NextCh(it8);        
+    }
+    else
+        SynError(ContextID, it8, "String expected");
+
+}
+
 // Reads next symbol
 static
 void InSymbol(cmsContext ContextID, cmsIT8* it8)
@@ -684,7 +720,6 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
     CMSREGISTER char *idptr;
     CMSREGISTER int k;
     SYMBOL key;
-    int sng;
 
     do {
 
@@ -870,24 +905,7 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
         // String.
         case '\'':
         case '\"':
-            idptr = it8->str;
-            sng = it8->ch;
-            k = 0;
-            NextCh(it8);
-
-            while (k < (MAXSTR-1) && it8->ch != sng) {
-
-                if (it8->ch == '\n'|| it8->ch == '\r') k = MAXSTR+1;
-                else {
-                    *idptr++ = (char) it8->ch;
-                    NextCh(it8);
-                    k++;
-                }
-            }
-
-            it8->sy = SSTRING;
-            *idptr = '\0';
-            NextCh(it8);
+            InStringSymbol(ContextID, it8);
             break;
 
 
@@ -910,7 +928,7 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
                     return;
                 }
 
-                InSymbol(ContextID, it8);
+                InStringSymbol(ContextID, it8);
                 if (!Check(ContextID, it8, SSTRING, "Filename expected")) return;
 
                 FileNest = it8 -> FileStack[it8 -> IncludeSP + 1];
