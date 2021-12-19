@@ -362,14 +362,14 @@ static const char* PredefinedSampleID[] = {
 static void* AllocChunk(cmsContext ContextID, cmsIT8* it8, cmsUInt32Number size);
 
 static
-string* StringAlloc(cmsIT8* it8, int max)
+string* StringAlloc(cmsContext ContextID, cmsIT8* it8, int max)
 {
-    string* s = (string*) AllocChunk(it8, sizeof(string));
+    string* s = (string*) AllocChunk(ContextID, it8, sizeof(string));
 
     s->it8 = it8;
     s->max = MAXSTR;
     s->len = 0;
-    s->begin = (char*) AllocChunk(it8, s->max);
+    s->begin = (char*) AllocChunk(ContextID, it8, s->max);
 
     return s;
 }
@@ -381,14 +381,14 @@ void StringClear(string* s)
 }
 
 static
-void StringAppend(string* s, char c)
+void StringAppend(cmsContext ContextID, string* s, char c)
 {
     if (s->len + 1 >= s->max)
     {
         char* new_ptr;
 
         s->max *= 10;
-        new_ptr = AllocChunk(s->it8, s->max);
+        new_ptr = AllocChunk(ContextID, s->it8, s->max);
         memcpy(new_ptr, s->begin, s->len);
         s->begin = new_ptr;
     }
@@ -1385,8 +1385,8 @@ cmsHANDLE  CMSEXPORT cmsIT8Alloc(cmsContext ContextID)
     it8->IncludeSP   = 0;
     it8 -> lineno = 1;
 
-    it8->id = StringAlloc(it8, MAXSTR);
-    it8->str = StringAlloc(it8, MAXSTR);
+    it8->id = StringAlloc(ContextID, it8, MAXSTR);
+    it8->str = StringAlloc(ContextID, it8, MAXSTR);
 
     strcpy(it8->DoubleFormatter, DEFAULT_DBL_FORMAT);
     cmsIT8SetSheetType(ContextID, (cmsHANDLE) it8, "CGATS.17");
@@ -1525,7 +1525,7 @@ void AllocateDataFormat(cmsContext ContextID, cmsIT8* it8)
         t -> nSamples = 10;
         }
 
-    t -> DataFormat = (char**) AllocChunk (ContextID, it8, ((cmsUInt32Number) t->nSamples + 1) * sizeof(char *));
+    t -> DataFormat = (char**) AllocChunk(ContextID, it8, ((cmsUInt32Number) t->nSamples + 1) * sizeof(char *));
     if (t->DataFormat == NULL) {
 
         SynError(ContextID, it8, "AllocateDataFormat: Unable to allocate dataFormat array");
@@ -2005,12 +2005,12 @@ cmsBool DataSection (cmsContext ContextID, cmsIT8* it8)
 
             // To keep very long data
             case SIDENT:  
-                if (!SetData(it8, iSet, iField, StringPtr(it8->id)))
+                if (!SetData(ContextID, it8, iSet, iField, StringPtr(it8->id)))
                     return FALSE;
                 break;
 
             case SSTRING:
-                if (!SetData(it8, iSet, iField, StringPtr(it8->str)))
+                if (!SetData(ContextID, it8, iSet, iField, StringPtr(it8->str)))
                     return FALSE;
                 break;
 
