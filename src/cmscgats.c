@@ -404,11 +404,11 @@ char* StringPtr(string* s)
 }
 
 static
-void StringCat(string* s, const char* c)
+void StringCat(cmsContext ContextID, string* s, const char* c)
 {
     while (*c)
     {
-        StringAppend(s, *c);
+        StringAppend(ContextID, s, *c);
         c++;
     }
 }
@@ -759,7 +759,7 @@ void InStringSymbol(cmsContext ContextID, cmsIT8* it8)
 
             if (it8->ch == '\n' || it8->ch == '\r' || it8->ch == 0) break;
             else {
-                StringAppend(it8->str, (char)it8->ch);
+                StringAppend(ContextID, it8->str, (char)it8->ch);
                 NextCh(it8);
             }
         }
@@ -789,7 +789,7 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
 
             do {
 
-                StringAppend(it8->id, it8->ch);
+                StringAppend(ContextID, it8->id, it8->ch);
 
                 NextCh(it8);
 
@@ -903,11 +903,11 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
                         snprintf(buffer, sizeof(buffer), it8 ->DoubleFormatter, it8->dnum);
                     }
 
-                    StringCat(it8->id, buffer);
+                    StringCat(ContextID, it8->id, buffer);
 
                     do {
 
-                        StringAppend(it8->id, (char) it8->ch);
+                        StringAppend(ContextID, it8->id, (char) it8->ch);
 
                         NextCh(it8);
 
