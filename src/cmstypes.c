@@ -144,13 +144,13 @@ cmsINLINE cmsUInt32Number surrogate_to_utf32(cmsUInt32Number high, cmsUInt32Numb
     return (high << 10) + low - 0x35fdc00;
 }
 
-cmsINLINE cmsBool convert_utf16_to_utf32(cmsIOHANDLER* io, cmsInt32Number n, wchar_t* output)
+cmsINLINE cmsBool convert_utf16_to_utf32(cmsContext ContextID, cmsIOHANDLER* io, cmsInt32Number n, wchar_t* output)
 {
     cmsUInt16Number uc;
 
     while (n > 0)
     {
-        if (!_cmsReadUInt16Number(io, &uc)) return FALSE;
+        if (!_cmsReadUInt16Number(ContextID, io, &uc)) return FALSE;
         n--;
 
         if (!is_surrogate(uc))
@@ -161,7 +161,7 @@ cmsINLINE cmsBool convert_utf16_to_utf32(cmsIOHANDLER* io, cmsInt32Number n, wch
 
             cmsUInt16Number low;
 
-            if (!_cmsReadUInt16Number(io, &low)) return FALSE;
+            if (!_cmsReadUInt16Number(ContextID, io, &low)) return FALSE;
             n--;
 
             if (is_high_surrogate(uc) && is_low_surrogate(low))
@@ -187,7 +187,7 @@ cmsBool _cmsReadWCharArray(cmsContext ContextID, cmsIOHANDLER* io, cmsUInt32Numb
 
     if (is32 && Array != NULL)
     {
-        return convert_utf16_to_utf32(io, n, Array);
+        return convert_utf16_to_utf32(ContextID, io, n, Array);
     }
 
     for (i=0; i < n; i++) {

@@ -564,7 +564,7 @@ cmsUInt8Number* UnrollAnyWords(cmsContext ContextID, CMSREGISTER _cmsTRANSFORM* 
 
 
 static
-cmsUInt8Number* UnrollAnyWordsPremul(CMSREGISTER _cmsTRANSFORM* info,
+cmsUInt8Number* UnrollAnyWordsPremul(cmsContext ContextID, CMSREGISTER _cmsTRANSFORM* info,
                                      CMSREGISTER cmsUInt16Number wIn[],
                                      CMSREGISTER cmsUInt8Number* accum,
                                      CMSREGISTER cmsUInt32Number Stride)
@@ -645,7 +645,7 @@ cmsUInt8Number* UnrollPlanarWords(cmsContext ContextID, CMSREGISTER _cmsTRANSFOR
 }
 
 static
-cmsUInt8Number* UnrollPlanarWordsPremul(CMSREGISTER _cmsTRANSFORM* info,
+cmsUInt8Number* UnrollPlanarWordsPremul(cmsContext ContextID, CMSREGISTER _cmsTRANSFORM* info,
                                         CMSREGISTER cmsUInt16Number wIn[],
                                         CMSREGISTER cmsUInt8Number* accum,
                                         CMSREGISTER cmsUInt32Number Stride)
