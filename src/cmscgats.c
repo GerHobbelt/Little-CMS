@@ -367,7 +367,7 @@ string* StringAlloc(cmsContext ContextID, cmsIT8* it8, int max)
     string* s = (string*) AllocChunk(ContextID, it8, sizeof(string));
 
     s->it8 = it8;
-    s->max = MAXSTR;
+    s->max = max;
     s->len = 0;
     s->begin = (char*) AllocChunk(ContextID, it8, s->max);
 
@@ -789,7 +789,7 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
 
             do {
 
-                StringAppend(ContextID, it8->id, it8->ch);
+                StringAppend(ContextID, it8->id, (char) it8->ch);
 
                 NextCh(it8);
 
