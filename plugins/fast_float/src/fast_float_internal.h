@@ -25,9 +25,9 @@
 #include "lcms2mt_fast_float.h"
 #include <stdint.h>
 
-#define REQUIRED_LCMS_VERSION (2120-2000)
+#define REQUIRED_LCMS_VERSION (2130-2000)
 
-// Unused parameter warning supression
+// Unused parameter warning suppression
 #define UNUSED_PARAMETER(x) ((void)x)
 
 // For testbed

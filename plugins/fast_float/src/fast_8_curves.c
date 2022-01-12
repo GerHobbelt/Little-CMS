@@ -382,7 +382,7 @@ cmsBool Optimize8ByJoiningCurves(cmsContext ContextID,
     Curves8Data* Data;
     cmsUInt32Number nChans;
 
-    // This is a loosy optimization! does not apply in floating-point cases
+    // This is a lossy optimization! does not apply in floating-point cases
     if (T_FLOAT(*InputFormat) || T_FLOAT(*OutputFormat)) return FALSE;
 
     // Only on 8-bit

@@ -393,7 +393,7 @@ cmsBool KCurveIsLinear(CurvesFloatData* data)
 }
 
 
-// Create linearization tables with a reasonable number of entries. Precission is about 32 bits.
+// Create linearization tables with a reasonable number of entries. Precision is about 32 bits.
 static
 CurvesFloatData* ComputeCompositeCurves(cmsContext ContextID, cmsUInt32Number nChan,  cmsPipeline* Src)
 {

@@ -280,7 +280,7 @@ void FloatXFORM(cmsContext ContextID, _cmsTRANSFORM* p,
 
             accum = p->FromInputFloat(ContextID, p, fIn, accum, Stride->BytesPerPlaneIn);
 
-            // Any gamut chack to do?
+            // Any gamut check to do?
             if (core->GamutCheck != NULL) {
 
                 // Evaluate gamut marker.
