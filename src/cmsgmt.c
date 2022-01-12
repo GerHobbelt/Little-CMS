@@ -199,15 +199,15 @@ typedef struct {
 
     cmsHTRANSFORM hInput;               // From whatever input color space. 16 bits to DBL
     cmsHTRANSFORM hForward, hReverse;   // Transforms going from Lab to colorant and back
-    cmsFloat64Number Thereshold;        // The thereshold after which is considered out of gamut
+    cmsFloat64Number Threshold;         // The threshold after which is considered out of gamut
 
     } GAMUTCHAIN;
 
 // This sampler does compute gamut boundaries by comparing original
-// values with a transform going back and forth. Values above ERR_THERESHOLD
+// values with a transform going back and forth. Values above ERR_THRESHOLD
 // of maximum are considered out of gamut.
 
-#define ERR_THERESHOLD      5
+#define ERR_THRESHOLD      5
 
 
 static
@@ -246,17 +246,17 @@ int GamutSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], C
 
 
     // if dE1 is small and dE2 is small, value is likely to be in gamut
-    if (dE1 < t->Thereshold && dE2 < t->Thereshold)
+    if (dE1 < t->Threshold && dE2 < t->Threshold)
         Out[0] = 0;
     else {
 
         // if dE1 is small and dE2 is big, undefined. Assume in gamut
-        if (dE1 < t->Thereshold && dE2 > t->Thereshold)
+        if (dE1 < t->Threshold && dE2 > t->Threshold)
             Out[0] = 0;
         else
             // dE1 is big and dE2 is small, clearly out of gamut
-            if (dE1 > t->Thereshold && dE2 < t->Thereshold)
-                Out[0] = (cmsUInt16Number) _cmsQuickFloor((dE1 - t->Thereshold) + .5);
+            if (dE1 > t->Threshold && dE2 < t->Threshold)
+                Out[0] = (cmsUInt16Number) _cmsQuickFloor((dE1 - t->Threshold) + .5);
             else  {
 
                 // dE1 is big and dE2 is also big, could be due to perceptual mapping
@@ -266,8 +266,8 @@ int GamutSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], C
                 else
                     ErrorRatio = dE1 / dE2;
 
-                if (ErrorRatio > t->Thereshold)
-                    Out[0] = (cmsUInt16Number)  _cmsQuickFloor((ErrorRatio - t->Thereshold) + .5);
+                if (ErrorRatio > t->Threshold)
+                    Out[0] = (cmsUInt16Number)  _cmsQuickFloor((ErrorRatio - t->Threshold) + .5);
                 else
                     Out[0] = 0;
             }
@@ -323,10 +323,10 @@ cmsPipeline* _cmsCreateGamutCheckPipeline(cmsContext ContextID,
 
     if (cmsIsMatrixShaper(ContextID, hGamut)) {
 
-        Chain.Thereshold = 1.0;
+        Chain.Threshold = 1.0;
     }
     else {
-        Chain.Thereshold = ERR_THERESHOLD;
+        Chain.Threshold = ERR_THRESHOLD;
     }
 
 
@@ -595,7 +595,7 @@ cmsBool CMSEXPORT cmsDesaturateLab(cmsContext ContextID, cmsCIELab* Lab,
 // The algorithm obtains Y from a syntetical gray R=G=B. Then least squares fitting is used to estimate gamma.
 // For gamma close to 1.0, RGB is linear. On profiles not supported, -1 is returned.
 
-cmsFloat64Number CMSEXPORT cmsDetectRGBProfileGamma(cmsContext ContextID, cmsHPROFILE hProfile, cmsFloat64Number thereshold)
+cmsFloat64Number CMSEXPORT cmsDetectRGBProfileGamma(cmsContext ContextID, cmsHPROFILE hProfile, cmsFloat64Number threshold)
 {
     cmsHPROFILE hXYZ;
     cmsHTRANSFORM xform;
@@ -642,7 +642,7 @@ cmsFloat64Number CMSEXPORT cmsDetectRGBProfileGamma(cmsContext ContextID, cmsHPR
     if (Y_curve == NULL)
         return -1;
 
-    gamma = cmsEstimateGamma(ContextID, Y_curve, thereshold);
+    gamma = cmsEstimateGamma(ContextID, Y_curve, threshold);
 
     cmsFreeToneCurve(ContextID, Y_curve);
 
