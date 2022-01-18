@@ -3624,40 +3624,55 @@ void *Type_UcrBg_Read(cmsContext ContextID, struct _cms_typehandler_struct* self
     SignedSizeOfTag -= sizeof(cmsUInt32Number);
 
     n ->Ucr = cmsBuildTabulatedToneCurve16(ContextID, CountUcr, NULL);
-    if (n ->Ucr == NULL) return NULL;
+    if (n ->Ucr == NULL) goto error;
 
-    if (SignedSizeOfTag < (cmsInt32Number)CountUcr * sizeof(cmsUInt16Number)) return NULL;
-    if (!_cmsReadUInt16Array(ContextID, io, CountUcr, n ->Ucr->Table16)) return NULL;
+    if (SignedSizeOfTag < (cmsInt32Number)CountUcr * sizeof(cmsUInt16Number)) goto error;
+    if (!_cmsReadUInt16Array(ContextID, io, CountUcr, n ->Ucr->Table16)) goto error;
   
     SignedSizeOfTag -= CountUcr * sizeof(cmsUInt16Number);
 
     // Second curve is Black generation
 
-    if (SignedSizeOfTag < sizeof(cmsUInt32Number)) return NULL;    
-    if (!_cmsReadUInt32Number(ContextID, io, &CountBg)) return NULL;
+    if (SignedSizeOfTag < sizeof(cmsUInt32Number)) goto error;
+    if (!_cmsReadUInt32Number(ContextID, io, &CountBg)) goto error;
     SignedSizeOfTag -= sizeof(cmsUInt32Number);
 
     n ->Bg = cmsBuildTabulatedToneCurve16(ContextID, CountBg, NULL);
-    if (n ->Bg == NULL) return NULL;
+    if (n ->Bg == NULL) goto error;
 
-    if (SignedSizeOfTag < (cmsInt32Number) CountBg * sizeof(cmsUInt16Number)) return NULL;    
-    if (!_cmsReadUInt16Array(ContextID, io, CountBg, n ->Bg->Table16)) return NULL;
+    if (SignedSizeOfTag < (cmsInt32Number) CountBg * sizeof(cmsUInt16Number)) goto error;
+    if (!_cmsReadUInt16Array(ContextID, io, CountBg, n ->Bg->Table16)) goto error;
     SignedSizeOfTag -= CountBg * sizeof(cmsUInt16Number);
 
-    if (SignedSizeOfTag < 0 || SignedSizeOfTag > 32000) return NULL;
+    if (SignedSizeOfTag < 0 || SignedSizeOfTag > 32000) goto error;
 
     // Now comes the text. The length is specified by the tag size
     n ->Desc = cmsMLUalloc(ContextID, 1);
-    if (n ->Desc == NULL) return NULL;
+    if (n ->Desc == NULL) goto error;
 
     ASCIIString = (char*) _cmsMalloc(ContextID, SignedSizeOfTag + 1);
-    if (io ->Read(ContextID, io, ASCIIString, sizeof(char), SignedSizeOfTag) != (cmsUInt32Number) SignedSizeOfTag) return NULL;
+    if (io->Read(ContextID, io, ASCIIString, sizeof(char), SignedSizeOfTag) != (cmsUInt32Number)SignedSizeOfTag)
+    {
+        _cmsFree(self->ContextID, ASCIIString);
+        goto error;
+    }
+
     ASCIIString[SignedSizeOfTag] = 0;
     cmsMLUsetASCII(ContextID, n ->Desc, cmsNoLanguage, cmsNoCountry, ASCIIString);
     _cmsFree(ContextID, ASCIIString);
 
     *nItems = 1;
     return (void*) n;
+
+error:
+
+    if (n->Ucr) cmsFreeToneCurve(n->Ucr);
+    if (n->Bg) cmsFreeToneCurve(n->Bg);
+    if (n->Desc) cmsMLUfree(n->Desc);
+    _cmsFree(self->ContextID, n);
+    *nItems = 0;
+    return NULL;
+
 }
 
 static
@@ -5070,17 +5085,26 @@ cmsBool ReadOneElem(cmsContext ContextID, cmsIOHANDLER* io,  _cmsDICelem* e, cms
 
 
 static
-cmsBool ReadOffsetArray(cmsContext ContextID, cmsIOHANDLER* io,  _cmsDICarray* a, cmsUInt32Number Count, cmsUInt32Number Length, cmsUInt32Number BaseOffset)
+cmsBool ReadOffsetArray(cmsContext ContextID, cmsIOHANDLER* io,  _cmsDICarray* a, 
+                        cmsUInt32Number Count, cmsUInt32Number Length, cmsUInt32Number BaseOffset,
+                        cmsInt32Number* SignedSizeOfTagPtr)
 {
     cmsUInt32Number i;
+    cmsInt32Number SignedSizeOfTag = *SignedSizeOfTagPtr;
 
     // Read column arrays
     for (i=0; i < Count; i++) {
+
+        if (SignedSizeOfTag < 4 * sizeof(cmsUInt32Number)) return FALSE;
+        SignedSizeOfTag -= 4 * sizeof(cmsUInt32Number);
 
         if (!ReadOneElem(ContextID, io, &a -> Name, i, BaseOffset)) return FALSE;
         if (!ReadOneElem(ContextID, io, &a -> Value, i, BaseOffset)) return FALSE;
 
         if (Length > 16) {
+
+            if (SignedSizeOfTag < 2 * sizeof(cmsUInt32Number)) return FALSE;
+            SignedSizeOfTag -= 2 * sizeof(cmsUInt32Number);
 
             if (!ReadOneElem(ContextID, io, &a ->DisplayName, i, BaseOffset)) return FALSE;
 
@@ -5088,9 +5112,14 @@ cmsBool ReadOffsetArray(cmsContext ContextID, cmsIOHANDLER* io,  _cmsDICarray* a
 
         if (Length > 24) {
 
+            if (SignedSizeOfTag < 2 * sizeof(cmsUInt32Number)) return FALSE;
+            SignedSizeOfTag -= 2 * sizeof(cmsUInt32Number);
+
             if (!ReadOneElem(ContextID, io, & a -> DisplayValue, i, BaseOffset)) return FALSE;
         }
     }
+
+    *SignedSizeOfTagPtr = SignedSizeOfTag;
     return TRUE;
 }
 
@@ -5238,26 +5267,31 @@ cmsBool WriteOneMLUC(cmsContext ContextID, struct _cms_typehandler_struct* self,
 static
 void *Type_Dictionary_Read(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsUInt32Number* nItems, cmsUInt32Number SizeOfTag)
 {
-   cmsHANDLE hDict;
+   cmsHANDLE hDict = NULL;
    cmsUInt32Number i, Count, Length;
    cmsUInt32Number BaseOffset;
    _cmsDICarray a;
    wchar_t *NameWCS = NULL, *ValueWCS = NULL;
    cmsMLU *DisplayNameMLU = NULL, *DisplayValueMLU=NULL;
    cmsBool rc;
+   cmsInt32Number SignedSizeOfTag = (cmsInt32Number)SizeOfTag;
 
     *nItems = 0;
+    memset(&a, 0, sizeof(a));
 
     // Get actual position as a basis for element offsets
     BaseOffset = io ->Tell(ContextID, io) - sizeof(_cmsTagBase);
 
     // Get name-value record count
+    SignedSizeOfTag -= sizeof(cmsUInt32Number);
+    if (SignedSizeOfTag < 0) goto Error;
     if (!_cmsReadUInt32Number(ContextID, io, &Count)) return NULL;
-    SizeOfTag -= sizeof(cmsUInt32Number);
-
+    
     // Get rec length
+    SignedSizeOfTag -= sizeof(cmsUInt32Number);
+    if (SignedSizeOfTag < 0) goto Error;
     if (!_cmsReadUInt32Number(ContextID, io, &Length)) return NULL;
-    SizeOfTag -= sizeof(cmsUInt32Number);
+    
 
     // Check for valid lengths
     if (Length != 16 && Length != 24 && Length != 32) {
@@ -5273,7 +5307,7 @@ void *Type_Dictionary_Read(cmsContext ContextID, struct _cms_typehandler_struct*
     if (!AllocArray(ContextID, &a, Count, Length)) goto Error;
 
     // Read column arrays
-    if (!ReadOffsetArray(ContextID, io, &a, Count, Length, BaseOffset)) goto Error;
+    if (!ReadOffsetArray(ContextID, io, &a, Count, Length, BaseOffset, &SignedSizeOfTag)) goto Error;
 
     // Seek to each element and read it
     for (i=0; i < Count; i++) {
@@ -5313,7 +5347,7 @@ void *Type_Dictionary_Read(cmsContext ContextID, struct _cms_typehandler_struct*
 
 Error:
    FreeArray(ContextID, &a);
-   cmsDictFree(ContextID, hDict);
+   if (hDict != NULL) cmsDictFree(ContextID, hDict);
    return NULL;
 }
 

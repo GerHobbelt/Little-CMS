@@ -1514,8 +1514,12 @@ void* CMSEXPORT cmsReadTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSig
     if (!_cmsLockMutex(ContextID, Icc ->UsrMutex)) return NULL;
 
     n = _cmsSearchTag(ContextID, Icc, sig, TRUE);
-    if (n < 0) goto Error;               // Not found, return NULL
-
+    if (n < 0)
+    {
+        // Not found, return NULL
+        _cmsUnlockMutex(ContextID, Icc->UsrMutex);
+        return NULL;
+    }
 
     // If the element is already in memory, return the pointer
     if (Icc -> TagPtrs[n]) {
