@@ -3653,7 +3653,7 @@ void *Type_UcrBg_Read(cmsContext ContextID, struct _cms_typehandler_struct* self
     ASCIIString = (char*) _cmsMalloc(ContextID, SignedSizeOfTag + 1);
     if (io->Read(ContextID, io, ASCIIString, sizeof(char), SignedSizeOfTag) != (cmsUInt32Number)SignedSizeOfTag)
     {
-        _cmsFree(self->ContextID, ASCIIString);
+        _cmsFree(ContextID, ASCIIString);
         goto error;
     }
 
@@ -3666,10 +3666,10 @@ void *Type_UcrBg_Read(cmsContext ContextID, struct _cms_typehandler_struct* self
 
 error:
 
-    if (n->Ucr) cmsFreeToneCurve(n->Ucr);
-    if (n->Bg) cmsFreeToneCurve(n->Bg);
-    if (n->Desc) cmsMLUfree(n->Desc);
-    _cmsFree(self->ContextID, n);
+    if (n->Ucr) cmsFreeToneCurve(ContextID, n->Ucr);
+    if (n->Bg) cmsFreeToneCurve(ContextID, n->Bg);
+    if (n->Desc) cmsMLUfree(ContextID, n->Desc);
+    _cmsFree(ContextID, n);
     *nItems = 0;
     return NULL;
 
