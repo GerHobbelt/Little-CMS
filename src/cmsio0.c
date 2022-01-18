@@ -1615,7 +1615,7 @@ Error:
 
     if (Icc->TagPtrs[n] != NULL)
     {
-        _cmsFree(Icc->ContextID, Icc->TagPtrs[n]);
+        _cmsFree(ContextID, Icc->TagPtrs[n]);
         Icc->TagPtrs[n] = NULL;
     }
 
