@@ -482,11 +482,11 @@ cmsBool CMSEXPORT cmsCloseIOhandler(cmsContext ContextID, cmsIOHANDLER* io)
 
 cmsIOHANDLER* CMSEXPORT cmsGetProfileIOhandler(cmsContext ContextID, cmsHPROFILE hProfile)
 {
-	_cmsICCPROFILE* Icc = (_cmsICCPROFILE*)hProfile;
+    _cmsICCPROFILE* Icc = (_cmsICCPROFILE*)hProfile;
     cmsUNUSED_PARAMETER(ContextID);
 
-	if (Icc == NULL) return NULL;
-	return Icc->IOhandler;
+    if (Icc == NULL) return NULL;
+    return Icc->IOhandler;
 }
 
 // Creates an empty structure holding all required parameters
@@ -1612,6 +1612,13 @@ void* CMSEXPORT cmsReadTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSig
 
     // Return error and unlock the data
 Error:
+
+    if (Icc->TagPtrs[n] != NULL)
+    {
+        _cmsFree(Icc->ContextID, Icc->TagPtrs[n]);
+        Icc->TagPtrs[n] = NULL;
+    }
+
     _cmsUnlockMutex(ContextID, Icc ->UsrMutex);
     return NULL;
 }
@@ -1776,7 +1783,7 @@ cmsUInt32Number CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfi
     // It is already read?
     if (Icc -> TagPtrs[i] == NULL) {
 
-        // No yet, get original position
+        // Not yet, get original position
         Offset   = Icc ->TagOffsets[i];
         TagSize  = Icc ->TagSizes[i];
 
