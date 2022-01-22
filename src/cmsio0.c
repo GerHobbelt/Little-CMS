@@ -1430,7 +1430,25 @@ cmsBool CMSEXPORT cmsSaveProfileToMem(cmsContext ContextID, cmsHPROFILE hProfile
     return rc;
 }
 
+// Free one tag contents
+static
+void freeOneTag(_cmsICCPROFILE* Icc, cmsUInt32Number i)
+{
+    if (Icc->TagPtrs[i]) {
 
+        cmsTagTypeHandler* TypeHandler = Icc->TagTypeHandlers[i];
+
+        if (TypeHandler != NULL) {
+            cmsTagTypeHandler LocalTypeHandler = *TypeHandler;
+
+            LocalTypeHandler.ContextID = Icc->ContextID;             
+            LocalTypeHandler.ICCVersion = Icc->Version;
+            LocalTypeHandler.FreePtr(&LocalTypeHandler, Icc->TagPtrs[i]);
+        }
+        else
+            _cmsFree(Icc->ContextID, Icc->TagPtrs[i]);
+    }
+}
 
 // Closes a profile freeing any involved resources
 cmsBool  CMSEXPORT cmsCloseProfile(cmsContext ContextID, cmsHPROFILE hProfile)
@@ -1450,19 +1468,7 @@ cmsBool  CMSEXPORT cmsCloseProfile(cmsContext ContextID, cmsHPROFILE hProfile)
 
     for (i=0; i < Icc -> TagCount; i++) {
 
-        if (Icc -> TagPtrs[i]) {
-
-            cmsTagTypeHandler* TypeHandler = Icc ->TagTypeHandlers[i];
-
-            if (TypeHandler != NULL) {
-                cmsTagTypeHandler LocalTypeHandler = *TypeHandler;
-
-                LocalTypeHandler.ICCVersion = Icc ->Version;
-                LocalTypeHandler.FreePtr(ContextID, &LocalTypeHandler, Icc -> TagPtrs[i]);
-            }
-            else
-                _cmsFree(ContextID, Icc ->TagPtrs[i]);
-        }
+        freeOneTag(Icc, i);        
     }
 
     if (Icc ->IOhandler != NULL) {
@@ -1617,12 +1623,9 @@ void* CMSEXPORT cmsReadTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSig
     // Return error and unlock the data
 Error:
 
-    if (Icc->TagPtrs[n] != NULL)
-    {
-        _cmsFree(ContextID, Icc->TagPtrs[n]);
-        Icc->TagPtrs[n] = NULL;
-    }
-
+    freeOneTag(Icc, n);    
+    Icc->TagPtrs[n] = NULL;
+    
     _cmsUnlockMutex(ContextID, Icc ->UsrMutex);
     return NULL;
 }
