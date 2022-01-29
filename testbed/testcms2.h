@@ -34,7 +34,10 @@
 #endif
 
 // On Visual Studio, use debug CRT
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
+#ifndef _CRTDBG_MAP_ALLOC
+#define _CRTDBG_MAP_ALLOC
+#endif
 #include <crtdbg.h>
 #endif
 
