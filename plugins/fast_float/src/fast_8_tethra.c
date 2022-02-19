@@ -361,9 +361,9 @@ cmsBool Optimize8BitRGBTransform( cmsContext ContextID,
 
     // Only on RGB
     if (T_COLORSPACE(*InputFormat)  != PT_RGB) return FALSE;
-
-    // Lab8 is not suitable due to the encoding
-    if (T_COLORSPACE(*OutputFormat) == PT_Lab) return FALSE;
+   
+    // This optimization only works on RGB8->RGB8
+    if (T_COLORSPACE(*OutputFormat) != PT_RGB) return FALSE;
 
     OriginalLut = *Lut;
     nGridPoints      = _cmsReasonableGridpointsByColorspace(cmsSigRgbData, *dwFlags);
