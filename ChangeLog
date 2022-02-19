@@ -34,6 +34,11 @@ Extend T_EXTRA etc to allow for 63 extra channels.
 No changelog provided.
 
 -----------------------
+2.13.1 Hot fix
+-----------------------
+Fix for pure white going gray in grayscale transforms.
+
+-----------------------
 2.13 Featured release
 -----------------------
 Added support for premultiplied alpha
