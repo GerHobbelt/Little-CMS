@@ -56,6 +56,15 @@ void Die(const char* Reason, ...)
     exit(1);
 }
 
+static
+void* chknull(void* mem)
+{
+    if (mem == NULL)
+        Die("Memory may be corrupted");
+
+    return mem;
+}
+
 // Memory management replacement -----------------------------------------------------------------------------
 
 
@@ -115,7 +124,7 @@ void* DebugMalloc(cmsContext ContextID, cmsUInt32Number size)
     if (size > SingleHit)
         SingleHit = size;
 
-    blk = (_cmsMemoryBlock*) malloc(size + SIZE_OF_MEM_HEADER);
+    blk = (_cmsMemoryBlock*) chknull(malloc(size + SIZE_OF_MEM_HEADER));
     if (blk == NULL) return NULL;
 
     blk ->KeepSize = size;
@@ -1018,7 +1027,7 @@ cmsInt32Number Check1D(cmsContext ContextID, cmsInt32Number nNodesToCheck, cmsBo
     cmsInterpParams* p;
     cmsUInt16Number* Tab;
 
-    Tab = (cmsUInt16Number*) malloc(sizeof(cmsUInt16Number)* nNodesToCheck);
+    Tab = (cmsUInt16Number*) chknull(malloc(sizeof(cmsUInt16Number)* nNodesToCheck));
     if (Tab == NULL) return 0;
 
     p = _cmsComputeInterpParams(ContextID, nNodesToCheck, 1, 1, Tab, CMS_LERP_FLAGS_16BITS);
@@ -5303,7 +5312,7 @@ cmsInt32Number CheckRAWtags(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROF
         case 2:
             if (!cmsReadRawTag(ContextID, hProfile, (cmsTagSignature) 0x31323334, Buffer, 7)) return 0;
 
-            if (strncmp(Buffer, "data123", 7) != 0) return 0;
+            if (memcmp(Buffer, "data123", 7) != 0) return 0;
             return 1;
 
         default:
@@ -7855,7 +7864,7 @@ cmsInt32Number CheckMeta(cmsContext ContextID)
     rc = cmsSaveProfileToMem(ContextID, p, NULL, &clen);
     if (!rc) return 0;
 
-    data = (char*) malloc(clen);
+    data = (char*) chknull(malloc(clen));
     rc = cmsSaveProfileToMem(ContextID, p, data, &clen);
     if (!rc) return 0;
 
@@ -8308,9 +8317,9 @@ int Check_sRGB_Rountrips(cmsContext contextID)
         for (g = 0; g <= 255; g += 16)
             for (b = 0; b <= 255; b += 16)
             {
-                seed[0] = rgb[0] = ((r << 8) | r);
-                seed[1] = rgb[1] = ((g << 8) | g);
-                seed[2] = rgb[2] = ((b << 8) | b);
+                seed[0] = rgb[0] = (cmsUInt16Number) ((r << 8) | r);
+                seed[1] = rgb[1] = (cmsUInt16Number) ((g << 8) | g);
+                seed[2] = rgb[2] = (cmsUInt16Number) ((b << 8) | b);
 
                 for (i = 0; i < 50; i++)
                 {
@@ -8522,7 +8531,7 @@ void SpeedTest32bits(cmsContext ContextID, const char * Title, cmsHPROFILE hlcms
     NumPixels = 256 / Interval * 256 / Interval * 256 / Interval;
     Mb = NumPixels * sizeof(Scanline_rgba32);
 
-    In = (Scanline_rgba32 *) malloc(Mb);
+    In = (Scanline_rgba32 *) chknull(malloc(Mb));
 
     j = 0;
     for (r=0; r < 256; r += Interval)
@@ -8573,7 +8582,7 @@ void SpeedTest16bits(cmsContext ContextID, const char * Title, cmsHPROFILE hlcms
 
     Mb = 256*256*256 * sizeof(Scanline_rgb16);
 
-    In = (Scanline_rgb16*) malloc(Mb);
+    In = (Scanline_rgb16*) chknull(malloc(Mb));
 
     j = 0;
     for (r=0; r < 256; r++)
@@ -8626,7 +8635,7 @@ void SpeedTest32bitsCMYK(cmsContext ContextID, const char * Title, cmsHPROFILE h
     NumPixels = 256 / Interval * 256 / Interval * 256 / Interval;
     Mb = NumPixels * sizeof(Scanline_rgba32);
 
-    In = (Scanline_rgba32 *) malloc(Mb);
+    In = (Scanline_rgba32 *) chknull(malloc(Mb));
 
     j = 0;
     for (r=0; r < 256; r += Interval)
@@ -8679,7 +8688,7 @@ void SpeedTest16bitsCMYK(cmsContext ContextID, const char * Title, cmsHPROFILE h
 
     Mb = 256*256*256*sizeof(Scanline_rgba16);
 
-    In = (Scanline_rgba16*) malloc(Mb);
+    In = (Scanline_rgba16*) chknull(malloc(Mb));
 
     j = 0;
     for (r=0; r < 256; r++)
@@ -8732,7 +8741,7 @@ void SpeedTest8bits(cmsContext ContextID, const char * Title, cmsHPROFILE hlcmsP
 
     Mb = 256*256*256*sizeof(Scanline_rgb8);
 
-    In = (Scanline_rgb8*) malloc(Mb);
+    In = (Scanline_rgb8*) chknull(malloc(Mb));
 
     j = 0;
     for (r=0; r < 256; r++)
@@ -8783,7 +8792,7 @@ void SpeedTest8bitsCMYK(cmsContext ContextID, const char * Title, cmsHPROFILE hl
 
     Mb = 256*256*256*sizeof(Scanline_rgba8);
 
-    In = (Scanline_rgba8*) malloc(Mb);
+    In = (Scanline_rgba8*) chknull(malloc(Mb));
 
     j = 0;
     for (r=0; r < 256; r++)
@@ -8839,7 +8848,7 @@ void SpeedTest32bitsGray(cmsContext ContextID, const char * Title, cmsHPROFILE h
     NumPixels = 256 / Interval * 256 / Interval * 256 / Interval;
     Mb = NumPixels * sizeof(cmsFloat32Number);
 
-    In = (cmsFloat32Number*) malloc(Mb);
+    In = (cmsFloat32Number*) chknull(malloc(Mb));
 
     j = 0;
     for (r = 0; r < 256; r += Interval)
@@ -8884,7 +8893,7 @@ void SpeedTest16bitsGray(cmsContext ContextID, const char * Title, cmsHPROFILE h
     cmsCloseProfile(ContextID, hlcmsProfileOut);
     Mb = 256*256*256 * sizeof(cmsUInt16Number);
 
-    In = (cmsUInt16Number *) malloc(Mb);
+    In = (cmsUInt16Number *) chknull(malloc(Mb));
 
     j = 0;
     for (r=0; r < 256; r++)
@@ -8930,7 +8939,7 @@ void SpeedTest8bitsGray(cmsContext ContextID, const char * Title, cmsHPROFILE hl
     cmsCloseProfile(ContextID, hlcmsProfileOut);
     Mb = 256*256*256;
 
-    In = (cmsUInt8Number*) malloc(Mb);
+    In = (cmsUInt8Number*) chknull(malloc(Mb));
 
     j = 0;
     for (r=0; r < 256; r++)

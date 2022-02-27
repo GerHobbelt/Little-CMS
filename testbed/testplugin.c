@@ -888,7 +888,7 @@ cmsInt32Number CheckTagTypePlugin(cmsContext ContextID)
 
     ptr = (cmsUInt32Number*) cmsReadTag(cpy2, h, SigInt);
     if (ptr == NULL) {
-        Fail("Read tag/conext switching failed (2)");
+        Fail("Read tag/context switching failed (2)");
         return 0;
     }
 
@@ -1069,7 +1069,7 @@ cmsInt32Number CheckMPEPlugin(cmsContext ContextID)
 
     pipe = (cmsPipeline*) cmsReadTag(cpy2, h, cmsSigDToB3Tag);
     if (pipe == NULL) {
-        Fail("Read tag/conext switching failed (2)");
+        Fail("Read tag/context switching failed (2)");
         return 0;
     }
 
