@@ -368,7 +368,7 @@ cmsBool Optimize16BitRGBTransform(cmsContext ContextID,
     p16 = Performance16alloc(ContextID, data->Params);
     if (p16 == NULL) return FALSE;
 
-    *TransformFn = (_cmsTransformFn)PerformanceEval16;
+    *TransformFn = PerformanceEval16;
     *UserData   = p16;
     *FreeDataFn = Performance16free;
     *InputFormat  |= 0x02000000;

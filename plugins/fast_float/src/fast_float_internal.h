@@ -219,7 +219,7 @@ cmsBool Optimize8ByJoiningCurves(cmsContext ContextID,
                                  cmsUInt32Number* dwFlags);
 
 cmsBool OptimizeFloatByJoiningCurves(cmsContext ContextID,
-                                   _cmsTransformFn* TransformFn,
+                                   _cmsTransform2Fn* TransformFn,
                                    void** UserData,
                                    _cmsFreeUserDataFn* FreeUserData,
                                    cmsPipeline** Lut,
@@ -228,7 +228,7 @@ cmsBool OptimizeFloatByJoiningCurves(cmsContext ContextID,
                                    cmsUInt32Number* dwFlags);
 
 cmsBool OptimizeFloatMatrixShaper(cmsContext ContextID,
-                                   _cmsTransformFn* TransformFn,
+                                   _cmsTransform2Fn* TransformFn,
                                    void** UserData,
                                    _cmsFreeUserDataFn* FreeUserData,
                                    cmsPipeline** Lut,
@@ -263,7 +263,7 @@ cmsBool OptimizeCLUTRGBTransform(cmsContext ContextID,
                                   cmsUInt32Number* dwFlags);
 
 cmsBool OptimizeCLUTCMYKTransform(cmsContext ContextID,
-                                                      _cmsTransformFn* TransformFn,
+                                  _cmsTransform2Fn* TransformFn,
 					              void** UserData,
 					              _cmsFreeUserDataFn* FreeDataFn,
 					              cmsPipeline** Lut,
@@ -273,7 +273,7 @@ cmsBool OptimizeCLUTCMYKTransform(cmsContext ContextID,
 
 
 cmsBool OptimizeCLUTLabTransform(cmsContext ContextID,
-                                 _cmsTransformFn* TransformFn,
+                                 _cmsTransform2Fn* TransformFn,
                                  void** UserData,
                                  _cmsFreeUserDataFn* FreeDataFn,
                                  cmsPipeline** Lut,

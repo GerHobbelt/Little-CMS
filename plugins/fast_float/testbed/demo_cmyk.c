@@ -19,7 +19,7 @@
 //
 //---------------------------------------------------------------------------------
 
-#include "lcms2_fast_float.h"
+#include "lcms2mt_fast_float.h"
 
 #include <stdlib.h>
 #include <memory.h>
