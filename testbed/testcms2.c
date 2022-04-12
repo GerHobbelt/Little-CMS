@@ -8390,6 +8390,28 @@ int CheckGammaSpaceDetection(cmsContext contextID)
     return 1;
 }
 
+// Per issue #308. A built-in corrupted by using write raw tag was causing a segfault
+static
+int CheckInducedCorruption(cmsContext contextID)
+{
+    cmsHTRANSFORM xform0, xform1;
+    char garbage[] = "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b";
+    cmsHPROFILE hsrgb = cmsCreate_sRGBProfile();
+    cmsHPROFILE hLab = cmsCreateLab4Profile(NULL);
+
+    cmsSetLogErrorHandler(NULL);
+    cmsWriteRawTag(hsrgb, cmsSigBlueColorantTag, &garbage, sizeof(garbage));
+
+    xform0 = cmsCreateTransform(contextID, hsrgb, TYPE_RGB_16, hLab, TYPE_Lab_16, INTENT_RELATIVE_COLORIMETRIC, 0);
+
+    if (xform0) cmsDeleteTransform(xform0);
+
+    cmsCloseProfile(hsrgb);
+    cmsCloseProfile(hLab);
+
+    ResetFatalError();
+    return 1;
+}
 
 #if 0
 
@@ -9427,6 +9449,7 @@ int main(int argc, const char** argv)
     Check(ctx, "sRGB round-trips", Check_sRGB_Rountrips);
     Check(ctx, "Gamma space detection", CheckGammaSpaceDetection);
     Check(ctx, "Unbounded mode w/ integer output", CheckIntToFloatTransform);
+    Check(ctx, "Corrupted built-in by using cmsWriteRawTag", CheckInducedCorruption);
     }
 
     if (DoPluginTests)

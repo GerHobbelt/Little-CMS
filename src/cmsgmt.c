@@ -616,6 +616,8 @@ cmsFloat64Number CMSEXPORT cmsDetectRGBProfileGamma(cmsContext ContextID, cmsHPR
         return -1;
 
     hXYZ = cmsCreateXYZProfile(ContextID);
+    if (hXYZ == NULL)
+        return -1;
     xform = cmsCreateTransform(ContextID, hProfile, TYPE_RGB_16, hXYZ, TYPE_XYZ_DBL, 
                                     INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_NOOPTIMIZE);
 

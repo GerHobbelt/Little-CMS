@@ -396,7 +396,7 @@ cmsIOHANDLER* CMSEXPORT cmsOpenIOhandlerFromFile(cmsContext ContextID, const cha
              cmsSignalError(ContextID, cmsERROR_FILE, "File '%s' not found", FileName);
             return NULL;
         }
-        fileLen = cmsfilelength(fm);
+        fileLen = (cmsInt32Number)cmsfilelength(fm);
         if (fileLen < 0)
         {
             fclose(fm);
@@ -446,7 +446,7 @@ cmsIOHANDLER* CMSEXPORT cmsOpenIOhandlerFromStream(cmsContext ContextID, FILE* S
     cmsIOHANDLER* iohandler = NULL;
     cmsInt32Number fileSize;
 
-    fileSize = cmsfilelength(Stream);
+    fileSize = (cmsInt32Number)cmsfilelength(Stream);
     if (fileSize < 0)
     {
         cmsSignalError(ContextID, cmsERROR_FILE, "Cannot get size of stream");
@@ -1555,6 +1555,13 @@ void* CMSEXPORT cmsReadTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSig
     if (TagSize < 8) goto Error;
 
     io = Icc ->IOhandler;
+
+    if (io == NULL) { // This is a built-in profile that has been manipulated, abort early
+
+        cmsSignalError(ContextID, cmsERROR_CORRUPTION_DETECTED, "Corrupted built-in profile.");
+        goto Error;
+    }
+
     // Seek to its location
     if (!io -> Seek(ContextID, io, Offset))
         goto Error;
@@ -1763,11 +1770,9 @@ Error:
 
 }
 
-// Read and write raw data. The only way those function would work and keep consistence with normal read and write
-// is to do an additional step of serialization. That means, readRaw would issue a normal read and then convert the obtained
-// data to raw bytes by using the "write" serialization logic. And vice-versa. I know this may end in situations where
-// raw data written does not exactly correspond with the raw data proposed to cmsWriteRaw data, but this approach allows
-// to write a tag as raw data and the read it as handled.
+// Read and write raw data. Read/Write Raw/cooked pairs try to maintain consistency within the pair. Some sequences
+// raw/cooked would work, but at a cost. Data "cooked" may be converted to "raw" by using the "write" serialization logic.
+// In general it is better to avoid mixing pairs.
 
 cmsUInt32Number CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSignature sig, void* data, cmsUInt32Number BufferSize)
 {
@@ -1784,6 +1789,7 @@ cmsUInt32Number CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfi
     if (!_cmsLockMutex(ContextID, Icc ->UsrMutex)) return 0;
 
     // Search for given tag in ICC profile directory
+    
     i = _cmsSearchTag(ContextID, Icc, sig, TRUE);
     if (i < 0) goto Error;                 // Not found,
 
@@ -1795,6 +1801,7 @@ cmsUInt32Number CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfi
         TagSize  = Icc ->TagSizes[i];
 
         // read the data directly, don't keep copy
+        
         if (data != NULL) {
 
             if (BufferSize < TagSize)
@@ -1813,6 +1820,7 @@ cmsUInt32Number CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfi
 
     // The data has been already read, or written. But wait!, maybe the user chose to save as
     // raw data. In this case, return the raw data directly
+    
     if (Icc ->TagSaveAsRaw[i]) {
 
         if (data != NULL)  {
@@ -1832,8 +1840,8 @@ cmsUInt32Number CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfi
     }
 
     // Already read, or previously set by cmsWriteTag(). We need to serialize that
-    // data to raw in order to maintain consistency.
-
+    // data to raw to get something that makes sense
+    
     _cmsUnlockMutex(ContextID, Icc ->UsrMutex);
     Object = cmsReadTag(ContextID, hProfile, sig);
     if (!_cmsLockMutex(ContextID, Icc ->UsrMutex)) return 0;
