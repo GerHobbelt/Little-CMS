@@ -3756,7 +3756,7 @@ country varies for each element:
 
 // Auxiliary, read an string specified as count + string
 static
-cmsBool  ReadCountAndSting(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsMLU* mlu, cmsUInt32Number* SizeOfTag, const char* Section)
+cmsBool  ReadCountAndString(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsMLU* mlu, cmsUInt32Number* SizeOfTag, const char* Section)
 {
     cmsUInt32Number Count;
     char* Text;
@@ -3787,7 +3787,7 @@ cmsBool  ReadCountAndSting(cmsContext ContextID, struct _cms_typehandler_struct*
 }
 
 static
-cmsBool  WriteCountAndSting(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsMLU* mlu, const char* Section)
+cmsBool  WriteCountAndString(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsMLU* mlu, const char* Section)
 {
  cmsUInt32Number TextSize;
  char* Text;
@@ -3812,11 +3812,11 @@ void *Type_CrdInfo_Read(cmsContext ContextID, struct _cms_typehandler_struct* se
     cmsMLU* mlu = cmsMLUalloc(ContextID, 5);
 
     *nItems = 0;
-    if (!ReadCountAndSting(ContextID, self, io, mlu, &SizeOfTag, "nm")) goto Error;
-    if (!ReadCountAndSting(ContextID, self, io, mlu, &SizeOfTag, "#0")) goto Error;
-    if (!ReadCountAndSting(ContextID, self, io, mlu, &SizeOfTag, "#1")) goto Error;
-    if (!ReadCountAndSting(ContextID, self, io, mlu, &SizeOfTag, "#2")) goto Error;
-    if (!ReadCountAndSting(ContextID, self, io, mlu, &SizeOfTag, "#3")) goto Error;
+    if (!ReadCountAndString(ContextID, self, io, mlu, &SizeOfTag, "nm")) goto Error;
+    if (!ReadCountAndString(ContextID, self, io, mlu, &SizeOfTag, "#0")) goto Error;
+    if (!ReadCountAndString(ContextID, self, io, mlu, &SizeOfTag, "#1")) goto Error;
+    if (!ReadCountAndString(ContextID, self, io, mlu, &SizeOfTag, "#2")) goto Error;
+    if (!ReadCountAndString(ContextID, self, io, mlu, &SizeOfTag, "#3")) goto Error;
 
     *nItems = 1;
     return (void*) mlu;
@@ -3833,11 +3833,11 @@ cmsBool  Type_CrdInfo_Write(cmsContext ContextID, struct _cms_typehandler_struct
 
     cmsMLU* mlu = (cmsMLU*) Ptr;
 
-    if (!WriteCountAndSting(ContextID, self, io, mlu, "nm")) goto Error;
-    if (!WriteCountAndSting(ContextID, self, io, mlu, "#0")) goto Error;
-    if (!WriteCountAndSting(ContextID, self, io, mlu, "#1")) goto Error;
-    if (!WriteCountAndSting(ContextID, self, io, mlu, "#2")) goto Error;
-    if (!WriteCountAndSting(ContextID, self, io, mlu, "#3")) goto Error;
+    if (!WriteCountAndString(ContextID, self, io, mlu, "nm")) goto Error;
+    if (!WriteCountAndString(ContextID, self, io, mlu, "#0")) goto Error;
+    if (!WriteCountAndString(ContextID, self, io, mlu, "#1")) goto Error;
+    if (!WriteCountAndString(ContextID, self, io, mlu, "#2")) goto Error;
+    if (!WriteCountAndString(ContextID, self, io, mlu, "#3")) goto Error;
 
     return TRUE;
 
