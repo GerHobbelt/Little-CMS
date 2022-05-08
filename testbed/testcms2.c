@@ -8394,22 +8394,22 @@ int CheckGammaSpaceDetection(cmsContext contextID)
 static
 int CheckInducedCorruption(cmsContext contextID)
 {
-    cmsHTRANSFORM xform0, xform1;
+    cmsHTRANSFORM xform0;
     char garbage[] = "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b";
-    cmsHPROFILE hsrgb = cmsCreate_sRGBProfile();
-    cmsHPROFILE hLab = cmsCreateLab4Profile(NULL);
+    cmsHPROFILE hsrgb = cmsCreate_sRGBProfile(contextID);
+    cmsHPROFILE hLab = cmsCreateLab4Profile(contextID, NULL);
 
-    cmsSetLogErrorHandler(NULL);
-    cmsWriteRawTag(hsrgb, cmsSigBlueColorantTag, &garbage, sizeof(garbage));
+    cmsSetLogErrorHandler(contextID, NULL);
+    cmsWriteRawTag(contextID, hsrgb, cmsSigBlueColorantTag, &garbage, sizeof(garbage));
 
     xform0 = cmsCreateTransform(contextID, hsrgb, TYPE_RGB_16, hLab, TYPE_Lab_16, INTENT_RELATIVE_COLORIMETRIC, 0);
 
-    if (xform0) cmsDeleteTransform(xform0);
+    if (xform0) cmsDeleteTransform(contextID, xform0);
 
-    cmsCloseProfile(hsrgb);
-    cmsCloseProfile(hLab);
+    cmsCloseProfile(contextID, hsrgb);
+    cmsCloseProfile(contextID, hLab);
 
-    ResetFatalError();
+    ResetFatalError(contextID);
     return 1;
 }
 
