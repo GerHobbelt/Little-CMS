@@ -24,6 +24,10 @@
 #include <stdlib.h>
 #include <memory.h>
 
+// On Visual Studio, use debug CRT
+#ifdef _MSC_VER
+#    include "crtdbg.h"
+#endif
 
 // Some pixel representations
 typedef struct { cmsUInt8Number  r, g, b;    }  Scanline_rgb8bits;
@@ -52,12 +56,12 @@ typedef struct { cmsFloat32Number L, a, b; }     Scanline_LabFloat;
 static
 void trace(const char* frm, ...)
 {
-	va_list args;
+    va_list args;
 
-	va_start(args, frm);
-	vfprintf(stderr, frm, args);
-	fflush(stderr);
-	va_end(args);
+    va_start(args, frm);
+    vfprintf(stderr, frm, args);
+    fflush(stderr);
+    va_end(args);
 }
 
 
@@ -579,9 +583,9 @@ void CheckUncommonValues(cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut
 
     for (i = 0; i < npixels; i++)
     {
-        bufferIn[i].r = i / 40.0 - 0.5;
-        bufferIn[i].g = i / 20.0 - 0.5;
-        bufferIn[i].b = i / 60.0 - 0.5;
+        bufferIn[i].r = i / 40.0f - 0.5f;
+        bufferIn[i].g = i / 20.0f - 0.5f;
+        bufferIn[i].b = i / 60.0f - 0.5f;
     }
 
     cmsDoTransform(xformPlugin, bufferIn, bufferPluginOut, npixels);
@@ -664,7 +668,7 @@ void CheckToEncodedLab(void)
             }
 
 
-    cmsDeleteTransform(xform);
+    cmsDeleteTransform(xform); cmsDeleteTransform(xform_plugin);
     cmsCloseProfile(hsRGB); cmsCloseProfile(hLab);
     cmsDeleteContext(Raw);
     cmsDeleteContext(Plugin);
@@ -707,7 +711,7 @@ void CheckToFloatLab(void)
             }
 
 
-    cmsDeleteTransform(xform);
+    cmsDeleteTransform(xform); cmsDeleteTransform(xform_plugin);
     cmsCloseProfile(hsRGB); cmsCloseProfile(hLab);
     cmsDeleteContext(Raw);
     cmsDeleteContext(Plugin);
@@ -1143,6 +1147,9 @@ void CheckLab2RGB(cmsContext plugin)
     cmsFloat32Number maxInside = 0, maxOutside = 0, L, a, b;
 
     trace("Checking Lab -> RGB...");
+    cmsCloseProfile(hLab);
+    cmsCloseProfile(hRGB);
+
     for (L = 4; L <= 100; L++)
     {
         for (a = -30; a < +30; a++)
@@ -1248,6 +1255,7 @@ void CheckSoftProofing(void)
                 j++;
             }
 
+    free(In); free(Out1); free(Out2);
     cmsDeleteTransform(hXformNoPlugin);
     cmsDeleteTransform(hXformPlugin);
 
@@ -1766,6 +1774,8 @@ void SpeedTest16(cmsContext ct)
     Performance("16 bits on same Matrix-Shaper    ", SpeedTest16bitsRGB,  ct, "test0.icc", "test0.icc", sizeof(Scanline_rgb16bits), 0);
     Performance("16 bits on curves                ", SpeedTest16bitsRGB,  ct, "*curves",   "*curves",   sizeof(Scanline_rgb16bits), 0);
     Performance("16 bits on CMYK CLUT profiles    ", SpeedTest16bitsCMYK, ct, "test1.icc", "test2.icc", sizeof(Scanline_cmyk16bits), 0);
+
+    cmsDeleteContext(noPlugin);
 }
 
 // The worst case is used, no cache and all rgb combinations
@@ -2098,7 +2108,7 @@ cmsFloat64Number SpeedTestFloatByUsing16BitsRGB(cmsContext ct, cmsHPROFILE hlcms
        }
 
        diff = clock() - atime;
-       free(In);
+       free(In); free(tmp16);
 
        cmsDeleteTransform(ct, xform16);
        return MPixSec(diff);
@@ -2358,14 +2368,18 @@ void TestGrayTransformPerformance1(cmsContext ct)
        trace("Gray conversion using two devicelinks\t %-12.2f MPixels/Sec.\n", MPixSec(diff));
 }
 
-
 // The harness test
 int main()
 {
+
+#ifdef _MSC_VER
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
        cmsContext raw = cmsCreateContext(NULL, NULL);
        cmsContext plugin = cmsCreateContext(NULL, NULL);
 
-       trace("FastFloating point extensions testbed - 1.5\n");
+       trace("FastFloating point extensions testbed - 1.6\n");
        trace("Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved\n");
 
        trace("\nInstalling error logger ... ");
@@ -2420,6 +2434,7 @@ int main()
 
        trace("\nAll tests passed OK\n");
 
+       cmsUnregisterPlugins();
 
        return 0;
 }

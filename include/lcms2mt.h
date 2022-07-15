@@ -23,7 +23,7 @@
 //
 //---------------------------------------------------------------------------------
 //
-// Version 2.13.1
+// Version 2.14 alpha2
 //
 
 #ifndef _lcms2mt_H
@@ -86,7 +86,7 @@ extern "C" {
 // use OUR numbers with a mainline LCMS to fail, so
 // we have to go under 2000-2100. Let's subtract
 // 2000 from the mainline release.
-#define LCMS_VERSION              (2131 - 2000)
+#define LCMS_VERSION              (2140 - 2000)
 
 // We expect any LCMS2MT release to fall within the
 // following range.
@@ -300,6 +300,7 @@ typedef int                  cmsBool;
 // Base ICC type definitions
 typedef enum {
     cmsSigChromaticityType                  = 0x6368726D,  // 'chrm'
+    cmsSigcicpType                          = 0x63696370,  // 'cicp' 
     cmsSigColorantOrderType                 = 0x636C726F,  // 'clro'
     cmsSigColorantTableType                 = 0x636C7274,  // 'clrt'
     cmsSigCrdInfoType                       = 0x63726469,  // 'crdi'
@@ -411,6 +412,7 @@ typedef enum {
     cmsSigViewingConditionsTag              = 0x76696577,  // 'view'
     cmsSigVcgtTag                           = 0x76636774,  // 'vcgt'
     cmsSigMetaTag                           = 0x6D657461,  // 'meta'
+    cmsSigcicpTag                           = 0x63696370,  // 'cicp'
     cmsSigArgyllArtsTag                     = 0x61727473   // 'arts'
 
 } cmsTagSignature;
@@ -1048,6 +1050,16 @@ typedef struct {
         cmsUInt32Number IlluminantType;  // viewing condition
 
     } cmsICCViewingConditions;
+
+typedef struct {
+    cmsUInt8Number  ColourPrimaries;            // Recommendation ITU-T H.273
+    cmsUInt8Number  TransferCharacteristics;    //  (ISO/IEC 23091-2)
+    cmsUInt8Number  MatrixCoefficients;
+    cmsUInt8Number  VideoFullRangeFlag;
+
+} cmsVideoSignalType;
+
+
 
 // Get LittleCMS version (for shared objects) -----------------------------------------------------------------------------
 

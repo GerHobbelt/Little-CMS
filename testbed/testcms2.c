@@ -5321,6 +5321,40 @@ cmsInt32Number CheckRAWtags(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROF
 }
 
 
+
+static
+cmsInt32Number Check_cicp(cmsInt32Number Pass, cmsHPROFILE hProfile)
+{
+    cmsVideoSignalType* v;
+    cmsVideoSignalType  s;
+
+    switch (Pass) {
+
+    case 1:
+        s.ColourPrimaries = 1;
+        s.TransferCharacteristics = 13;
+        s.MatrixCoefficients = 0;
+        s.VideoFullRangeFlag = 1;
+        
+        if (!cmsWriteTag(hProfile, cmsSigcicpTag, &s)) return 0;
+        return 1;
+
+    case 2:
+        v = (cmsVideoSignalType*)cmsReadTag(hProfile, cmsSigcicpTag);
+        if (v == NULL) return 0;
+
+        if (v->ColourPrimaries != 1) return 0;
+        if (v->TransferCharacteristics != 13) return 0;
+        if (v->MatrixCoefficients != 0) return 0;
+        if (v->VideoFullRangeFlag != 1) return 0;
+        return 1;
+
+    default:
+        return 0;
+    }
+
+}
+
 // This is a very big test that checks every single tag
 static
 cmsInt32Number CheckProfileCreation(cmsContext ContextID)
@@ -5465,6 +5499,9 @@ cmsInt32Number CheckProfileCreation(cmsContext ContextID)
         SubTest("Dictionary meta tags");
         // if (!CheckDictionary16(ContextID, Pass, h)) goto Error;
         if (!CheckDictionary24(ContextID, Pass, h)) goto Error;
+
+        SubTest("cicp Video Signal Type");
+        if (!Check_cicp(Pass, h)) goto Error;
 
         if (Pass == 1) {
             cmsSaveProfileToFile(ContextID, h, "alltags.icc");
@@ -8390,7 +8427,7 @@ int CheckGammaSpaceDetection(cmsContext contextID)
     return 1;
 }
 
-// Per issue #308. A built-in corrupted by using write raw tag was causing a segfault
+// Per issue #308. A built-in is corrupted by using write raw tag was causing a segfault
 static
 int CheckInducedCorruption(cmsContext contextID)
 {
@@ -9214,7 +9251,7 @@ int main(int argc, const char** argv)
         Die("Oops, you are mixing header and shared lib!\nHeader version reports to be '%d' and shared lib '%d'\n", LCMS_VERSION, cmsGetEncodedCMMversion());
     }
 
-    printf("LittleCMS %2.2f test bed %s %s\n\n", LCMS_VERSION / 1000.0, __DATE__, __TIME__);
+    printf("LittleCMS %2.2f test bed %s %s\n\n", cmsGetEncodedCMMversion() / 1000.0, __DATE__, __TIME__);
 
     if ((argc == 2) && strcmp(argv[1], "--exhaustive") == 0) {
 

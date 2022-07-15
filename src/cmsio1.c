@@ -318,10 +318,8 @@ cmsPipeline* CMSEXPORT _cmsReadInputLUT(cmsContext ContextID, cmsHPROFILE hProfi
         if (nc == NULL) return NULL;
 
         Lut = cmsPipelineAlloc(ContextID, 0, 0);
-        if (Lut == NULL) {
-            cmsFreeNamedColorList(ContextID, nc);
-            return NULL;
-        }
+        if (Lut == NULL)            
+            return NULL;        
 
         if (!cmsPipelineInsertStage(ContextID, Lut, cmsAT_BEGIN, _cmsStageAllocNamedColor(ContextID, nc, TRUE)) ||
             !cmsPipelineInsertStage(ContextID, Lut, cmsAT_END, _cmsStageAllocLabV2ToV4(ContextID))) {

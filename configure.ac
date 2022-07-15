@@ -7,7 +7,7 @@ AC_PREREQ(2.60)
 #
 # Set the package name and version
 #
-AC_INIT(lcms2mt,2.13)
+AC_INIT(lcms2mt,2.14)
 
 # Specify directory where m4 macros may be found.
 AC_CONFIG_MACRO_DIR([m4])
@@ -16,7 +16,7 @@ AC_CONFIG_MACRO_DIR([m4])
 # Libtool library revision control info
 #
 LIBRARY_CURRENT=2
-LIBRARY_REVISION=13
+LIBRARY_REVISION=14
 LIBRARY_AGE=0
 
 AC_SUBST(LIBRARY_CURRENT)dnl
@@ -154,13 +154,28 @@ then
             LIB_PLUGINS="$LIB_PLUGINS -llcms2_fast_float"
 fi
 
+#multi threaded plugin:
+AC_ARG_WITH(threaded,
+            AS_HELP_STRING([--with-threaded],
+                           [build and install multi threaded plugin, use only if GPL 3.0 is acceptable]),
+            [
+                with_threaded=$withval
+            ],
+            [
+                with_threaded='no'
+            ])
+if test "x$with_threaded" = "xyes"
+then
+            LIB_PLUGINS="$LIB_PLUGINS -llcms2_threaded"
+fi
+
 #
 # Determine POSIX threads settings
 #
 # Enable support for POSIX thread APIs
 AC_ARG_WITH(threads,
-	      AS_HELP_STRING([--without-threads],
-                             [disable POSIX threads API support]),
+	      AS_HELP_STRING([--without-pthreads],
+                             [disable POSIX pthreads API support]),
 	      [with_threads=$withval],
 	      [with_threads='yes'])
 
@@ -411,9 +426,14 @@ AC_CONFIG_FILES([utils/jpgicc/Makefile])
 AC_CONFIG_FILES([utils/psicc/Makefile])
 AC_CONFIG_FILES([testbed/Makefile])
 AM_CONDITIONAL([COND_FASTFLOAT], [test "x$with_fastfloat" = "xyes" ])
+AM_CONDITIONAL([COND_THREADED], [test "x$with_threaded" = "xyes" ])
 AC_CONFIG_FILES([plugins/Makefile])
 AC_CONFIG_FILES([plugins/fast_float/Makefile])
 AC_CONFIG_FILES([plugins/fast_float/src/Makefile])
 AC_CONFIG_FILES([plugins/fast_float/include/Makefile])
 AC_CONFIG_FILES([plugins/fast_float/testbed/Makefile])
+AC_CONFIG_FILES([plugins/threaded/Makefile])
+AC_CONFIG_FILES([plugins/threaded/src/Makefile])
+AC_CONFIG_FILES([plugins/threaded/include/Makefile])
+AC_CONFIG_FILES([plugins/threaded/testbed/Makefile])
 AC_OUTPUT

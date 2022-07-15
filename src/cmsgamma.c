@@ -427,8 +427,8 @@ cmsFloat64Number DefaultEvalParametricFn(cmsContext ContextID, cmsInt32Number Ty
 
 
     // IEC 61966-3
-    // Y = (aX + b)^Gamma | X <= -b/a
-    // Y = c              | else
+    // Y = (aX + b)^Gamma + c | X <= -b/a
+    // Y = c                  | else
     case 3:
     {
         if (fabs(Params[1]) < MATRIX_DET_TOLERANCE)
