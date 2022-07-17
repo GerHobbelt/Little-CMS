@@ -1865,7 +1865,7 @@ cmsBool  _cmsRegisterTransformPlugin(cmsContext ContextID, cmsPluginBase* Data)
 {
     cmsPluginTransform* Plugin = (cmsPluginTransform*) Data;
     _cmsTransformCollection* fl;
-    _cmsTransformPluginChunkType* ctx = ( _cmsTransformPluginChunkType*) _cmsContextGetClientChunk(ContextID,TransformPlugin);
+    _cmsTransformPluginChunkType* ctx = ( _cmsTransformPluginChunkType*) _cmsContextGetClientChunk(ContextID, TransformPlugin);
 
     if (Data == NULL) {
 
@@ -2230,9 +2230,9 @@ cmsUInt32Number CMSEXPORT _cmsGetTransformWorkerFlags(struct _cmstransform_struc
 
 // In the case there is a parallelization plug-in, let it to do its job
 static
-void ParalellizeIfSuitable(_cmsTRANSFORM* p)
+void ParalellizeIfSuitable(cmsContext ContextID, _cmsTRANSFORM* p)
 {
-    _cmsParallelizationPluginChunkType* ctx = (_cmsParallelizationPluginChunkType*)_cmsContextGetClientChunk(p->ContextID, ParallelizationPlugin);
+    _cmsParallelizationPluginChunkType* ctx = (_cmsParallelizationPluginChunkType*)_cmsContextGetClientChunk(ContextID, ParallelizationPlugin);
 
     _cmsAssert(p != NULL);
     if (ctx != NULL && ctx->SchedulerFn != NULL) {
@@ -2309,7 +2309,7 @@ _cmsTRANSFORM* AllocEmptyTransform(cmsContext ContextID, cmsPipeline* lut,
                        }
 #endif
 
-                       ParalellizeIfSuitable(p);
+                       ParalellizeIfSuitable(ContextID, p);
                        return p;
                    }
                }
@@ -2377,7 +2377,7 @@ _cmsTRANSFORM* AllocEmptyTransform(cmsContext ContextID, cmsPipeline* lut,
     p ->OutputFormat    = *OutputFormat;
     core->dwOriginalFlags = *dwFlags;
     core->UserData        = NULL;
-    ParalellizeIfSuitable(p);
+    ParalellizeIfSuitable(ContextID, p);
     return p;
 }
 

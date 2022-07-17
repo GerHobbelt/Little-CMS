@@ -1060,7 +1060,6 @@ typedef struct {
 } cmsVideoSignalType;
 
 
-
 // Get LittleCMS version (for shared objects) -----------------------------------------------------------------------------
 
 CMSAPI int               CMSEXPORT cmsGetEncodedCMMversion(void);

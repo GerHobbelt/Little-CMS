@@ -1458,6 +1458,7 @@ static
 void *Type_Measurement_Read(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsUInt32Number* nItems, cmsUInt32Number SizeOfTag)
 {
     cmsICCMeasurementConditions mc;
+    cmsUNUSED_PARAMETER(self);
 
     memset(&mc, 0, sizeof(mc));
 	
@@ -5442,41 +5443,41 @@ void Type_Dictionary_Free(cmsContext ContextID, struct _cms_typehandler_struct* 
 // cicp VideoSignalType
 
 static
-void* Type_VideoSignal_Read(struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsUInt32Number* nItems, cmsUInt32Number SizeOfTag)
+void* Type_VideoSignal_Read(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsUInt32Number* nItems, cmsUInt32Number SizeOfTag)
 {
     cmsVideoSignalType* cicp = NULL;
 
     if (SizeOfTag != 8) return NULL; 
 
-    if (!_cmsReadUInt32Number(io, NULL)) return NULL;
+    if (!_cmsReadUInt32Number(ContextID, io, NULL)) return NULL;
 
-    cicp = (cmsVideoSignalType*)_cmsCalloc(self->ContextID, 1, sizeof(cmsVideoSignalType));
+    cicp = (cmsVideoSignalType*)_cmsCalloc(ContextID, 1, sizeof(cmsVideoSignalType));
     if (cicp == NULL) return NULL;
 
-    if (!_cmsReadUInt8Number(io, &cicp->ColourPrimaries)) goto Error;
-    if (!_cmsReadUInt8Number(io, &cicp->TransferCharacteristics)) goto Error;
-    if (!_cmsReadUInt8Number(io, &cicp->MatrixCoefficients)) goto Error;
-    if (!_cmsReadUInt8Number(io, &cicp->VideoFullRangeFlag)) goto Error;
+    if (!_cmsReadUInt8Number(ContextID, io, &cicp->ColourPrimaries)) goto Error;
+    if (!_cmsReadUInt8Number(ContextID, io, &cicp->TransferCharacteristics)) goto Error;
+    if (!_cmsReadUInt8Number(ContextID, io, &cicp->MatrixCoefficients)) goto Error;
+    if (!_cmsReadUInt8Number(ContextID, io, &cicp->VideoFullRangeFlag)) goto Error;
 
     // Success
     *nItems = 1;
     return cicp;
 
 Error:
-    if (cicp != NULL) _cmsFree(self->ContextID, cicp);
+    if (cicp != NULL) _cmsFree(ContextID, cicp);
     return NULL;
 }
 
 static
-cmsBool Type_VideoSignal_Write(struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
+cmsBool Type_VideoSignal_Write(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
 {
     cmsVideoSignalType* cicp = (cmsVideoSignalType*)Ptr;
 
-    if (!_cmsWriteUInt32Number(io, 0)) return FALSE;
-    if (!_cmsWriteUInt8Number(io, cicp->ColourPrimaries)) return FALSE;
-    if (!_cmsWriteUInt8Number(io, cicp->TransferCharacteristics)) return FALSE;
-    if (!_cmsWriteUInt8Number(io, cicp->MatrixCoefficients)) return FALSE;
-    if (!_cmsWriteUInt8Number(io, cicp->VideoFullRangeFlag)) return FALSE;
+    if (!_cmsWriteUInt32Number(ContextID, io, 0)) return FALSE;
+    if (!_cmsWriteUInt8Number(ContextID, io, cicp->ColourPrimaries)) return FALSE;
+    if (!_cmsWriteUInt8Number(ContextID, io, cicp->TransferCharacteristics)) return FALSE;
+    if (!_cmsWriteUInt8Number(ContextID, io, cicp->MatrixCoefficients)) return FALSE;
+    if (!_cmsWriteUInt8Number(ContextID, io, cicp->VideoFullRangeFlag)) return FALSE;
 
     return TRUE;
 
@@ -5484,18 +5485,18 @@ cmsBool Type_VideoSignal_Write(struct _cms_typehandler_struct* self, cmsIOHANDLE
     cmsUNUSED_PARAMETER(nItems);
 }
 
-void* Type_VideoSignal_Dup(struct _cms_typehandler_struct* self, const void* Ptr, cmsUInt32Number n)
+void* Type_VideoSignal_Dup(cmsContext ContextID, struct _cms_typehandler_struct* self, const void* Ptr, cmsUInt32Number n)
 {
-    return _cmsDupMem(self->ContextID, Ptr, sizeof(cmsVideoSignalType));
+    return _cmsDupMem(ContextID, Ptr, sizeof(cmsVideoSignalType));
 
     cmsUNUSED_PARAMETER(n);
 }
 
 
 static
-void Type_VideoSignal_Free(struct _cms_typehandler_struct* self, void* Ptr)
+void Type_VideoSignal_Free(cmsContext ContextID, struct _cms_typehandler_struct* self, void* Ptr)
 {
-    _cmsFree(self->ContextID, Ptr);
+    _cmsFree(ContextID, Ptr);
 }
 
 // ********************************************************************************
