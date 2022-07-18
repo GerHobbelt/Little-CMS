@@ -5323,7 +5323,7 @@ cmsInt32Number CheckRAWtags(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROF
 
 
 static
-cmsInt32Number Check_cicp(cmsInt32Number Pass, cmsHPROFILE hProfile)
+cmsInt32Number Check_cicp(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE hProfile)
 {
     cmsVideoSignalType* v;
     cmsVideoSignalType  s;
@@ -5336,11 +5336,11 @@ cmsInt32Number Check_cicp(cmsInt32Number Pass, cmsHPROFILE hProfile)
         s.MatrixCoefficients = 0;
         s.VideoFullRangeFlag = 1;
         
-        if (!cmsWriteTag(hProfile, cmsSigcicpTag, &s)) return 0;
+        if (!cmsWriteTag(ContextID, hProfile, cmsSigcicpTag, &s)) return 0;
         return 1;
 
     case 2:
-        v = (cmsVideoSignalType*)cmsReadTag(hProfile, cmsSigcicpTag);
+        v = (cmsVideoSignalType*)cmsReadTag(ContextID, hProfile, cmsSigcicpTag);
         if (v == NULL) return 0;
 
         if (v->ColourPrimaries != 1) return 0;
