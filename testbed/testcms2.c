@@ -5501,7 +5501,7 @@ cmsInt32Number CheckProfileCreation(cmsContext ContextID)
         if (!CheckDictionary24(ContextID, Pass, h)) goto Error;
 
         SubTest("cicp Video Signal Type");
-        if (!Check_cicp(Pass, h)) goto Error;
+        if (!Check_cicp(ContextID, Pass, h)) goto Error;
 
         if (Pass == 1) {
             cmsSaveProfileToFile(ContextID, h, "alltags.icc");
