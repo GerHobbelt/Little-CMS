@@ -685,13 +685,34 @@ cmsBool CMSEXPORT cmsIsTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSig
        return _cmsSearchTag(ContextID, Icc, sig, FALSE) >= 0;
 }
 
+
+
+// Checks for link compatibility
+static
+cmsBool CompatibleTypes(const cmsTagDescriptor* desc1, const cmsTagDescriptor* desc2)
+{
+    cmsUInt32Number i;
+
+    if (desc1 == NULL || desc2 == NULL) return FALSE;
+
+    if (desc1->nSupportedTypes != desc2->nSupportedTypes) return FALSE;
+    if (desc1->ElemCount != desc2->ElemCount) return FALSE;
+
+    for (i = 0; i < desc1->nSupportedTypes; i++)
+    {
+        if (desc1->SupportedTypes[i] != desc2->SupportedTypes[i]) return FALSE;
+    }
+
+    return TRUE;
+}
+
 // Enforces that the profile version is per. spec.
 // Operates on the big endian bytes from the profile.
 // Called before converting to platform endianness.
 // Byte 0 is BCD major version, so max 9.
 // Byte 1 is 2 BCD digits, one per nibble.
 // Reserved bytes 2 & 3 must be 0.
-static
+static 
 cmsUInt32Number _validatedVersion(cmsUInt32Number DWord)
 {
     cmsUInt8Number* pByte = (cmsUInt8Number*) &DWord;
@@ -779,6 +800,7 @@ cmsBool _cmsReadHeader(cmsContext ContextID, _cmsICCPROFILE* Icc)
         if (!_cmsReadUInt32Number(ContextID, io, &Tag.size)) return FALSE;
 
         // Perform some sanity check. Offset + size should fall inside file.
+        if (Tag.size == 0 || Tag.offset == 0) continue;
         if (Tag.offset + Tag.size > HeaderSize ||
             Tag.offset + Tag.size < Tag.offset)
                   continue;
@@ -789,16 +811,34 @@ cmsBool _cmsReadHeader(cmsContext ContextID, _cmsICCPROFILE* Icc)
 
        // Search for links
         for (j=0; j < Icc ->TagCount; j++) {
-
+           
             if ((Icc ->TagOffsets[j] == Tag.offset) &&
                 (Icc ->TagSizes[j]   == Tag.size)) {
 
-                Icc ->TagLinked[Icc ->TagCount] = Icc ->TagNames[j];
+                // Check types. 
+                if (CompatibleTypes(_cmsGetTagDescriptor(Icc->ContextID, Icc->TagNames[j]),
+                                    _cmsGetTagDescriptor(Icc->ContextID, Tag.sig))) {
+
+                    Icc->TagLinked[Icc->TagCount] = Icc->TagNames[j];
+                }
             }
 
         }
 
         Icc ->TagCount++;
+    }
+
+
+    for (i = 0; i < Icc->TagCount; i++) {
+        for (j = 0; j < Icc->TagCount; j++) {
+
+            // Tags cannot be duplicate
+            if ((i != j) && (Icc->TagNames[i] == Icc->TagNames[j])) {
+                cmsSignalError(Icc->ContextID, cmsERROR_RANGE, "Duplicate tag found");
+                return FALSE;
+            }
+
+        }
     }
 
     return TRUE;
@@ -1818,6 +1858,9 @@ cmsUInt32Number CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfi
     cmsUInt32Number rc;
     cmsUInt32Number Offset, TagSize;
 
+    // Sanity check
+    if (data != NULL && BufferSize == 0) return 0;
+
     if (!_cmsLockMutex(ContextID, Icc ->UsrMutex)) return 0;
 
     // Search for given tag in ICC profile directory
@@ -1837,7 +1880,7 @@ cmsUInt32Number CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfi
         if (data != NULL) {
 
             if (BufferSize < TagSize)
-                TagSize = BufferSize;
+                goto Error;
 
             if (!Icc ->IOhandler ->Seek(ContextID, Icc ->IOhandler, Offset)) goto Error;
             if (!Icc ->IOhandler ->Read(ContextID, Icc ->IOhandler, data, 1, TagSize)) goto Error;
@@ -1859,7 +1902,7 @@ cmsUInt32Number CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfi
 
             TagSize  = Icc ->TagSizes[i];
             if (BufferSize < TagSize)
-                TagSize = BufferSize;
+                goto Error;
 
             memmove(data, Icc ->TagPtrs[i], TagSize);
 

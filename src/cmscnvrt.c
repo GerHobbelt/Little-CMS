@@ -387,7 +387,7 @@ cmsBool ComputeConversion(cmsContext ContextID,
 
         if (BPC) {
 
-            cmsCIEXYZ BlackPointIn, BlackPointOut;
+            cmsCIEXYZ BlackPointIn = { 0, 0, 0}, BlackPointOut = { 0, 0, 0 };
 
             cmsDetectBlackPoint(ContextID, &BlackPointIn,  hProfiles[i-1], Intent, 0);
             cmsDetectDestinationBlackPoint(ContextID, &BlackPointOut, hProfiles[i], Intent, 0);
