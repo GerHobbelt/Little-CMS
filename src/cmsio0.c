@@ -774,7 +774,6 @@ cmsBool _cmsReadHeader(cmsContext ContextID, _cmsICCPROFILE* Icc)
     if (HeaderSize >= Icc ->IOhandler ->ReportedSize)
             HeaderSize = Icc ->IOhandler ->ReportedSize;
 
-
     // Get creation date/time
     _cmsDecodeDateTimeNumber(ContextID, &Header.date, &Icc ->Created);
 
@@ -789,7 +788,6 @@ cmsBool _cmsReadHeader(cmsContext ContextID, _cmsICCPROFILE* Icc)
         cmsSignalError(ContextID, cmsERROR_RANGE, "Too many tags (%d)", TagCount);
         return FALSE;
     }
-
 
     // Read tag directory
     Icc -> TagCount = 0;
@@ -816,8 +814,8 @@ cmsBool _cmsReadHeader(cmsContext ContextID, _cmsICCPROFILE* Icc)
                 (Icc ->TagSizes[j]   == Tag.size)) {
 
                 // Check types. 
-                if (CompatibleTypes(_cmsGetTagDescriptor(Icc->ContextID, Icc->TagNames[j]),
-                                    _cmsGetTagDescriptor(Icc->ContextID, Tag.sig))) {
+                if (CompatibleTypes(_cmsGetTagDescriptor(ContextID, Icc->TagNames[j]),
+                                    _cmsGetTagDescriptor(ContextID, Tag.sig))) {
 
                     Icc->TagLinked[Icc->TagCount] = Icc->TagNames[j];
                 }
@@ -834,7 +832,7 @@ cmsBool _cmsReadHeader(cmsContext ContextID, _cmsICCPROFILE* Icc)
 
             // Tags cannot be duplicate
             if ((i != j) && (Icc->TagNames[i] == Icc->TagNames[j])) {
-                cmsSignalError(Icc->ContextID, cmsERROR_RANGE, "Duplicate tag found");
+                cmsSignalError(ContextID, cmsERROR_RANGE, "Duplicate tag found");
                 return FALSE;
             }
 

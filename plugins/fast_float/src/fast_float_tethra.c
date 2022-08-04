@@ -271,7 +271,6 @@ cmsBool OptimizeCLUTRGBTransform(cmsContext ContextID,
 
     // If output is CMYK, add a conversion stage to get %   
     if (T_COLORSPACE(*OutputFormat) == PT_CMYK) {
-
         static const cmsFloat64Number mat[] = { 100.0,   0,     0,     0,
                                                   0,   100.0,   0,     0,
                                                   0,     0,   100.0,   0,
@@ -280,15 +279,14 @@ cmsBool OptimizeCLUTRGBTransform(cmsContext ContextID,
         cmsStage* percent = cmsStageAllocMatrix(ContextID, 4, 4, mat, NULL);
         if (percent == NULL) goto Error;
 
-        cmsPipelineInsertStage(OriginalLut, cmsAT_END, percent);
+        cmsPipelineInsertStage(ContextID, OriginalLut, cmsAT_END, percent);
     }
 
     // Resample the LUT
     if (!cmsStageSampleCLutFloat(ContextID, OptimizedCLUTmpe, XFormSampler, (void*)OriginalLut, 0)) goto Error;
     
     if (T_COLORSPACE(*OutputFormat) == PT_CMYK) {
-
-        cmsPipelineUnlinkStage(OriginalLut, cmsAT_END, NULL);
+        cmsPipelineUnlinkStage(ContextID, OriginalLut, cmsAT_END, NULL);
     }
 
     // Set the evaluator, copy parameters

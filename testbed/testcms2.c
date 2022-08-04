@@ -7836,7 +7836,6 @@ cmsInt32Number CheckFloatSegments(cmsContext ContextID)
     return ok;
 }
 
-
 static
 cmsInt32Number CheckReadRAW(cmsContext ContextID)
 {
@@ -7844,14 +7843,13 @@ cmsInt32Number CheckReadRAW(cmsContext ContextID)
 	char buffer[37009];
 	cmsHPROFILE hProfile;
 
-
 	SubTest("RAW read on on-disk");
     hProfile = cmsOpenProfileFromFile(ContextID, "test1.icc", "r");
 
 	if (hProfile == NULL)
 		return 0;
-	tag_size1 = cmsReadRawTag(hProfile, cmsSigGamutTag, NULL, 0);
-	tag_size = cmsReadRawTag(hProfile, cmsSigGamutTag, buffer, 37009);
+	tag_size1 = cmsReadRawTag(ContextID, hProfile, cmsSigGamutTag, NULL, 0);
+	tag_size = cmsReadRawTag(ContextID, hProfile, cmsSigGamutTag, buffer, 37009);
 
     cmsCloseProfile(ContextID, hProfile);
 
@@ -7863,8 +7861,8 @@ cmsInt32Number CheckReadRAW(cmsContext ContextID)
 
 	SubTest("RAW read on in-memory created profiles");
     hProfile = cmsCreate_sRGBProfile(ContextID);
-	tag_size1 = cmsReadRawTag(hProfile, cmsSigGreenColorantTag, NULL, 0);
-	tag_size = cmsReadRawTag(hProfile, cmsSigGreenColorantTag, buffer, 20);
+	tag_size1 = cmsReadRawTag(ContextID, hProfile, cmsSigGreenColorantTag, NULL, 0);
+	tag_size = cmsReadRawTag(ContextID, hProfile, cmsSigGreenColorantTag, buffer, 20);
 
     cmsCloseProfile(ContextID, hProfile);
 
@@ -7875,7 +7873,6 @@ cmsInt32Number CheckReadRAW(cmsContext ContextID)
 
 	return 1;
 }
-
 
 static
 cmsInt32Number CheckMeta(cmsContext ContextID)
