@@ -548,7 +548,7 @@ cmsNAMEDCOLORLIST* CMSEXPORT cmsAllocNamedColorList(cmsContext ContextID, cmsUIn
 {
     cmsNAMEDCOLORLIST* v;
     
-    if (ColorantCount >= cmsMAXCHANNELS) 
+    if (ColorantCount > cmsMAXCHANNELS) 
         return NULL;
    
     v = (cmsNAMEDCOLORLIST*)_cmsMallocZero(ContextID, sizeof(cmsNAMEDCOLORLIST));
