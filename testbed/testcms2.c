@@ -8187,7 +8187,7 @@ int CheckForgedMPE(cmsContext ContextID)
     }
 
     srcCS = cmsGetColorSpace(ContextID, srcProfile);
-    nSrcComponents = cmsChannelsOf(ContextID, srcCS);
+    nSrcComponents = cmsChannelsOfColorSpace(ContextID, srcCS);
 
     if (srcCS == cmsSigLabData) {
         srcFormat =
@@ -9219,8 +9219,6 @@ void PrintSupportedIntents(void)
     }
     printf("\n");
 }
-
-
 
 // ---------------------------------------------------------------------------------------
 

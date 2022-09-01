@@ -162,7 +162,7 @@ typedef double               cmsFloat64Number;
 #endif
 
 // Handle "register" keyword
-#if (defined(CMS_NO_REGISTER_KEYWORD) && !defined(CMS_DLL) && !defined(CMS_DLL_BUILD)) || defined(_HAS_CXX17)
+#if defined(CMS_NO_REGISTER_KEYWORD) || defined(_HAS_CXX17)
 #  define CMSREGISTER
 #else
 #  define CMSREGISTER register
@@ -1536,7 +1536,11 @@ CMSAPI cmsBool           CMSEXPORT cmsIsCLUT(cmsContext ContextID, cmsHPROFILE h
 CMSAPI cmsColorSpaceSignature   CMSEXPORT _cmsICCcolorSpace(cmsContext ContextID, int OurNotation);
 CMSAPI int                      CMSEXPORT _cmsLCMScolorSpace(cmsContext ContextID, cmsColorSpaceSignature ProfileSpace);
 
+// Deprecated, use cmsChannelsOfColorSpace instead
 CMSAPI cmsUInt32Number   CMSEXPORT cmsChannelsOf(cmsContext ContextID, cmsColorSpaceSignature ColorSpace);
+
+// Get number of channels of color space or -1 if color space is not listed/supported
+CMSAPI cmsInt32Number CMSEXPORT cmsChannelsOfColorSpace(cmsContext ContextID, cmsColorSpaceSignature ColorSpace);
 
 // Build a suitable formatter for the colorspace of this profile. nBytes=1 means 8 bits, nBytes=2 means 16 bits.
 CMSAPI cmsUInt32Number   CMSEXPORT cmsFormatterForColorspaceOfProfile(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number nBytes, cmsBool lIsFloat);

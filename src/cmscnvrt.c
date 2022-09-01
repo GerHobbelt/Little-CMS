@@ -636,7 +636,7 @@ cmsPipeline* DefaultICCintents(cmsContext       ContextID,
                   ColorSpaceOut == cmsSigRgbData ||
                   ColorSpaceOut == cmsSigCmykData) {
 
-                  cmsStage* clip = _cmsStageClipNegatives(ContextID, cmsChannelsOf(ContextID, ColorSpaceOut));
+                  cmsStage* clip = _cmsStageClipNegatives(ContextID, cmsChannelsOfColorSpace(ColorSpaceOut));
                   if (clip == NULL) goto Error;
 
                   if (!cmsPipelineInsertStage(ContextID, Result, cmsAT_END, clip))

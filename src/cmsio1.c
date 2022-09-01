@@ -727,7 +727,6 @@ cmsPipeline* CMSEXPORT _cmsReadDevicelinkLUT(cmsContext ContextID, cmsHPROFILE h
         return Lut;
     Error:
         cmsPipelineFree(ContextID, Lut);
-        cmsFreeNamedColorList(ContextID, nc);
         return NULL;
     }
 

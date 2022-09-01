@@ -592,8 +592,11 @@ cmsUInt8Number* UnrollAnyWordsPremul(cmsContext ContextID, CMSREGISTER _cmsTRANS
         if (SwapEndian)
             v = CHANGE_ENDIAN(v);
 
-        v = (v << 16) / alpha_factor;
-        if (v > 0xffff) v = 0xffff;
+        if (alpha_factor > 0) {
+
+            v = (v << 16) / alpha_factor;
+            if (v > 0xffff) v = 0xffff;
+        }
 
         wIn[index] = (cmsUInt16Number) (Reverse ? REVERSE_FLAVOR_16(v) : v);
 
@@ -674,8 +677,11 @@ cmsUInt8Number* UnrollPlanarWordsPremul(cmsContext ContextID, CMSREGISTER _cmsTR
         if (SwapEndian)
             v = CHANGE_ENDIAN(v);
 
-        v = (v << 16) / alpha_factor;
-        if (v > 0xffff) v = 0xffff;
+        if (alpha_factor > 0) {
+
+            v = (v << 16) / alpha_factor;
+            if (v > 0xffff) v = 0xffff;
+        }
 
         wIn[index] = (cmsUInt16Number) (Reverse ? REVERSE_FLAVOR_16(v) : v);
 
@@ -3833,7 +3839,7 @@ cmsUInt32Number CMSEXPORT cmsFormatterForColorspaceOfProfile(cmsContext ContextI
 
     cmsColorSpaceSignature ColorSpace = cmsGetColorSpace(ContextID, hProfile);
     cmsUInt32Number        ColorSpaceBits = (cmsUInt32Number)_cmsLCMScolorSpace(ContextID, ColorSpace);
-    cmsUInt32Number        nOutputChans = cmsChannelsOf(ContextID, ColorSpace);
+    cmsInt32Number         nOutputChans = cmsChannelsOfColorSpace(ContextID, ColorSpace);
     cmsUInt32Number        Float = lIsFloat ? 1U : 0;
 
     // Create a fake formatter for result

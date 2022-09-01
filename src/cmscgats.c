@@ -365,6 +365,7 @@ static
 string* StringAlloc(cmsContext ContextID, cmsIT8* it8, int max)
 {
     string* s = (string*) AllocChunk(ContextID, it8, sizeof(string));
+    if (s == NULL) return NULL;
 
     s->it8 = it8;
     s->max = max;
@@ -389,12 +390,17 @@ void StringAppend(cmsContext ContextID, string* s, char c)
 
         s->max *= 10;
         new_ptr = (char*) AllocChunk(ContextID, s->it8, s->max);
-        memcpy(new_ptr, s->begin, s->len);
+        if (new_ptr != NULL && s->begin != NULL)
+            memcpy(new_ptr, s->begin, s->len);
+
         s->begin = new_ptr;
     }
 
-    s->begin[s->len++] = c;
-    s->begin[s->len] = 0;
+    if (s->begin != NULL)
+    {
+        s->begin[s->len++] = c;
+        s->begin[s->len] = 0;
+    }
 }
 
 static
@@ -990,8 +996,10 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
                 if(FileNest == NULL) {
 
                     FileNest = it8 ->FileStack[it8 -> IncludeSP + 1] = (FILECTX*)AllocChunk(ContextID, it8, sizeof(FILECTX));
-                    //if(FileNest == NULL)
-                    //  TODO: how to manage out-of-memory conditions?
+                    if (FileNest == NULL) {
+                        SynError(it8, "Out of memory");
+                        return;
+                    }
                 }
 
                 if (BuildAbsolutePath(StringPtr(it8->str),
@@ -1165,8 +1173,10 @@ void* AllocChunk(cmsContext ContextID, cmsIT8* it8, cmsUInt32Number size)
                 it8 ->Allocator.BlockSize = size;
 
         it8 ->Allocator.Used = 0;
-        it8 ->Allocator.Block = (cmsUInt8Number*)  AllocBigBlock(ContextID, it8, it8 ->Allocator.BlockSize);
+        it8 ->Allocator.Block = (cmsUInt8Number*) AllocBigBlock(ContextID, it8, it8 ->Allocator.BlockSize);
     }
+
+    if (it8->Allocator.Block == NULL) return NULL;
 
     ptr = it8 ->Allocator.Block + it8 ->Allocator.Used;
     it8 ->Allocator.Used += size;
@@ -1509,6 +1519,21 @@ const char* CMSEXPORT cmsIT8GetPropertyMulti(cmsContext ContextID, cmsHANDLE hIT
 
 // ----------------------------------------------------------------- Datasets
 
+// A safe atoi that returns 0 when NULL input is given
+static
+cmsInt32Number satoi(const char* b)
+{
+    int n;
+
+    if (b == NULL) return 0;
+
+    n = atoi(b);
+    if (n > 0x7fffffffL) return 0x7fffffffL;
+    if (n < -0x7ffffffeL) return -0x7ffffffeL;
+
+    return (cmsInt32Number)n;
+}
+
 
 static
 void AllocateDataFormat(cmsContext ContextID, cmsIT8* it8)
@@ -1517,7 +1542,7 @@ void AllocateDataFormat(cmsContext ContextID, cmsIT8* it8)
 
     if (t -> DataFormat) return;    // Already allocated
 
-    t -> nSamples  = (int) cmsIT8GetPropertyDbl(ContextID, it8, "NUMBER_OF_FIELDS");
+    t -> nSamples  = satoi(cmsIT8GetProperty(ContextID, it8, "NUMBER_OF_FIELDS"));
 
     if (t -> nSamples <= 0) {
 
@@ -1569,14 +1594,6 @@ cmsBool CMSEXPORT cmsIT8SetDataFormat(cmsContext ContextID, cmsHANDLE  h, int n,
 {
     cmsIT8* it8 = (cmsIT8*)h;
     return SetDataFormat(ContextID, it8, n, Sample);
-}
-
-// A safe atoi that returns 0 when NULL input is given
-static
-cmsInt32Number satoi(const char* b)
-{
-    if (b == NULL) return 0;
-    return atoi(b);
 }
 
 // Convert to binary
@@ -2536,14 +2553,17 @@ cmsUInt32Number CMSEXPORT cmsIT8EnumProperties(cmsContext ContextID, cmsHANDLE h
 
 
     Props = (char **) AllocChunk(ContextID, it8, sizeof(char *) * n);
+	if (Props != NULL) {
 
-    // Pass#2 - Fill pointers
-    n = 0;
-    for (p = t -> HeaderList;  p != NULL; p = p->Next) {
-        Props[n++] = p -> Keyword;
-    }
+		// Pass#2 - Fill pointers
+		n = 0;
+		for (p = t->HeaderList; p != NULL; p = p->Next) {
+			Props[n++] = p->Keyword;
+		}
 
-    *PropertyNames = Props;
+	}
+	*PropertyNames = Props;
+
     return n;
 }
 
@@ -2575,12 +2595,14 @@ cmsUInt32Number CMSEXPORT cmsIT8EnumPropertyMulti(cmsContext ContextID, cmsHANDL
 
 
     Props = (const char **) AllocChunk(ContextID, it8, sizeof(char *) * n);
+    if (Props != NULL) {
 
-    // Pass#2 - Fill pointers
-    n = 0;
-    for (tmp = p;  tmp != NULL; tmp = tmp->NextSubkey) {
-        if(tmp->Subkey != NULL)
-            Props[n++] = p ->Subkey;
+        // Pass#2 - Fill pointers
+        n = 0;
+        for (tmp = p; tmp != NULL; tmp = tmp->NextSubkey) {
+            if (tmp->Subkey != NULL)
+                Props[n++] = p->Subkey;
+        }
     }
 
     *SubpropertyNames = Props;
