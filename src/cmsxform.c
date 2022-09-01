@@ -2249,7 +2249,7 @@ void ParalellizeIfSuitable(cmsContext ContextID, _cmsTRANSFORM* p)
 * An empty unroll to avoid a check with NULL on cmsDoTransform()
 */
 static
-cmsUInt8Number* UnrollNothing(CMSREGISTER _cmsTRANSFORM* info,
+cmsUInt8Number* UnrollNothing(cmsContext ContextID, CMSREGISTER _cmsTRANSFORM* info,
                               CMSREGISTER cmsUInt16Number wIn[],
                               CMSREGISTER cmsUInt8Number* accum,
                               CMSREGISTER cmsUInt32Number Stride)
@@ -2262,7 +2262,7 @@ cmsUInt8Number* UnrollNothing(CMSREGISTER _cmsTRANSFORM* info,
 }
 
 static
-cmsUInt8Number* PackNothing(CMSREGISTER _cmsTRANSFORM* info,
+cmsUInt8Number* PackNothing(cmsContext ContextID, CMSREGISTER _cmsTRANSFORM* info,
                            CMSREGISTER cmsUInt16Number wOut[],
                            CMSREGISTER cmsUInt8Number* output,
                            CMSREGISTER cmsUInt32Number Stride)
@@ -2584,8 +2584,8 @@ cmsHTRANSFORM CMSEXPORT cmsCreateExtendedTransform(cmsContext ContextID,
     }
 
     // Check channel count
-    if ((cmsChannelsOfColorSpace(ContextID, EntryColorSpace) != (cmsInt32Number) cmsPipelineInputChannels(Lut)) ||
-        (cmsChannelsOfColorSpace(ContextID, ExitColorSpace)  != (cmsInt32Number) cmsPipelineOutputChannels(Lut))) {
+    if ((cmsChannelsOfColorSpace(ContextID, EntryColorSpace) != (cmsInt32Number) cmsPipelineInputChannels(ContextID, Lut)) ||
+        (cmsChannelsOfColorSpace(ContextID, ExitColorSpace)  != (cmsInt32Number) cmsPipelineOutputChannels(ContextID, Lut))) {
         cmsPipelineFree(ContextID, Lut);
         cmsSignalError(ContextID, cmsERROR_NOT_SUITABLE, "Channel count doesn't match. Profile is corrupted");
         return NULL;

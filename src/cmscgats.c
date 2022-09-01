@@ -997,7 +997,7 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
 
                     FileNest = it8 ->FileStack[it8 -> IncludeSP + 1] = (FILECTX*)AllocChunk(ContextID, it8, sizeof(FILECTX));
                     if (FileNest == NULL) {
-                        SynError(it8, "Out of memory");
+                        SynError(ContextID, it8, "Out of memory");
                         return;
                     }
                 }

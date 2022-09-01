@@ -1987,16 +1987,16 @@ cmsBool  Type_LUT8_Write(cmsContext ContextID, struct _cms_typehandler_struct* s
     else {
         // Lut8 only allows same CLUT points in all dimensions        
         clutPoints = clut->Params->nSamples[0];
-        for (i = 1; i < cmsPipelineInputChannels(NewLUT); i++) {
+        for (i = 1; i < cmsPipelineInputChannels(ContextID, NewLUT); i++) {
             if (clut->Params->nSamples[i] != clutPoints) {
-                cmsSignalError(self->ContextID, cmsERROR_UNKNOWN_EXTENSION, "LUT with different samples per dimension not suitable to be saved as LUT16");
+                cmsSignalError(ContextID, cmsERROR_UNKNOWN_EXTENSION, "LUT with different samples per dimension not suitable to be saved as LUT16");
                 return FALSE;
             }
         }
     }
         
-    if (!_cmsWriteUInt8Number(ContextID, io, (cmsUInt8Number)cmsPipelineInputChannels(NewLUT))) return FALSE;
-    if (!_cmsWriteUInt8Number(ContextID, io, (cmsUInt8Number)cmsPipelineOutputChannels(NewLUT))) return FALSE;
+    if (!_cmsWriteUInt8Number(ContextID, io, (cmsUInt8Number)cmsPipelineInputChannels(ContextID, NewLUT))) return FALSE;
+    if (!_cmsWriteUInt8Number(ContextID, io, (cmsUInt8Number)cmsPipelineOutputChannels(ContextID, NewLUT))) return FALSE;
     if (!_cmsWriteUInt8Number(ContextID, io, (cmsUInt8Number) clutPoints)) return FALSE;
     if (!_cmsWriteUInt8Number(ContextID, io, 0)) return FALSE; // Padding
 
@@ -2281,7 +2281,7 @@ cmsBool Type_LUT16_Write(cmsContext ContextID, struct _cms_typehandler_struct* s
         clutPoints = clut->Params->nSamples[0];
         for (i = 1; i < InputChannels; i++) {
             if (clut->Params->nSamples[i] != clutPoints) {
-                cmsSignalError(self->ContextID, cmsERROR_UNKNOWN_EXTENSION, "LUT with different samples per dimension not suitable to be saved as LUT16");
+                cmsSignalError(ContextID, cmsERROR_UNKNOWN_EXTENSION, "LUT with different samples per dimension not suitable to be saved as LUT16");
                 return FALSE;
             }
         }

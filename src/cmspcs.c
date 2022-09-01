@@ -957,9 +957,9 @@ cmsInt32Number CMSEXPORT cmsChannelsOfColorSpace(cmsContext ContextID, cmsColorS
 /**
 * DEPRECATED: Provided for compatibility only
 */
-cmsUInt32Number CMSEXPORT cmsChannelsOf(cmsColorSpaceSignature ColorSpace)
+cmsUInt32Number CMSEXPORT cmsChannelsOf(cmsContext ContextID, cmsColorSpaceSignature ColorSpace)
 {
-    int n = cmsChannelsOfColorSpace(ColorSpace);
+    int n = cmsChannelsOfColorSpace(ContextID, ColorSpace);
     if (n < 0) return 3;
     return (cmsUInt32Number)n;
 }
