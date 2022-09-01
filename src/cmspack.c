@@ -3842,6 +3842,9 @@ cmsUInt32Number CMSEXPORT cmsFormatterForColorspaceOfProfile(cmsContext ContextI
     cmsInt32Number         nOutputChans = cmsChannelsOfColorSpace(ContextID, ColorSpace);
     cmsUInt32Number        Float = lIsFloat ? 1U : 0;
 
+    // Unsupported color space?
+    if (nOutputChans < 0) return 0;
+
     // Create a fake formatter for result
     return FLOAT_SH(Float) | COLORSPACE_SH(ColorSpaceBits) | BYTES_SH(nBytes) | CHANNELS_SH(nOutputChans);
 }
@@ -3855,6 +3858,9 @@ cmsUInt32Number CMSEXPORT cmsFormatterForPCSOfProfile(cmsContext ContextID, cmsH
     cmsUInt32Number ColorSpaceBits = (cmsUInt32Number)_cmsLCMScolorSpace(ContextID, ColorSpace);
     cmsUInt32Number nOutputChans = cmsChannelsOf(ContextID, ColorSpace);
     cmsUInt32Number Float = lIsFloat ? 1U : 0;
+
+    // Unsupported color space?
+    if (nOutputChans < 0) return 0;
 
     // Create a fake formatter for result
     return FLOAT_SH(Float) | COLORSPACE_SH(ColorSpaceBits) | BYTES_SH(nBytes) | CHANNELS_SH(nOutputChans);
