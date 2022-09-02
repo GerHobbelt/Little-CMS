@@ -759,7 +759,7 @@ struct _cmsContext_struct* _cmsGetContext(cmsContext ContextID)
 }
 
 
-// Internal: get the memory area associanted with each context client
+// Internal: get the memory area associated with each context client
 // Returns the block assigned to the specific zone. Never return NULL.
 void* _cmsContextGetClientChunk(cmsContext ContextID, _cmsMemoryClient mc)
 {
