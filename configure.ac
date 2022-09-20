@@ -7,34 +7,16 @@ AC_PREREQ(2.60)
 #
 # Set the package name and version
 #
-AC_INIT(lcms2,2.9)
+AC_INIT(lcms2,2.13)
 
 # Specify directory where m4 macros may be found.
 AC_CONFIG_MACRO_DIR([m4])
 
 #
 # Libtool library revision control info
-# See the libtool documentation under the heading "Libtool's versioning
-# system" in order to understand the meaning of these fields
-#
-# Here are a set of rules to help you update your library version
-# information:
-#
-#  1. Start with version information of `0:0:0' for each libtool library.
-#  2. Update the version information only immediately before a public
-#     release of your software. More frequent updates are unnecessary, and
-#     only guarantee that the current interface number gets larger faster.
-#  3. If the library source code has changed at all since the last update,
-#     then increment revision (`c:r:a' becomes `c:r+1:a').
-#  4. If any interfaces have been added, removed, or changed since the last
-#     update, increment current, and set revision to 0.
-#  5. If any interfaces have been added since the last public release, then
-#     increment age.
-#  6. If any interfaces have been removed since the last public release,
-#     then set age to 0.
 #
 LIBRARY_CURRENT=2
-LIBRARY_REVISION=8
+LIBRARY_REVISION=13
 LIBRARY_AGE=0
 
 AC_SUBST(LIBRARY_CURRENT)dnl
@@ -44,13 +26,14 @@ AC_SUBST(LIBRARY_AGE)dnl
 # Obtain system type by running config.guess
 AC_CANONICAL_HOST
 
-AM_INIT_AUTOMAKE([foreign 1.7.2 no-define dist-zip subdir-objects])
+AM_INIT_AUTOMAKE([foreign 1.9 tar-ustar no-define dist-zip subdir-objects])
 
 
 # Check for programs
 AC_PROG_CC_STDC
 AC_PROG_CPP
 AC_PROG_CXX
+LT_INIT
 
 #AM_PROG_LD
 #AC_SUBST(LD)
@@ -71,6 +54,8 @@ AC_LIBTOOL_WIN32_DLL
 AC_LIBTOOL_SETUP
 AC_PROG_LIBTOOL
 AC_SUBST(LIBTOOL_DEPS)
+
+LIB_PLUGINS = ''
 
 # Add configure option --enable-maintainer-mode which enables dependency
 # checking and generation useful to package maintainers.  This is made an
@@ -96,9 +81,25 @@ AX_APPEND_COMPILE_FLAGS(["-fvisibility=hidden"])
 # Motorola and SPARC CPUs), define `WORDS_BIGENDIAN'.
 AC_C_BIGENDIAN
 
+# Check for threadsafe variants of gmtime
+# Note: check for gmtime_s is a bit more complex as it is implemented as a macro
+AC_CHECK_FUNCS(gmtime_r, [], [
+               AC_MSG_CHECKING([for gmtime_s])
+               AC_LINK_IFELSE([
+                 AC_LANG_PROGRAM([[#include <time.h>]], [[
+                   time_t t;
+                   struct tm m;
+                   gmtime_s(&m, &t);
+                   return 0;
+                 ]])],
+                 [AC_MSG_RESULT([yes])
+                  AC_DEFINE([HAVE_GMTIME_S], [1], [gmtime_s can be used])], 
+                 [AC_MSG_RESULT([no])]
+               )])
+
 # Point to JPEG installed in DIR or disable JPEG with --without-jpeg.
 AC_ARG_WITH(jpeg,
-            [  --with-jpeg=DIR         use jpeg installed in DIR],
+            AS_HELP_STRING([--with-jpeg=DIR],[use jpeg installed in DIR]),
             [
             if [ test "x$withval" = "xno" ]; then
               [with_jpeg='no']
@@ -116,7 +117,7 @@ AC_ARG_WITH(jpeg,
 
 # Point to TIFF installed in DIR or disable TIFF with --without-tiff.
 AC_ARG_WITH(tiff,
-            [  --with-tiff=DIR         use tiff installed in DIR],
+            AS_HELP_STRING([--with-tiff=DIR], [use tiff installed in DIR]),
             [
             if [ test "x$withval" = "xno" ]; then
               [with_tiff='no']
@@ -137,6 +138,21 @@ AC_ARG_WITH(zlib,
 	      [  --without-zlib          disable ZLIB support],
 	      [with_zlib=$withval],
 	      [with_zlib='yes'])
+
+#fast_float plugin:
+AC_ARG_WITH(fastfloat,
+            AS_HELP_STRING([--with-fastfloat],
+                           [build and install fast_float plugin, use only if GPL 3.0 is acceptable]),
+            [
+                with_fastfloat=$withval
+            ],
+            [
+                with_fastfloat='no'
+            ])
+if test "$with_fastfloat" == "yes"
+then
+            LIB_PLUGINS="$LIB_PLUGINS -llcms2_fast_float"
+fi
 
 #
 # Determine POSIX threads settings
@@ -175,6 +191,19 @@ then
   fi
 fi
 
+# check if compiler supports SSE2 intrinsics
+AC_LANG_PUSH([C])
+
+AC_MSG_CHECKING([whether compiler supports SSE2])
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+    #include <emmintrin.h>
+    main() { __m128i n = _mm_set1_epi8(42); }]])],
+  [ac_compiler_supports_sse2=yes], [ac_compiler_supports_sse2=no])
+AC_MSG_RESULT([$ac_compiler_supports_sse2])
+AS_IF([test "x$ac_compiler_supports_sse2" != "xyes"],
+  [AC_DEFINE([CMS_DONT_USE_SSE2], [1], [Define if compiler does not support SSE2 intrinsics])])
+
+AC_LANG_POP([C])
 
 #
 # Find math library
@@ -218,7 +247,7 @@ then
     passed=0;
     AC_CHECK_HEADER(jconfig.h,passed=`expr $passed + 1`,failed=`expr $failed + 1`)
     AC_CHECK_HEADER(jerror.h,passed=`expr $passed + 1`,failed=`expr $failed + 1`)
-    AC_CHECK_HEADER(jmorecfg.h,passed=`expr $passed + 1`,failed=`expr $failed + 1`)
+    AC_CHECK_HEADER(jmorecfg.h,passed=`expr $passed + 1`,failed=`expr $failed + 1`,[#include <jconfig.h>])
     AC_CHECK_HEADER(jpeglib.h,passed=`expr $passed + 1`,failed=`expr $failed + 1`)
     AC_CHECK_LIB(jpeg,jpeg_read_header,passed=`expr $passed + 1`,failed=`expr $failed + 1`,)
 
@@ -273,8 +302,8 @@ AC_SUBST(LIB_JPEG)
 # Check for ZLIB
 #
 have_zlib='no'
-dnl PNG requires zlib so enable zlib check if PNG is requested
-if test ! "$with_zlib" = 'no' || test ! "$with_png" = 'no'
+dnl TIFF may require zlib so enable zlib check if TIFF is requested
+if test ! "$with_zlib" = 'no' || test ! "$with_tiff" = 'no'
 then
   LIB_ZLIB=''
   AC_MSG_CHECKING(for ZLIB support )
@@ -354,6 +383,9 @@ LCMS_LIB_DEPLIBS="$LIB_MATH $LIB_THREAD"
 LCMS_LIB_DEPLIBS=`echo $LCMS_LIB_DEPLIBS | sed -e 's/  */ /g'`
 AC_SUBST(LCMS_LIB_DEPLIBS)
 
+echo "LIB_PLUGINS: $LIB_PLUGINS"
+AC_SUBST(LIB_PLUGINS)
+
 # Libraries that the jpegicc program depends on
 JPEGICC_DEPLIBS="$LIB_JPEG $LIB_MATH $LIB_THREAD"
 JPEGICC_DEPLIBS=`echo $JPEGICC_DEPLIBS | sed -e 's/  */ /g'`
@@ -379,4 +411,10 @@ AC_CONFIG_FILES([utils/linkicc/Makefile])
 AC_CONFIG_FILES([utils/jpgicc/Makefile])
 AC_CONFIG_FILES([utils/psicc/Makefile])
 AC_CONFIG_FILES([testbed/Makefile])
+AM_CONDITIONAL([COND_FASTFLOAT], [test "x$with_fastfloat" = "xyes" ])
+AC_CONFIG_FILES([plugins/Makefile])
+AC_CONFIG_FILES([plugins/fast_float/Makefile])
+AC_CONFIG_FILES([plugins/fast_float/src/Makefile])
+AC_CONFIG_FILES([plugins/fast_float/include/Makefile])
+AC_CONFIG_FILES([plugins/fast_float/testbed/Makefile])
 AC_OUTPUT

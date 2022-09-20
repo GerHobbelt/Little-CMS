@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2017 Marti Maria Saguer
+//  Copyright (c) 1998-2022 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -38,7 +38,7 @@ int CMSEXPORT cmsGetEncodedCMMversion(void)
 // compare two strings ignoring case
 int CMSEXPORT cmsstrcasecmp(const char* s1, const char* s2)
 {
-    register const unsigned char *us1 = (const unsigned char *)s1,
+    CMSREGISTER const unsigned char *us1 = (const unsigned char *)s1,
                                  *us2 = (const unsigned char *)s2;
 
     while (toupper(*us1) == toupper(*us2++))
@@ -79,7 +79,7 @@ long int CMSEXPORT cmsfilelength(FILE* f)
 
 // User may override this behaviour by using a memory plug-in, which basically replaces
 // the default memory management functions. In this case, no check is performed and it
-// is up to the plug-in writter to keep in the safe side. There are only three functions
+// is up to the plug-in writer to keep in the safe side. There are only three functions
 // required to be implemented: malloc, realloc and free, although the user may want to
 // replace the optional mallocZero, calloc and dup as well.
 
@@ -308,7 +308,7 @@ void* CMSEXPORT _cmsDupMem(cmsContext ContextID, const void* Org, cmsUInt32Numbe
 
 // Sub allocation takes care of many pointers of small size. The memory allocated in
 // this way have be freed at once. Next function allocates a single chunk for linked list
-// I prefer this method over realloc due to the big inpact on xput realloc may have if
+// I prefer this method over realloc due to the big impact on xput realloc may have if
 // memory is being swapped to disk. This approach is safer (although that may not be true on all platforms)
 static
 _cmsSubAllocator_chunk* _cmsCreateSubAllocChunk(cmsContext ContextID, cmsUInt32Number Initial)
@@ -435,7 +435,7 @@ void* _cmsSubAllocDup(_cmsSubAllocator* s, const void *ptr, cmsUInt32Number size
 // There is no error handling at all. When a function fails, it returns proper value.
 // For example, all create functions does return NULL on failure. Other return FALSE
 // It may be interesting, for the developer, to know why the function is failing.
-// for that reason, lcms2 does offer a logging function. This function does recive
+// for that reason, lcms2 does offer a logging function. This function does receive
 // a ENGLISH string with some clues on what is going wrong. You can show this
 // info to the end user, or just create some sort of log.
 // The logging function should NOT terminate the program, as this obviously can leave

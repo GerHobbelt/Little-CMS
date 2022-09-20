@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2017 Marti Maria Saguer
+//  Copyright (c) 1998-2022 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -81,7 +81,7 @@ void PrintInfo(cmsHPROFILE h, cmsInfoType Info)
     len = cmsGetProfileInfo(h, Info, "en", "US", NULL, 0);
     if (len == 0) return;
 
-    text = _cmsMalloc(id, len);
+    text = (wchar_t*) _cmsMalloc(id, len);
     cmsGetProfileInfo(h, Info, "en", "US", text, len);
 
     wprintf(L"%s\n", text);

@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2017 Marti Maria Saguer
+//  Copyright (c) 1998-2022 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -180,34 +180,31 @@ cmsBool AddMLUBlock(cmsMLU* mlu, cmsUInt32Number size, const wchar_t *Block,
 
 // Convert from a 3-char code to a cmsUInt16Number. It is done in this way because some
 // compilers don't properly align beginning of strings
-
 static
 cmsUInt16Number strTo16(const char str[3])
-{
-    const cmsUInt8Number* ptr8 = (const cmsUInt8Number*)str;
-    cmsUInt16Number n = (cmsUInt16Number) (((cmsUInt16Number) ptr8[1] << 8) | ptr8[0]);
+{   
+    const cmsUInt8Number* ptr8;
+    cmsUInt16Number n;
 
-    return _cmsAdjustEndianess16(n);
+    // For non-existent strings
+    if (str == NULL) return 0;
+    ptr8 = (const cmsUInt8Number*)str;
+    n = (cmsUInt16Number)(((cmsUInt16Number)ptr8[0] << 8) | ptr8[1]);
+
+    return n;
 }
 
 static
 void strFrom16(char str[3], cmsUInt16Number n)
 {
-    // Assuming this would be aligned
-    union {
-
-       cmsUInt16Number n;
-       cmsUInt8Number str[2];
-       
-    } c;
-
-    c.n = _cmsAdjustEndianess16(n);  
-
-    str[0] = (char) c.str[0]; str[1] = (char) c.str[1]; str[2] = (char) 0;
+    str[0] = (char)(n >> 8);
+    str[1] = (char)n;
+    str[2] = (char)0;
 
 }
 
 // Add an ASCII entry. Do not add any \0 termination (ICC1v43_2010-12.pdf page 61)
+// In the case the user explicitly sets an empty string, we force a \0
 cmsBool CMSEXPORT cmsMLUsetASCII(cmsMLU* mlu, const char LanguageCode[3], const char CountryCode[3], const char* ASCIIString)
 {
     cmsUInt32Number i, len = (cmsUInt32Number) strlen(ASCIIString);
@@ -217,6 +214,12 @@ cmsBool CMSEXPORT cmsMLUsetASCII(cmsMLU* mlu, const char LanguageCode[3], const 
     cmsUInt16Number Cntry = strTo16(CountryCode);
 
     if (mlu == NULL) return FALSE;
+
+    // len == 0 would prevent operation, so we set a empty string pointing to zero
+    if (len == 0)
+    {
+        len = 1;
+    }
 
     WStr = (wchar_t*) _cmsCalloc(mlu ->ContextID, len,  sizeof(wchar_t));
     if (WStr == NULL) return FALSE;
@@ -255,6 +258,9 @@ cmsBool  CMSEXPORT cmsMLUsetWide(cmsMLU* mlu, const char Language[3], const char
     if (WideString == NULL) return FALSE;
 
     len = (cmsUInt32Number) (mywcslen(WideString)) * sizeof(wchar_t);
+    if (len == 0)
+        len = sizeof(wchar_t);
+
     return AddMLUBlock(mlu, len, WideString, Lang, Cntry);
 }
 
@@ -546,7 +552,7 @@ cmsNAMEDCOLORLIST* CMSEXPORT cmsAllocNamedColorList(cmsContext ContextID, cmsUIn
 
     while (v -> Allocated < n) {
         if (!GrowNamedColorList(v)) {
-            _cmsFree(ContextID, (void*) v);
+            cmsFreeNamedColorList(v);
             return NULL;
         }
     }
@@ -579,7 +585,11 @@ cmsNAMEDCOLORLIST* CMSEXPORT cmsDupNamedColorList(const cmsNAMEDCOLORLIST* v)
 
     // For really large tables we need this
     while (NewNC ->Allocated < v ->Allocated){
-        if (!GrowNamedColorList(NewNC)) return NULL;
+        if (!GrowNamedColorList(NewNC))
+        {
+            cmsFreeNamedColorList(NewNC);
+            return NULL;
+        }
     }
 
     memmove(NewNC ->Prefix, v ->Prefix, sizeof(v ->Prefix));
@@ -631,7 +641,7 @@ cmsUInt32Number CMSEXPORT cmsNamedColorCount(const cmsNAMEDCOLORLIST* NamedColor
      return NamedColorList ->nColors;
 }
 
-// Info aboout a given color
+// Info about a given color
 cmsBool  CMSEXPORT cmsNamedColorInfo(const cmsNAMEDCOLORLIST* NamedColorList, cmsUInt32Number nColor,
                                      char* Name,
                                      char* Prefix,
@@ -730,7 +740,7 @@ void EvalNamedColor(const cmsFloat32Number In[], cmsFloat32Number Out[], const c
 
 
 // Named color lookup element
-cmsStage* _cmsStageAllocNamedColor(cmsNAMEDCOLORLIST* NamedColorList, cmsBool UsePCS)
+cmsStage* CMSEXPORT _cmsStageAllocNamedColor(cmsNAMEDCOLORLIST* NamedColorList, cmsBool UsePCS)
 {
     return _cmsStageAllocPlaceholder(NamedColorList ->ContextID,
                                    cmsSigNamedColorElemType,

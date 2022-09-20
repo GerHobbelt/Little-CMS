@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2017 Marti Maria Saguer
+//  Copyright (c) 1998-2022 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -27,7 +27,7 @@
 #include "testcms2.h"
 
 // --------------------------------------------------------------------------------------------------
-// Auxiliar, duplicate a context and mark the block as non-debug because in this case the allocator 
+// Auxiliary, duplicate a context and mark the block as non-debug because in this case the allocator
 // and deallocator have different context owners
 // --------------------------------------------------------------------------------------------------
 
@@ -239,9 +239,9 @@ void Fake1Dfloat(const cmsFloat32Number Value[],
 
 // This fake interpolation just uses scrambled negated indexes for output
 static
-void Fake3D16(register const cmsUInt16Number Input[],
-              register cmsUInt16Number Output[],
-              register const struct _cms_interp_struc* p)
+void Fake3D16(CMSREGISTER const cmsUInt16Number Input[],
+              CMSREGISTER cmsUInt16Number Output[],
+              CMSREGISTER const struct _cms_interp_struc* p)
 {
        Output[0] =  0xFFFF - Input[2];
        Output[1] =  0xFFFF - Input[1];
@@ -635,10 +635,10 @@ Error:
 
 #define TYPE_RGB_565  (COLORSPACE_SH(PT_RGB)|CHANNELS_SH(3)|BYTES_SH(0) | (1 << 23))
 
-cmsUInt8Number* my_Unroll565(register struct _cmstransform_struct* nfo, 
-                            register cmsUInt16Number wIn[], 
-                            register cmsUInt8Number* accum,
-                            register cmsUInt32Number Stride)
+cmsUInt8Number* my_Unroll565(CMSREGISTER struct _cmstransform_struct* nfo, 
+                            CMSREGISTER cmsUInt16Number wIn[], 
+                            CMSREGISTER cmsUInt8Number* accum,
+                            CMSREGISTER cmsUInt32Number Stride)
 {
     cmsUInt16Number pixel = *(cmsUInt16Number*) accum;  // Take whole pixel
 
@@ -653,13 +653,13 @@ cmsUInt8Number* my_Unroll565(register struct _cmstransform_struct* nfo,
     return accum + 2;
 }
 
-cmsUInt8Number* my_Pack565(register _cmsTRANSFORM* info, 
-                           register cmsUInt16Number wOut[],
-                           register cmsUInt8Number* output,
-                           register cmsUInt32Number Stride)
+cmsUInt8Number* my_Pack565(CMSREGISTER _cmsTRANSFORM* info, 
+                           CMSREGISTER cmsUInt16Number wOut[],
+                           CMSREGISTER cmsUInt8Number* output,
+                           CMSREGISTER cmsUInt32Number Stride)
 {
 
-    register cmsUInt16Number pixel;
+    CMSREGISTER cmsUInt16Number pixel;
     int r, g, b;
 
     r = (int) floor(( wOut[2] * 31) / 65535.0 + 0.5);
@@ -1113,9 +1113,9 @@ Error:
 // --------------------------------------------------------------------------------------------------
 
 static
-void FastEvaluateCurves(register const cmsUInt16Number In[],
-                                     register cmsUInt16Number Out[],
-                                     register const void* Data)
+void FastEvaluateCurves(CMSREGISTER const cmsUInt16Number In[],
+                        CMSREGISTER cmsUInt16Number Out[],
+                        CMSREGISTER const void* Data)
 {
     Out[0] = In[0];
 }
@@ -1474,3 +1474,75 @@ cmsInt32Number CheckMutexPlugin(void)
 
     return 1;
 }
+
+
+cmsInt32Number CheckMethodPackDoublesFromFloat(void)
+{
+
+    cmsContext ctx = WatchDogContext(NULL);
+
+    cmsHTRANSFORM xform; 
+    cmsHTRANSFORM l_pFakeProfileLAB;
+
+    cmsFloat64Number l_D_OutputColorArrayBlack[8];
+    cmsFloat64Number l_D_OutputColorArrayBlue[8];
+
+    cmsCIELab LabInBlack; 
+    cmsCIELab LabInBlue;
+
+    cmsUInt16Number Lab_UI16_Black[3];
+    cmsUInt16Number Lab_UI16_Blue[3];
+
+    cmsHPROFILE OutputCMYKProfile;
+    cmsUInt32Number l_UI32_OutputFormat;
+
+
+    cmsPluginTHR(ctx, &FullTransformPluginSample);
+
+
+    l_pFakeProfileLAB = cmsCreateLab2ProfileTHR(ctx, NULL);
+
+    if (l_pFakeProfileLAB == NULL)
+        return 0;
+
+    OutputCMYKProfile = cmsOpenProfileFromFileTHR(ctx, "TestCLT.icc", "r");
+
+    if (OutputCMYKProfile == NULL)
+        return 0;
+
+    l_UI32_OutputFormat = 0;
+    l_UI32_OutputFormat |= COLORSPACE_SH(PT_CMYK);
+    l_UI32_OutputFormat |= PLANAR_SH(1);
+    l_UI32_OutputFormat |= CHANNELS_SH(4);
+    l_UI32_OutputFormat |= BYTES_SH(0);
+    l_UI32_OutputFormat |= FLOAT_SH(1);
+
+
+    xform = cmsCreateTransformTHR(ctx, l_pFakeProfileLAB, TYPE_Lab_DBL, OutputCMYKProfile, l_UI32_OutputFormat, INTENT_PERCEPTUAL, 0);
+    cmsCloseProfile(OutputCMYKProfile);
+    cmsCloseProfile(l_pFakeProfileLAB);
+
+    Lab_UI16_Black[0] = 0;
+    Lab_UI16_Black[1] = 32768;
+    Lab_UI16_Black[2] = 32768;
+
+    Lab_UI16_Blue[0] = 0;
+    Lab_UI16_Blue[1] = 8192;
+    Lab_UI16_Blue[2] = 8192;
+
+    cmsLabEncoded2Float(&LabInBlack, Lab_UI16_Black);
+    cmsLabEncoded2Float(&LabInBlue, Lab_UI16_Blue);
+
+    memset(l_D_OutputColorArrayBlack, 0, sizeof(l_D_OutputColorArrayBlack));
+    memset(l_D_OutputColorArrayBlue, 0, sizeof(l_D_OutputColorArrayBlue));
+
+    cmsDoTransform(xform, &LabInBlack, l_D_OutputColorArrayBlack, 1);
+    cmsDoTransform(xform, &LabInBlue, l_D_OutputColorArrayBlue, 1);
+
+
+    cmsDeleteTransform(xform);
+    cmsDeleteContext(ctx);
+    
+    return 1;
+}
+

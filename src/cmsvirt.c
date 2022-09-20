@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2017 Marti Maria Saguer
+//  Copyright (c) 1998-2022 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -361,14 +361,14 @@ cmsHPROFILE CMSEXPORT cmsCreateLinearizationDeviceLink(cmsColorSpaceSignature Co
 //     K: Does not change
 
 static
-int InkLimitingSampler(register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void* Cargo)
+int InkLimitingSampler(CMSREGISTER const cmsUInt16Number In[], CMSREGISTER cmsUInt16Number Out[], CMSREGISTER void* Cargo)
 {
     cmsFloat64Number InkLimit = *(cmsFloat64Number *) Cargo;
     cmsFloat64Number SumCMY, SumCMYK, Ratio;
 
     InkLimit = (InkLimit * 655.35);
 
-    SumCMY   = In[0]  + In[1] + In[2];
+    SumCMY   = (cmsFloat64Number) In[0]  + In[1] + In[2];
     SumCMYK  = SumCMY + In[3];
 
     if (SumCMYK > InkLimit) {
@@ -612,18 +612,18 @@ cmsHPROFILE CMSEXPORT cmsCreateXYZProfile(void)
 
 //sRGB Curves are defined by:
 //
-//If  R’sRGB,G’sRGB, B’sRGB < 0.04045
+//If  R'sRGB,G'sRGB, B'sRGB < 0.04045
 //
-//    R =  R’sRGB / 12.92
-//    G =  G’sRGB / 12.92
-//    B =  B’sRGB / 12.92
+//    R =  R'sRGB / 12.92
+//    G =  G'sRGB / 12.92
+//    B =  B'sRGB / 12.92
 //
 //
-//else if  R’sRGB,G’sRGB, B’sRGB >= 0.04045
+//else if  R'sRGB,G'sRGB, B'sRGB >= 0.04045
 //
-//    R = ((R’sRGB + 0.055) / 1.055)^2.4
-//    G = ((G’sRGB + 0.055) / 1.055)^2.4
-//    B = ((B’sRGB + 0.055) / 1.055)^2.4
+//    R = ((R'sRGB + 0.055) / 1.055)^2.4
+//    G = ((G'sRGB + 0.055) / 1.055)^2.4
+//    B = ((B'sRGB + 0.055) / 1.055)^2.4
 
 static
 cmsToneCurve* Build_sRGBGamma(cmsContext ContextID)
@@ -686,7 +686,7 @@ typedef struct {
 
 
 static
-int bchswSampler(register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void* Cargo)
+int bchswSampler(CMSREGISTER const cmsUInt16Number In[], CMSREGISTER cmsUInt16Number Out[], CMSREGISTER void* Cargo)
 {
     cmsCIELab LabIn, LabOut;
     cmsCIELCh LChIn, LChOut;
@@ -1096,9 +1096,10 @@ cmsHPROFILE CMSEXPORT cmsTransform2DeviceLink(cmsHTRANSFORM hTransform, cmsFloat
             goto Error;
     }
 
-    // On the output side too
+    // On the output side too. Note that due to V2/V4 PCS encoding on lab we cannot fix white misalignments
     if ((xform ->ExitColorSpace) == cmsSigLabData && (Version < 4.0)) {
 
+        dwFlags |= cmsFLAGS_NOWHITEONWHITEFIXUP;
         if (!cmsPipelineInsertStage(LUT, cmsAT_END, _cmsStageAllocLabV4ToV2(ContextID)))
             goto Error;
     }

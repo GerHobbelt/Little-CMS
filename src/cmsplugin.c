@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2017 Marti Maria Saguer
+//  Copyright (c) 1998-2022 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -33,7 +33,7 @@
 
 //      Little-Endian to Big-Endian
 
-// Adjust a word value after being readed/ before being written from/to an ICC profile
+// Adjust a word value after being read/ before being written from/to an ICC profile
 cmsUInt16Number CMSEXPORT  _cmsAdjustEndianess16(cmsUInt16Number Word)
 {
 #ifndef CMS_USE_BIG_ENDIAN
@@ -99,8 +99,8 @@ void CMSEXPORT  _cmsAdjustEndianess64(cmsUInt64Number* Result, cmsUInt64Number* 
     _cmsAssert(Result != NULL);
 
 #  ifdef CMS_DONT_USE_INT64
-    (*Result)[0] = QWord[0];
-    (*Result)[1] = QWord[1];
+    (*Result)[0] = (*QWord)[0];
+    (*Result)[1] = (*QWord)[1];
 #  else
     *Result = *QWord;
 #  endif
@@ -186,6 +186,8 @@ cmsBool CMSEXPORT  _cmsReadFloat32Number(cmsIOHANDLER* io, cmsFloat32Number* n)
         #if defined(_MSC_VER) && _MSC_VER < 1800
            return TRUE;
         #elif defined (__BORLANDC__)
+           return TRUE;
+        #elif !defined(_MSC_VER) && (defined(__STDC_VERSION__) && __STDC_VERSION__ < 199901L)
            return TRUE;
         #else
 
@@ -496,6 +498,7 @@ cmsBool CMSEXPORT _cmsIOPrintf(cmsIOHANDLER* io, const char* frm, ...)
     int len;
     cmsUInt8Number Buffer[2048];
     cmsBool rc;
+    cmsUInt8Number* ptr;
 
     _cmsAssert(io != NULL);
     _cmsAssert(frm != NULL);
@@ -506,6 +509,13 @@ cmsBool CMSEXPORT _cmsIOPrintf(cmsIOHANDLER* io, const char* frm, ...)
     if (len < 0) {
         va_end(args);
         return FALSE;   // Truncated, which is a fatal error for us
+    }
+
+    // setlocale may be active, no commas are needed in PS generator
+    // and PS generator is our only client
+    for (ptr = Buffer; *ptr; ptr++)
+    {
+        if (*ptr == ',') *ptr = '.';
     }
 
     rc = io ->Write(io, (cmsUInt32Number) len, Buffer);
@@ -661,27 +671,81 @@ static struct _cmsContext_struct globalContext = {
 static _cmsMutex _cmsContextPoolHeadMutex = CMS_MUTEX_INITIALIZER;
 static struct _cmsContext_struct* _cmsContextPoolHead = NULL;
 
+
+// Make sure context is initialized (needed on windows)
+static
+cmsBool InitContextMutex(void)
+{
+    // See the comments regarding locking in lcms2_internal.h
+    // for an explanation of why we need the following code.
+#ifndef CMS_NO_PTHREADS
+#ifdef CMS_IS_WINDOWS_
+#ifndef CMS_RELY_ON_WINDOWS_STATIC_MUTEX_INIT
+
+    static cmsBool already_initialized = FALSE;
+
+    if (!already_initialized)
+    {
+        static HANDLE _cmsWindowsInitMutex = NULL;
+        static volatile HANDLE* mutex = &_cmsWindowsInitMutex;
+
+        if (*mutex == NULL)
+        {
+            HANDLE p = CreateMutex(NULL, FALSE, NULL);
+            if (p && InterlockedCompareExchangePointer((void**)mutex, (void*)p, NULL) != NULL)
+                CloseHandle(p);
+        }
+        if (*mutex == NULL || WaitForSingleObject(*mutex, INFINITE) == WAIT_FAILED)
+        {
+            cmsSignalError(0, cmsERROR_INTERNAL, "Mutex lock failed");
+            return FALSE;
+        }
+        if (((void**)&_cmsContextPoolHeadMutex)[0] == NULL)
+            InitializeCriticalSection(&_cmsContextPoolHeadMutex);
+        if (*mutex == NULL || !ReleaseMutex(*mutex))
+        {
+            cmsSignalError(0, cmsERROR_INTERNAL, "Mutex unlock failed");
+            return FALSE;
+        }
+        already_initialized = TRUE;
+    }
+#endif
+#endif
+#endif
+
+    return TRUE;
+}
+
+
+
 // Internal, get associated pointer, with guessing. Never returns NULL.
 struct _cmsContext_struct* _cmsGetContext(cmsContext ContextID)
 {
     struct _cmsContext_struct* id = (struct _cmsContext_struct*) ContextID;
     struct _cmsContext_struct* ctx;
 
-
     // On 0, use global settings
     if (id == NULL) 
         return &globalContext;
 
+    InitContextMutex();
+
     // Search
+    _cmsEnterCriticalSectionPrimitive(&_cmsContextPoolHeadMutex);
+
     for (ctx = _cmsContextPoolHead;
          ctx != NULL;
          ctx = ctx ->Next) {
 
             // Found it?
-            if (id == ctx)
-                return ctx; // New-style context, 
+        if (id == ctx)
+        {
+            _cmsLeaveCriticalSectionPrimitive(&_cmsContextPoolHeadMutex);
+            return ctx; // New-style context
+        }
     }
 
+    _cmsLeaveCriticalSectionPrimitive(&_cmsContextPoolHeadMutex);
     return &globalContext;
 }
 
@@ -768,29 +832,7 @@ cmsContext CMSEXPORT cmsCreateContext(void* Plugin, void* UserData)
     struct _cmsContext_struct* ctx;
     struct _cmsContext_struct  fakeContext;
         
-    // See the comments regarding locking in lcms2_internal.h
-    // for an explanation of why we need the following code.
-#ifdef CMS_IS_WINDOWS_
-#ifndef CMS_RELY_ON_WINDOWS_STATIC_MUTEX_INIT
-    {
-        static HANDLE _cmsWindowsInitMutex = NULL;
-        static volatile HANDLE* mutex = &_cmsWindowsInitMutex;
-
-        if (*mutex == NULL)
-        {
-            HANDLE p = CreateMutex(NULL, FALSE, NULL);
-            if (p && InterlockedCompareExchangePointer((void **)mutex, (void*)p, NULL) != NULL)
-                CloseHandle(p);
-        }
-        if (*mutex == NULL || WaitForSingleObject(*mutex, INFINITE) == WAIT_FAILED)
-            return NULL;
-        if (((void **)&_cmsContextPoolHeadMutex)[0] == NULL)
-            InitializeCriticalSection(&_cmsContextPoolHeadMutex);
-        if (*mutex == NULL || !ReleaseMutex(*mutex))
-            return NULL;
-    }
-#endif
-#endif
+    if (!InitContextMutex()) return NULL;
 
     _cmsInstallAllocFunctions(_cmsFindMemoryPlugin(Plugin), &fakeContext.DefaultMemoryManager);
     
@@ -866,6 +908,8 @@ cmsContext CMSEXPORT cmsDupContext(cmsContext ContextID, void* NewUserData)
     if (ctx == NULL)   
         return NULL;     // Something very wrong happened
 
+    if (!InitContextMutex()) return NULL;
+
     // Setup default memory allocators
     memcpy(&ctx->DefaultMemoryManager, &src->DefaultMemoryManager, sizeof(ctx->DefaultMemoryManager));
 
@@ -914,25 +958,6 @@ cmsContext CMSEXPORT cmsDupContext(cmsContext ContextID, void* NewUserData)
 }
 
 
-/*
-static
-struct _cmsContext_struct* FindPrev(struct _cmsContext_struct* id)
-{
-    struct _cmsContext_struct* prev;
-
-    // Search for previous
-    for (prev = _cmsContextPoolHead; 
-             prev != NULL;
-             prev = prev ->Next)
-    {
-        if (prev ->Next == id)
-            return prev;
-    }
-
-    return NULL;  // List is empty or only one element!
-}
-*/
-
 // Frees any resources associated with the given context, 
 // and destroys the context placeholder. 
 // The ContextID can no longer be used in any THR operation.  
@@ -943,6 +968,9 @@ void CMSEXPORT cmsDeleteContext(cmsContext ContextID)
         struct _cmsContext_struct* ctx = (struct _cmsContext_struct*) ContextID;              
         struct _cmsContext_struct  fakeContext;  
         struct _cmsContext_struct* prev;
+
+
+        InitContextMutex();
 
         memcpy(&fakeContext.DefaultMemoryManager, &ctx->DefaultMemoryManager, sizeof(ctx->DefaultMemoryManager));
 
@@ -990,3 +1018,32 @@ void* CMSEXPORT cmsGetContextUserData(cmsContext ContextID)
 }
 
 
+// Use context mutex to provide thread-safe time
+cmsBool _cmsGetTime(struct tm* ptr_time)
+{
+    struct tm* t;
+#if defined(HAVE_GMTIME_R) || defined(HAVE_GMTIME_S)
+    struct tm tm;
+#endif
+
+    time_t now = time(NULL);
+
+#ifdef HAVE_GMTIME_R
+    t = gmtime_r(&now, &tm);
+#elif defined(HAVE_GMTIME_S)
+    t = gmtime_s(&tm, &now) == 0 ? &tm : NULL;
+#else
+    if (!InitContextMutex()) return FALSE;
+
+    _cmsEnterCriticalSectionPrimitive(&_cmsContextPoolHeadMutex);
+    t = gmtime(&now);
+    _cmsLeaveCriticalSectionPrimitive(&_cmsContextPoolHeadMutex);
+#endif
+
+    if (t == NULL) 
+        return FALSE;
+    else {
+        *ptr_time = *t;
+        return TRUE;
+    }
+}
