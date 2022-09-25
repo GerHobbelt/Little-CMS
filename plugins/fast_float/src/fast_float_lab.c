@@ -360,8 +360,8 @@ int GetGridpoints(cmsUInt32Number dwFlags)
 // --------------------------------------------------------------------------------------------------------------
 
 cmsBool OptimizeCLUTLabTransform(cmsContext ContextID,
-                                  _cmsTransformFn* TransformFn,
-                                  void** UserData,
+                                  _cmsTransform2Fn* TransformFn,
+					              void** UserData,
                                   _cmsFreeUserDataFn* FreeDataFn,
                                   cmsPipeline** Lut,
                                   cmsUInt32Number* InputFormat,
@@ -419,7 +419,7 @@ cmsBool OptimizeCLUTLabTransform(cmsContext ContextID,
     cmsPipelineFree(ContextID, OriginalLut);
 
     *Lut = OptimizedLUT;
-    *TransformFn = (_cmsTransformFn)LabCLUTEval;
+    *TransformFn = LabCLUTEval;
     *UserData   = pfloat;
     *FreeDataFn = LabCLUTFree;
     *dwFlags &= ~cmsFLAGS_CAN_CHANGE_FORMATTER;

@@ -320,8 +320,8 @@ void FloatCMYKCLUTEval(cmsContext ContextID,
 // --------------------------------------------------------------------------------------------------------------
 
 cmsBool OptimizeCLUTCMYKTransform(cmsContext ContextID,
-                                  _cmsTransformFn* TransformFn,
-                                  void** UserData,
+                                  _cmsTransform2Fn* TransformFn,
+					              void** UserData,
                                   _cmsFreeUserDataFn* FreeDataFn,
                                   cmsPipeline** Lut,
                                   cmsUInt32Number* InputFormat,
@@ -374,7 +374,7 @@ cmsBool OptimizeCLUTCMYKTransform(cmsContext ContextID,
     cmsPipelineFree(ContextID, OriginalLut);
 
     *Lut = OptimizedLUT;
-    *TransformFn = (_cmsTransformFn)FloatCMYKCLUTEval;
+    *TransformFn = FloatCMYKCLUTEval;
     *UserData   = pcmyk;
     *FreeDataFn = _cmsFree;
     *dwFlags &= ~cmsFLAGS_CAN_CHANGE_FORMATTER;
