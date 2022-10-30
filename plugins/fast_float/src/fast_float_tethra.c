@@ -133,10 +133,9 @@ void FloatCLUTEval(cmsContext ContextID,
             py = g * p->Domain[1];
             pz = b * p->Domain[2];
 
-            x0 = _cmsQuickFloor(px); rx = (px - (cmsFloat32Number)x0);
-            y0 = _cmsQuickFloor(py); ry = (py - (cmsFloat32Number)y0);
-            z0 = _cmsQuickFloor(pz); rz = (pz - (cmsFloat32Number)z0);
-
+            x0 = (int) floorf(px); rx = (px - (cmsFloat32Number)x0);
+            y0 = (int) floorf(py); ry = (py - (cmsFloat32Number)y0);
+            z0 = (int) floorf(pz); rz = (pz - (cmsFloat32Number)z0);
 
             X0 = p->opta[2] * x0;
             X1 = X0 + (r >= 1.0 ? 0 : p->opta[2]);
