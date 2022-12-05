@@ -86,7 +86,7 @@ extern "C" {
 // use OUR numbers with a mainline LCMS to fail, so
 // we have to go under 2000-2100. Let's subtract
 // 2000 from the mainline release.
-#define LCMS_VERSION              (2140 - 2000)
+#define LCMS_VERSION              (2150 - 2000)
 
 // We expect any LCMS2MT release to fall within the
 // following range.
@@ -237,7 +237,7 @@ typedef int                  cmsBool;
 
 
 // Calling convention -- this is hardly platform and compiler dependent
-#ifdef CMS_IS_WINDOWS_
+#if defined(CMS_IS_WINDOWS_) && !defined(__GNUC__)
 #  if defined(CMS_DLL) || defined(CMS_DLL_BUILD)
 #     ifdef __BORLANDC__
 #        define CMSEXPORT       __stdcall _export

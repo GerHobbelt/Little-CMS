@@ -371,11 +371,11 @@ cmsBool ComputeConversion(cmsContext ContextID,
         cmsCIEXYZ WhitePointIn, WhitePointOut;
         cmsMAT3 ChromaticAdaptationMatrixIn, ChromaticAdaptationMatrixOut;
 
-        _cmsReadMediaWhitePoint(ContextID, &WhitePointIn,  hProfiles[i-1]);
-        _cmsReadCHAD(ContextID, &ChromaticAdaptationMatrixIn, hProfiles[i-1]);
+        if (!_cmsReadMediaWhitePoint(ContextID, &WhitePointIn, hProfiles[i - 1])) return FALSE;
+        if (!_cmsReadCHAD(ContextID, &ChromaticAdaptationMatrixIn, hProfiles[i - 1])) return FALSE;
 
-        _cmsReadMediaWhitePoint(ContextID, &WhitePointOut,  hProfiles[i]);
-        _cmsReadCHAD(ContextID, &ChromaticAdaptationMatrixOut, hProfiles[i]);
+        if (!_cmsReadMediaWhitePoint(ContextID, &WhitePointOut, hProfiles[i])) return FALSE;
+        if (!_cmsReadCHAD(ContextID, &ChromaticAdaptationMatrixOut, hProfiles[i])) return FALSE;
 
         if (!ComputeAbsoluteIntent(ContextID, AdaptationState,
                                   &WhitePointIn,  &ChromaticAdaptationMatrixIn,
