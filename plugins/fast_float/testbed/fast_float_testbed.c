@@ -2485,7 +2485,7 @@ int main()
 
        trace("\nAll tests passed OK\n");
 
-       cmsUnregisterPlugins();
+       cmsDeleteContext(0);
 
        return 0;
 }
