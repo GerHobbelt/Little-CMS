@@ -978,7 +978,7 @@ void CMSEXPORT cmsDeleteContext(cmsContext ContextID)
 {
     if (ContextID == NULL) {
 
-        cmsUnregisterPlugins();
+        cmsUnregisterPlugins(ContextID);
         if (globalContext.MemPool != NULL)
             _cmsSubAllocDestroy(globalContext.MemPool);
         globalContext.MemPool = NULL;
