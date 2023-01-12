@@ -22,7 +22,7 @@
 #ifndef _LCMS2_THREADED_H
 #define _LCMS2_THREADED_H
 
-#include "lcms2_plugin.h"
+#include "lcms2mt_plugin.h"
 
 #ifdef CMS_NO_PTHREADS
 #error "This plug-in needs pthreads to operate"

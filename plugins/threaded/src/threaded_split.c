@@ -83,7 +83,7 @@ cmsUInt32Number MemSize(cmsUInt32Number format,
 }
 
 // Compute how many workers to use. Repairs Stride if any missing member
-cmsUInt32Number _cmsThrCountSlices(struct _cmstransform_struct* CMMcargo, cmsInt32Number MaxWorkers,
+cmsUInt32Number _cmsThrCountSlices(cmsContext ContextID, struct _cmstransform_struct* CMMcargo, cmsInt32Number MaxWorkers,
                                    cmsUInt32Number PixelsPerLine, cmsUInt32Number LineCount, 
                                    cmsStride* Stride)
 {	    
@@ -104,10 +104,10 @@ cmsUInt32Number _cmsThrCountSlices(struct _cmstransform_struct* CMMcargo, cmsInt
         }
     }
 
-    MaxInputMem = MemSize(cmsGetTransformInputFormat((cmsHTRANSFORM)CMMcargo),
+    MaxInputMem = MemSize(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo),
                          PixelsPerLine, LineCount, &Stride->BytesPerLineIn, Stride->BytesPerPlaneIn);                         
 
-    MaxOutputMem = MemSize(cmsGetTransformOutputFormat((cmsHTRANSFORM)CMMcargo),
+    MaxOutputMem = MemSize(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo),
                          PixelsPerLine, LineCount, &Stride->BytesPerLineOut, Stride->BytesPerPlaneOut);
     
     // Each thread takes 128K at least
@@ -124,7 +124,7 @@ cmsUInt32Number _cmsThrCountSlices(struct _cmstransform_struct* CMMcargo, cmsInt
 
 // Slice input, output for lines
 static
-void SlicePerLines(const _cmsWorkSlice* master, cmsInt32Number nslices, 
+void SlicePerLines(cmsContext ContextID, const _cmsWorkSlice* master, cmsInt32Number nslices,
                             cmsInt32Number LinesPerSlice, _cmsWorkSlice slices[])
 {
     cmsInt32Number i;
@@ -152,14 +152,14 @@ void SlicePerLines(const _cmsWorkSlice* master, cmsInt32Number nslices,
 
 // Per pixels on big blocks of one line
 static
-void SlicePerPixels(const _cmsWorkSlice* master, cmsInt32Number nslices,
+void SlicePerPixels(cmsContext ContextID, const _cmsWorkSlice* master, cmsInt32Number nslices,
                     cmsInt32Number PixelsPerSlice, _cmsWorkSlice slices[])
 {
     cmsInt32Number i;
     cmsInt32Number TotalPixels = master->PixelsPerLine; // As this works on one line only
 
-    cmsUInt32Number PixelSpacingIn = PixelSpacing(cmsGetTransformInputFormat((cmsHTRANSFORM)master->CMMcargo));
-    cmsUInt32Number PixelSpacingOut = PixelSpacing(cmsGetTransformOutputFormat((cmsHTRANSFORM)master->CMMcargo));
+    cmsUInt32Number PixelSpacingIn = PixelSpacing(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)master->CMMcargo));
+    cmsUInt32Number PixelSpacingOut = PixelSpacing(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)master->CMMcargo));
 
     for (i = 0; i < nslices; i++) {
 
@@ -184,7 +184,7 @@ void SlicePerPixels(const _cmsWorkSlice* master, cmsInt32Number nslices,
 
 // If multiline, assign a number of lines to each thread. This works on chunky and planar. Stride parameters 
 // are not changed. In the case of one line, stride chunky is not used and stride planar keeps same.
-cmsBool _cmsThrSplitWork(const _cmsWorkSlice* master, cmsInt32Number nslices, _cmsWorkSlice slices[])
+cmsBool _cmsThrSplitWork(cmsContext ContextID, const _cmsWorkSlice* master, cmsInt32Number nslices, _cmsWorkSlice slices[])
 {
     
     // Check parameters
@@ -200,7 +200,7 @@ cmsBool _cmsThrSplitWork(const _cmsWorkSlice* master, cmsInt32Number nslices, _c
         if (PixelsPerWorker <= 0) 
             return FALSE;
         else
-            SlicePerPixels(master, nslices, PixelsPerWorker, slices);
+            SlicePerPixels(ContextID, master, nslices, PixelsPerWorker, slices);
     }
     else {
         
@@ -209,7 +209,7 @@ cmsBool _cmsThrSplitWork(const _cmsWorkSlice* master, cmsInt32Number nslices, _c
         if (LinesPerWorker <= 0)
             return FALSE;
         else
-            SlicePerLines(master, nslices, LinesPerWorker, slices);
+            SlicePerLines(ContextID, master, nslices, LinesPerWorker, slices);
     }
 
     return TRUE;

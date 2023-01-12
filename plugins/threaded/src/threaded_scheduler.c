@@ -24,14 +24,13 @@
 // The scheduler is responsible to split the work in several portions in a way that each
 // portion can be calculated by a different thread. All loacking is already done by lcms 
 // mutexes, and memory should not overlap.
-void  _cmsThrScheduler(struct _cmstransform_struct* CMMcargo,
-                       const void* InputBuffer,
-                       void* OutputBuffer,
-                       cmsUInt32Number PixelsPerLine,
-                       cmsUInt32Number LineCount,
-                       const cmsStride* Stride)
+void  _cmsThrScheduler(cmsContext ContextID, struct _cmstransform_struct* CMMcargo,
+						const void* InputBuffer,
+						void* OutputBuffer,
+						cmsUInt32Number PixelsPerLine,
+						cmsUInt32Number LineCount,
+						const cmsStride* Stride)
 {
-    cmsContext ContextID = cmsGetTransformContextID(CMMcargo);
     _cmsTransform2Fn worker = _cmsGetTransformWorker(CMMcargo);
     cmsInt32Number   MaxWorkers = _cmsGetTransformMaxWorkers(CMMcargo);
 
@@ -44,16 +43,17 @@ void  _cmsThrScheduler(struct _cmstransform_struct* CMMcargo,
     cmsHANDLE* handles;
 
     //  Count the number of threads needed for this job. MaxWorkers is the upper limit or -1 to auto
-    cmsUInt32Number nSlices = _cmsThrCountSlices(CMMcargo, MaxWorkers, PixelsPerLine, LineCount, &FixedStride);
+    cmsUInt32Number nSlices = _cmsThrCountSlices(ContextID, CMMcargo, MaxWorkers, PixelsPerLine, LineCount, &FixedStride);
     
     // Abort early if no threaded code
     if (nSlices <= 1) {
 
-        worker(CMMcargo, InputBuffer, OutputBuffer, PixelsPerLine, LineCount, Stride);
+        worker(ContextID, CMMcargo, InputBuffer, OutputBuffer, PixelsPerLine, LineCount, Stride);
         return;
     }
 
     // Setup master thread
+	master.ContextID = ContextID;
     master.CMMcargo = CMMcargo;
     master.InputBuffer = InputBuffer;
     master.OutputBuffer = OutputBuffer;
@@ -71,12 +71,12 @@ void  _cmsThrScheduler(struct _cmstransform_struct* CMMcargo,
         if (handles) _cmsFree(ContextID, handles);
 
         // Out of memory in this case only can come from a corruption, but we do the work anyway
-        worker(CMMcargo, InputBuffer, OutputBuffer, PixelsPerLine, LineCount, Stride);
+        worker(ContextID, CMMcargo, InputBuffer, OutputBuffer, PixelsPerLine, LineCount, Stride);
         return;
     }
 
     // All seems ok so far
-    if (_cmsThrSplitWork(&master, nSlices, slices))
+    if (_cmsThrSplitWork(ContextID, &master, nSlices, slices))
     {
         // Work is splitted. Create threads
         cmsUInt32Number i;
@@ -87,7 +87,7 @@ void  _cmsThrScheduler(struct _cmstransform_struct* CMMcargo,
         }
 
         // Do our portion of work 
-        worker(CMMcargo, slices[0].InputBuffer, slices[0].OutputBuffer, 
+        worker(ContextID, CMMcargo, slices[0].InputBuffer, slices[0].OutputBuffer,
             slices[0].PixelsPerLine, slices[0].LineCount, slices[0].Stride);
 
         // Wait until all threads are finished
@@ -99,7 +99,7 @@ void  _cmsThrScheduler(struct _cmstransform_struct* CMMcargo,
     else
     {
         // Not able to split the work, so don't thread
-        worker(CMMcargo, InputBuffer, OutputBuffer, PixelsPerLine, LineCount, Stride);
+        worker(ContextID, CMMcargo, InputBuffer, OutputBuffer, PixelsPerLine, LineCount, Stride);
     }
 
     _cmsFree(ContextID, slices);

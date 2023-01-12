@@ -44,7 +44,7 @@ DWORD WINAPI thread_adaptor(LPVOID p)
     thread_adaptor_param* ap = (thread_adaptor_param*)p;
     _cmsWorkSlice* s = ap->param;
 
-    ap->worker(s->CMMcargo, s->InputBuffer, s->OutputBuffer, 
+    ap->worker(s->ContextID, s->CMMcargo, s->InputBuffer, s->OutputBuffer,
                s->PixelsPerLine, s->LineCount, s->Stride);
     _cmsFree(0, p);
     return 0;
@@ -113,7 +113,7 @@ void* thread_adaptor(void* p)
     thread_adaptor_param* ap = (thread_adaptor_param*)p;
     _cmsWorkSlice* s = ap->param;
 
-    ap->worker(s->CMMcargo, s->InputBuffer, s->OutputBuffer,
+    ap->worker(s->ContextID, s->CMMcargo, s->InputBuffer, s->OutputBuffer,
                s->PixelsPerLine, s->LineCount, s->Stride);
     _cmsFree(0, p);
 
