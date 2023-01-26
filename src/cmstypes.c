@@ -1592,7 +1592,7 @@ void *Type_MLU_Read(cmsContext ContextID, struct _cms_typehandler_struct* self, 
         // Make sure this is an even utf16 size.
         if (SizeOfTag & 1) goto Error;
 
-        Block = (wchar_t*) _cmsCalloc(self ->ContextID, 1, SizeOfTag);
+        Block = (wchar_t*) _cmsCalloc(ContextID, 1, SizeOfTag);
         if (Block == NULL) goto Error;
        
         NumOfWchar = SizeOfTag / sizeof(wchar_t);
