@@ -1556,6 +1556,12 @@ void *Type_MLU_Read(cmsContext ContextID, struct _cms_typehandler_struct* self, 
         if (!_cmsReadUInt32Number(ContextID, io, &Len)) goto Error;
         if (!_cmsReadUInt32Number(ContextID, io, &Offset)) goto Error;
 
+        // Offset MUST be even because it indexes a block of utf16 chars. 
+        // Tricky profiles that uses odd positions will not work anyway
+        // because the whole utf16 block is previously converted to wchar_t 
+        // and sizeof this type may be of 4 bytes. On Linux systems, for example.
+        if (Offset & 1) goto Error;
+
         // Check for overflow
         if (Offset < (SizeOfHeader + 8)) goto Error;
         if (((Offset + Len) < Len) || ((Offset + Len) > SizeOfTag + 8)) goto Error;
@@ -1583,8 +1589,12 @@ void *Type_MLU_Read(cmsContext ContextID, struct _cms_typehandler_struct* self, 
     }
     else
     {
-        Block = (wchar_t*) _cmsMalloc(ContextID, SizeOfTag);
+        // Make sure this is an even utf16 size.
+        if (SizeOfTag & 1) goto Error;
+
+        Block = (wchar_t*) _cmsCalloc(self ->ContextID, 1, SizeOfTag);
         if (Block == NULL) goto Error;
+       
         NumOfWchar = SizeOfTag / sizeof(wchar_t);
         if (!_cmsReadWCharArray(ContextID, io, NumOfWchar, Block)) {
             _cmsFree(ContextID, Block);

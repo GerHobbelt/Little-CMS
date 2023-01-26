@@ -368,6 +368,8 @@ const wchar_t* _cmsMLUgetWide(const cmsMLU* mlu,
 
     if (len != NULL) *len   = v ->Len;
 
+    if (v->StrW + v->Len > mlu->PoolSize) return NULL;
+
     return(wchar_t*) ((cmsUInt8Number*) mlu ->MemPool + v ->StrW);
 }
 
@@ -765,7 +767,14 @@ cmsStage* CMSEXPORT _cmsStageAllocNamedColor(cmsContext ContextID, cmsNAMEDCOLOR
 cmsNAMEDCOLORLIST* CMSEXPORT cmsGetNamedColorList(cmsHTRANSFORM xform)
 {
     _cmsTRANSFORM* v = (_cmsTRANSFORM*) xform;
-    cmsStage* mpe  = v ->core->Lut->Elements;
+    cmsStage* mpe;
+    
+    if (v == NULL) return NULL;
+    if (v->core == NULL) return NULL;
+    if (v->core->Lut == NULL) return NULL;
+
+    mpe = v->core->Lut->Elements;
+    if (mpe == NULL) return NULL;
 
     if (mpe ->Type != cmsSigNamedColorElemType) return NULL;
     return (cmsNAMEDCOLORLIST*) mpe ->Data;

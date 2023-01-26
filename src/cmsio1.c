@@ -840,6 +840,10 @@ cmsBool  CMSEXPORT cmsIsCLUT(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt
            return FALSE;
     }
 
+    // Extended intents are not strictly CLUT-based
+    if (Intent > INTENT_ABSOLUTE_COLORIMETRIC)
+        return FALSE;
+
     return cmsIsTag(ContextID, hProfile, TagTable[Intent]);
 
 }

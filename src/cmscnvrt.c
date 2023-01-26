@@ -234,7 +234,7 @@ cmsFloat64Number CHAD2Temp(cmsContext ContextID, const cmsMAT3* Chad)
 
 // Compute a CHAD based on a given temperature
 static
-    void Temp2CHAD(cmsContext ContextID, cmsMAT3* Chad, cmsFloat64Number Temp)
+void Temp2CHAD(cmsContext ContextID, cmsMAT3* Chad, cmsFloat64Number Temp)
 {
     cmsCIEXYZ White;
     cmsCIExyY ChromaticityOfWhite;
