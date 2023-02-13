@@ -1249,7 +1249,7 @@ void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
 }
 
 
-int main(int argc, char* argv[])
+int main(int argc, const char** argv)
 {
     cmsContext ContextID = cmsCreateContext(NULL, NULL);
 
