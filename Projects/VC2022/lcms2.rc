@@ -1,18 +1,13 @@
 // Microsoft Visual C++ generated resource script.
 //
-#include "resource.h"
 
+//#define WIN32_LEAN_AND_MEAN
 #define APSTUDIO_READONLY_SYMBOLS
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 2 resource.
-//
 #define APSTUDIO_HIDDEN_SYMBOLS
-#include "windows.h"
-#undef APSTUDIO_HIDDEN_SYMBOLS
+#include <windows.h>
+#include <winver.h>
 
-/////////////////////////////////////////////////////////////////////////////
-#undef APSTUDIO_READONLY_SYMBOLS
+#include "resource.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // Spanish (Spain, International Sort) resources
