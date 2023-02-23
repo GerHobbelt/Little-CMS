@@ -215,7 +215,7 @@ cmsINLINE cmsUInt16Number _cmsQuickSaturateWord(cmsFloat64Number d)
 
 #ifdef CMS_IS_WINDOWS_
 
-#define WIN32_LEAN_AND_MEAN 1
+//#define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
 #if defined(_MSC_VER)
 #ifndef _CRTDBG_MAP_ALLOC
