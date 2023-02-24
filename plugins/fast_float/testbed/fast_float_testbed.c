@@ -2421,6 +2421,11 @@ void TestGrayTransformPerformance1(cmsContext ct)
        trace("Gray conversion using two devicelinks\t %-12.2f MPixels/Sec.\n", MPixSec(diff));
 }
 
+
+#if defined(BUILD_MONOLITHIC)
+#define main      lcms2_fast_float_testbed_main
+#endif
+
 // The harness test
 int main()
 {

@@ -843,6 +843,11 @@ void ComparativeLineStride8bits(void)
 
 
 
+
+#if defined(BUILD_MONOLITHIC)
+#define main      lcms2_threaded_testbed_main
+#endif
+
 // The harness test
 int main()
 {
