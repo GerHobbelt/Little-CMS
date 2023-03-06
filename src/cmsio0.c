@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2022 Marti Maria Saguer
+//  Copyright (c) 1998-2023 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -1914,7 +1914,7 @@ cmsUInt32Number CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfi
         if (data != NULL) {
 
             if (BufferSize < TagSize)
-                goto Error;
+                TagSize = BufferSize;
 
             if (!Icc ->IOhandler ->Seek(ContextID, Icc ->IOhandler, Offset)) goto Error;
             if (!Icc ->IOhandler ->Read(ContextID, Icc ->IOhandler, data, 1, TagSize)) goto Error;
@@ -1927,7 +1927,7 @@ cmsUInt32Number CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfi
         return Icc ->TagSizes[i];
     }
 
-    // The data has been already read, or written. But wait!, maybe the user chose to save as
+    // The data has been already read, or written. But wait!, maybe the user choose to save as
     // raw data. In this case, return the raw data directly
     
     if (Icc ->TagSaveAsRaw[i]) {
@@ -1936,7 +1936,7 @@ cmsUInt32Number CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfi
 
             TagSize  = Icc ->TagSizes[i];
             if (BufferSize < TagSize)
-                goto Error;
+                TagSize = BufferSize;
 
             memmove(data, Icc ->TagPtrs[i], TagSize);
 
