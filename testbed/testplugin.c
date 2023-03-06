@@ -1322,7 +1322,7 @@ static cmsPluginTransform FullTransformPluginSample = {
 
      { cmsPluginMagicNumber, 2060-2000, cmsPluginTransformSig, NULL},
 
-     TransformFactory
+     { TransformFactory }                          
 };
 
 cmsInt32Number CheckTransformPlugin(cmsContext ContextID)

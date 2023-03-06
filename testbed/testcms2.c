@@ -529,8 +529,8 @@ cmsInt32Number ReverseSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16N
             rgb[2] = Clip((1 - y) * (1 - k));
         }
 
-        cmsDoTransform(ContextID, p ->sRGB2Lab, rgb, Out, 1);
-        return 1;
+    cmsDoTransform(ContextID, p ->sRGB2Lab, rgb, Out, 1);
+    return 1;
 }
 
 
@@ -837,7 +837,6 @@ cmsInt32Number CheckQuickFloorWord(cmsContext ContextID)
 #define FLOAT_PRECISSION      (0.00001)
 
 static cmsFloat64Number MaxErr;
-static cmsFloat64Number AllowedErr = FIXED_PRECISION_15_16;
 
 cmsBool IsGoodVal(const char *title, cmsFloat64Number in, cmsFloat64Number out, cmsFloat64Number max)
 {
@@ -2627,6 +2626,7 @@ cmsInt32Number CheckJointCurves(cmsContext ContextID)
 }
 
 
+#if 0
 // Create a gamma curve by cheating the table
 static
 cmsToneCurve* GammaTableLinear(cmsContext ContextID, cmsInt32Number nEntries, cmsBool Dir)
@@ -2646,6 +2646,7 @@ cmsToneCurve* GammaTableLinear(cmsContext ContextID, cmsInt32Number nEntries, cm
 
     return g;
 }
+#endif
 
 
 static
@@ -6567,13 +6568,13 @@ cmsInt32Number CheckCMYKPerceptual(cmsContext ContextID)
 }
 
 
-
+#if 0
 static
 cmsInt32Number CheckCMYKRelCol(cmsContext ContextID)
 {
     return CheckCMYK(ContextID, INTENT_RELATIVE_COLORIMETRIC, "test1.icc", "test2.icc");
 }
-
+#endif
 
 
 static
