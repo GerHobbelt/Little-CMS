@@ -534,6 +534,20 @@ cmsHPROFILE CMSEXPORT cmsCreateProfilePlaceholder(cmsContext ContextID)
     // Set default version
     Icc ->Version =  0x02100000;
 
+    // Set default CMM (that's me!)
+    Icc ->CMM = lcmsSignature;
+
+    // Set default creator
+    // Created by LittleCMS (that's me!)
+    Icc ->creator = lcmsSignature;
+
+    // Set default platform
+#ifdef CMS_IS_WINDOWS_
+    Icc ->platform = cmsSigMicrosoft;
+#else
+    Icc ->platform = cmsSigMacintosh;
+#endif
+
     // Set default device class
     Icc->DeviceClass = cmsSigDisplayClass;
 
@@ -780,11 +794,13 @@ cmsBool _cmsReadHeader(cmsContext ContextID, _cmsICCPROFILE* Icc)
     }
 
     // Adjust endianness of the used parameters
+    Icc -> CMM             = _cmsAdjustEndianess32(Header.cmmId);
     Icc -> DeviceClass     = (cmsProfileClassSignature) _cmsAdjustEndianess32(Header.deviceClass);
     Icc -> ColorSpace      = (cmsColorSpaceSignature)   _cmsAdjustEndianess32(Header.colorSpace);
     Icc -> PCS             = (cmsColorSpaceSignature)   _cmsAdjustEndianess32(Header.pcs);
 
     Icc -> RenderingIntent = _cmsAdjustEndianess32(Header.renderingIntent);
+    Icc -> platform        = (cmsPlatformSignature)_cmsAdjustEndianess32(Header.platform);
     Icc -> flags           = _cmsAdjustEndianess32(Header.flags);
     Icc -> manufacturer    = _cmsAdjustEndianess32(Header.manufacturer);
     Icc -> model           = _cmsAdjustEndianess32(Header.model);
@@ -887,7 +903,7 @@ cmsBool _cmsWriteHeader(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsUInt32Numb
     cmsUInt32Number Count;
 
     Header.size        = _cmsAdjustEndianess32(UsedSpace);
-    Header.cmmId       = _cmsAdjustEndianess32(lcmsSignature);
+    Header.cmmId       = _cmsAdjustEndianess32(Icc ->CMM);
     Header.version     = _cmsAdjustEndianess32(Icc ->Version);
 
     Header.deviceClass = (cmsProfileClassSignature) _cmsAdjustEndianess32(Icc -> DeviceClass);
@@ -899,11 +915,7 @@ cmsBool _cmsWriteHeader(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsUInt32Numb
 
     Header.magic       = _cmsAdjustEndianess32(cmsMagicNumber);
 
-#ifdef CMS_IS_WINDOWS_
-    Header.platform    = (cmsPlatformSignature) _cmsAdjustEndianess32(cmsSigMicrosoft);
-#else
-    Header.platform    = (cmsPlatformSignature) _cmsAdjustEndianess32(cmsSigMacintosh);
-#endif
+    Header.platform    = (cmsPlatformSignature) _cmsAdjustEndianess32(Icc -> platform);
 
     Header.flags        = _cmsAdjustEndianess32(Icc -> flags);
     Header.manufacturer = _cmsAdjustEndianess32(Icc -> manufacturer);
@@ -919,8 +931,7 @@ cmsBool _cmsWriteHeader(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsUInt32Numb
     Header.illuminant.Y = (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, cmsD50_XYZ(ContextID)->Y));
     Header.illuminant.Z = (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, cmsD50_XYZ(ContextID)->Z));
 
-    // Created by LittleCMS (that's me!)
-    Header.creator      = _cmsAdjustEndianess32(lcmsSignature);
+    Header.creator      = _cmsAdjustEndianess32(Icc ->creator);
 
     memset(&Header.reserved, 0, sizeof(Header.reserved));
 
