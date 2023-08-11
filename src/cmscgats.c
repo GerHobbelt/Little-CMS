@@ -1850,11 +1850,14 @@ void WriteDataFormat(cmsContext ContextID, SAVESTREAM* fp, cmsIT8* it8)
        WriteStr(ContextID, fp, " ");
        nSamples = satoi(cmsIT8GetProperty(ContextID, it8, "NUMBER_OF_FIELDS"));
 
-       for (i = 0; i < nSamples; i++) {
+       if (nSamples <= t->nSamples) {
+
+           for (i = 0; i < nSamples; i++) {
 
               WriteStr(ContextID, fp, t->DataFormat[i]);
               WriteStr(ContextID, fp, ((i == (nSamples-1)) ? "\n" : "\t"));
-          }
+           }
+       }
 
        WriteStr (ContextID, fp, "END_DATA_FORMAT\n");
 }
@@ -1864,39 +1867,42 @@ void WriteDataFormat(cmsContext ContextID, SAVESTREAM* fp, cmsIT8* it8)
 static
 void WriteData(cmsContext ContextID, SAVESTREAM* fp, cmsIT8* it8)
 {
-       int  i, j;
+       int  i, j, nPatches;
        TABLE* t = GetTable(ContextID, it8);
 
        if (!t->Data) return;
 
        WriteStr (ContextID, fp, "BEGIN_DATA\n");
 
-       t->nPatches = satoi(cmsIT8GetProperty(ContextID, it8, "NUMBER_OF_SETS"));
+       nPatches = satoi(cmsIT8GetProperty(ContextID, it8, "NUMBER_OF_SETS"));
 
-       for (i = 0; i < t-> nPatches; i++) {
+       if (nPatches <= t->nPatches) {
+
+           for (i = 0; i < nPatches; i++) {
 
               WriteStr(ContextID, fp, " ");
 
-              for (j = 0; j < t->nSamples; j++) {
+               for (j = 0; j < t->nSamples; j++) {
 
-                     char *ptr = t->Data[i*t->nSamples+j];
+                   char* ptr = t->Data[i * t->nSamples + j];
 
                      if (ptr == NULL) WriteStr(ContextID, fp, "\"\"");
-                     else {
-                         // If value contains whitespace, enclose within quote
+                   else {
+                       // If value contains whitespace, enclose within quote
 
-                         if (strchr(ptr, ' ') != NULL) {
+                       if (strchr(ptr, ' ') != NULL) {
 
                              WriteStr(ContextID, fp, "\"");
                              WriteStr(ContextID, fp, ptr);
                              WriteStr(ContextID, fp, "\"");
-                         }
-                         else
+                       }
+                       else
                             WriteStr(ContextID, fp, ptr);
-                     }
+                   }
 
                      WriteStr(ContextID, fp, ((j == (t->nSamples-1)) ? "\n" : "\t"));
-              }
+               }
+           }
        }
        WriteStr(ContextID, fp, "END_DATA\n");
 }
