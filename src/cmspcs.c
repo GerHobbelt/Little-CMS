@@ -431,7 +431,7 @@ cmsFloat64Number XYZ2float(cmsContext ContextID, cmsUInt16Number v)
     fix32 = v << 1;
 
     // From fixed 15.16 to cmsFloat64Number
-    return _cms15Fixed16toDouble(ContextID, fix32);
+    return _cms15Fixed16toDouble(fix32);
 }
 
 

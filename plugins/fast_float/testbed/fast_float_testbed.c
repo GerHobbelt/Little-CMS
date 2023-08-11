@@ -1121,10 +1121,33 @@ void CheckLab2Roundtrip(cmsContext ContextID)
 
 }
 
+static
+void CheckAlphaDetect(void)
+{
+    cmsHPROFILE hsRGB;
+    cmsHTRANSFORM xform;
+
+    cmsSetLogErrorHandler(NULL);
+
+    hsRGB = cmsCreate_sRGBProfile();
+    
+    xform = cmsCreateTransform(hsRGB, TYPE_RGB_FLT, hsRGB, TYPE_RGBA_FLT, INTENT_PERCEPTUAL, cmsFLAGS_COPY_ALPHA);
+    cmsCloseProfile(hsRGB);
+
+    if (xform != NULL)
+        Fail("Copy alpha with mismatched channels should not succeed");
+
+    cmsSetLogErrorHandler(FatalErrorQuit);
+}
+
 // Convert some known values
 static
 void CheckConversionFloat(void)
 {
+    trace("Check alpha detection.");
+    CheckAlphaDetect();
+    trace("Ok\n");
+
     trace("Crash test.");
     TryAllValuesFloatAlpha(cmsOpenProfileFromFile(PROFILES_DIR "test5.icc", "r"), cmsOpenProfileFromFile(PROFILES_DIR "test0.icc", "r"), INTENT_PERCEPTUAL, FALSE);
 
@@ -1165,6 +1188,8 @@ void CheckConversionFloat(void)
     TryAllValuesFloatVs16(cmsOpenProfileFromFile(PROFILES_DIR "test0.icc", "r"), cmsOpenProfileFromFile(PROFILES_DIR "test0.icc", "r"), INTENT_PERCEPTUAL);
     TryAllValuesFloat(cmsOpenProfileFromFile(PROFILES_DIR "test0.icc", "r"), cmsOpenProfileFromFile(PROFILES_DIR "test0.icc", "r"), INTENT_PERCEPTUAL);
     trace("Ok\n");
+
+
 }
 
 
@@ -2448,7 +2473,7 @@ int main()
        trace("Installing plug-in ... ");
        cmsPlugin(plugin, cmsFastFloatExtensions());
        trace("done.\n\n");
-
+                      
        CheckComputeIncrements();
 
        // 15 bit functionality

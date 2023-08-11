@@ -460,8 +460,11 @@ void Emit1Gamma(cmsContext ContextID, cmsIOHANDLER* m, cmsToneCurve* Table, cons
 
     if (Table ->nEntries <= 0) return;  // Empty table
 
-    // Suppress whole if identity
-    if (cmsIsToneCurveLinear(ContextID, Table)) return;
+    // Check for identity function
+    if (cmsIsToneCurveLinear(ContextID, Table)) {
+        _cmsIOPrintf(ContextID, m, "/%s {} def\n", name);
+        return;
+    }
 
     // Check if is really an exponential. If so, emit "exp"
     gamma = cmsEstimateGamma(ContextID, Table, 0.001);

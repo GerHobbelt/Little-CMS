@@ -892,8 +892,8 @@ cmsBool  IsGoodWordPrec(const char *title, cmsUInt16Number in, cmsUInt16Number o
 static
 cmsInt32Number TestSingleFixed15_16(cmsContext ContextID, cmsFloat64Number d)
 {
-    cmsS15Fixed16Number f = _cmsDoubleTo15Fixed16(ContextID, d);
-    cmsFloat64Number RoundTrip = _cms15Fixed16toDouble(ContextID, f);
+    cmsS15Fixed16Number f = _cmsDoubleTo15Fixed16(d);
+    cmsFloat64Number RoundTrip = _cms15Fixed16toDouble(f);
     cmsFloat64Number Error     = fabs(d - RoundTrip);
 
     return ( Error <= FIXED_PRECISION_15_16);
@@ -919,8 +919,8 @@ cmsInt32Number CheckFixedPoint15_16(cmsContext ContextID)
 static
 cmsInt32Number TestSingleFixed8_8(cmsContext ContextID, cmsFloat64Number d)
 {
-    cmsS15Fixed16Number f = _cmsDoubleTo8Fixed8(ContextID, d);
-    cmsFloat64Number RoundTrip = _cms8Fixed8toDouble(ContextID, (cmsUInt16Number) f);
+    cmsS15Fixed16Number f = _cmsDoubleTo8Fixed8(d);
+    cmsFloat64Number RoundTrip = _cms8Fixed8toDouble((cmsUInt16Number) f);
     cmsFloat64Number Error     = fabs(d - RoundTrip);
 
     return ( Error <= FIXED_PRECISION_8_8);
@@ -948,13 +948,13 @@ cmsInt32Number CheckD50Roundtrip(cmsContext ContextID)
     cmsFloat64Number cmsD50Y_2 =  1.0;
     cmsFloat64Number cmsD50Z_2 = 0.82490540;
 
-    cmsS15Fixed16Number xe = _cmsDoubleTo15Fixed16(ContextID, cmsD50X);
-    cmsS15Fixed16Number ye = _cmsDoubleTo15Fixed16(ContextID, cmsD50Y);
-    cmsS15Fixed16Number ze = _cmsDoubleTo15Fixed16(ContextID, cmsD50Z);
+    cmsS15Fixed16Number xe = _cmsDoubleTo15Fixed16(cmsD50X);
+    cmsS15Fixed16Number ye = _cmsDoubleTo15Fixed16(cmsD50Y);
+    cmsS15Fixed16Number ze = _cmsDoubleTo15Fixed16(cmsD50Z);
 
-    cmsFloat64Number x =  _cms15Fixed16toDouble(ContextID, xe);
-    cmsFloat64Number y =  _cms15Fixed16toDouble(ContextID, ye);
-    cmsFloat64Number z =  _cms15Fixed16toDouble(ContextID, ze);
+    cmsFloat64Number x =  _cms15Fixed16toDouble(xe);
+    cmsFloat64Number y =  _cms15Fixed16toDouble(ye);
+    cmsFloat64Number z =  _cms15Fixed16toDouble(ze);
 
     double dx = fabs(cmsD50X - x);
     double dy = fabs(cmsD50Y - y);
@@ -972,9 +972,9 @@ cmsInt32Number CheckD50Roundtrip(cmsContext ContextID)
     ye = _cmsDoubleTo15Fixed16(ContextID, cmsD50Y_2);
     ze = _cmsDoubleTo15Fixed16(ContextID, cmsD50Z_2);
 
-    x =  _cms15Fixed16toDouble(ContextID, xe);
-    y =  _cms15Fixed16toDouble(ContextID, ye);
-    z =  _cms15Fixed16toDouble(ContextID, ze);
+    x =  _cms15Fixed16toDouble(xe);
+    y =  _cms15Fixed16toDouble(ye);
+    z =  _cms15Fixed16toDouble(ze);
 
     dx = fabs(cmsD50X_2 - x);
     dy = fabs(cmsD50Y_2 - y);
@@ -5356,6 +5356,73 @@ cmsInt32Number Check_cicp(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE
 
 }
 
+
+static
+void SetMHC2Matrix(cmsFloat64Number XYZ2XYZmatrix[3][4])
+{
+    XYZ2XYZmatrix[0][0] = 0.5; XYZ2XYZmatrix[0][1] = 0.1; XYZ2XYZmatrix[0][2] = 0.1; XYZ2XYZmatrix[0][3] = 0.0;
+    XYZ2XYZmatrix[1][0] = 0.0; XYZ2XYZmatrix[1][1] = 1.0; XYZ2XYZmatrix[1][2] = 0.0; XYZ2XYZmatrix[1][3] = 0.0;
+    XYZ2XYZmatrix[2][0] = 0.3; XYZ2XYZmatrix[2][1] = 0.2; XYZ2XYZmatrix[2][2] = 0.4; XYZ2XYZmatrix[2][3] = 0.0;
+}
+
+static
+cmsBool CloseEnough(cmsFloat64Number a, cmsFloat64Number b)
+{
+    return fabs(b - a) < (1.0 / 65535.0);
+}
+
+static
+cmsBool IsOriginalMHC2Matrix(cmsContext ContextID, cmsFloat64Number XYZ2XYZmatrix[3][4])
+{
+    cmsFloat64Number m[3][4];
+    int i, j;
+
+    SetMHC2Matrix(m);
+
+    for (i = 0; i < 3; i++)
+        for (j = 0; j < 4; j++)
+            if (!CloseEnough(XYZ2XYZmatrix[i][j], m[i][j])) return FALSE;
+
+    return TRUE;
+}
+
+
+static
+cmsInt32Number Check_MHC2(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE hProfile)
+{
+    cmsMHC2Type* v;
+    cmsMHC2Type  s;
+    double curve[] = { 0, 0.5, 1.0 };
+
+    switch (Pass) {
+
+    case 1:
+        SetMHC2Matrix(s.XYZ2XYZmatrix);
+        s.CurveEntries = 3;
+        s.GreenCurve = curve;
+        s.RedCurve = curve;
+        s.BlueCurve = curve;
+        s.MinLuminance = 0.1;
+        s.PeakLuminance = 100.0;
+        
+        if (!cmsWriteTag(hProfile, cmsSigMHC2Tag, &s)) return 0;
+        return 1;
+
+    case 2:
+        v = (cmsMHC2Type*)cmsReadTag(hProfile, cmsSigMHC2Tag);
+        if (v == NULL) return 0;
+
+        if (!IsOriginalMHC2Matrix(v->XYZ2XYZmatrix)) return 0;
+        if (v->CurveEntries != 3) return 0;
+        return 1;
+
+    default:
+        return 0;
+    }
+
+}
+
+
 // This is a very big test that checks every single tag
 static
 cmsInt32Number CheckProfileCreation(cmsContext ContextID)
@@ -5503,6 +5570,10 @@ cmsInt32Number CheckProfileCreation(cmsContext ContextID)
 
         SubTest("cicp Video Signal Type");
         if (!Check_cicp(ContextID, Pass, h)) goto Error;
+
+        SubTest("Microsoft MHC2 tag");
+        if (!Check_MHC2(Pass, h)) goto Error;
+
 
         if (Pass == 1) {
             cmsSaveProfileToFile(ContextID, h, "alltags.icc");
@@ -8376,6 +8447,52 @@ int Check_sRGB_Rountrips(cmsContext contextID)
     return 1;
 }
 
+/**
+* Check OKLab colorspace
+*/
+static
+int Check_OkLab(cmsContext ContextID)
+{
+    cmsHPROFILE hOkLab = cmsCreate_OkLabProfile(NULL);
+    cmsHPROFILE hXYZ = cmsCreateXYZProfile();
+    cmsCIEXYZ xyz, xyz2;
+    cmsCIELab okLab;
+
+#define TYPE_OKLAB_DBL          (FLOAT_SH(1)|COLORSPACE_SH(PT_MCH3)|CHANNELS_SH(3)|BYTES_SH(0))
+
+    cmsHTRANSFORM xform  = cmsCreateTransform(hXYZ, TYPE_XYZ_DBL,  hOkLab, TYPE_OKLAB_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsHTRANSFORM xform2 = cmsCreateTransform(hOkLab, TYPE_OKLAB_DBL, hXYZ, TYPE_XYZ_DBL,  INTENT_RELATIVE_COLORIMETRIC, 0);
+
+    /**
+    * D50 should be converted to white by PCS definition
+    */
+    xyz.X = 0.9642; xyz.Y = 1.0000; xyz.Z = 0.8249;
+    cmsDoTransform(xform, &xyz, &okLab, 1);
+    cmsDoTransform(xform2, &okLab, &xyz2, 1);
+
+
+    xyz.X = 1.0; xyz.Y = 0.0; xyz.Z = 0.0;
+    cmsDoTransform(xform, &xyz, &okLab, 1);
+    cmsDoTransform(xform2, &okLab, &xyz2, 1);
+
+
+    xyz.X = 0.0; xyz.Y = 1.0; xyz.Z = 0.0;
+    cmsDoTransform(xform, &xyz, &okLab, 1);
+    cmsDoTransform(xform2, &okLab, &xyz2, 1);
+
+    xyz.X = 0.0; xyz.Y = 0.0; xyz.Z = 1.0;
+    cmsDoTransform(xform, &xyz, &okLab, 1);
+    cmsDoTransform(xform2, &okLab, &xyz2, 1);
+
+
+    cmsDeleteTransform(xform);
+    cmsDeleteTransform(xform2);
+    cmsCloseProfile(hOkLab);
+    cmsCloseProfile(hXYZ);
+
+    return 1;
+}
+
 static
 cmsHPROFILE createRgbGamma(cmsContext contextID, cmsFloat64Number g)
 {
@@ -9503,6 +9620,7 @@ int main(int argc, const char** argv)
     Check(ctx, "Proofing intersection", CheckProofingIntersection);
     Check(ctx, "Empty MLUC", CheckEmptyMLUC);
     Check(ctx, "sRGB round-trips", Check_sRGB_Rountrips);
+    Check(ctx, "OkLab color space", Check_OkLab);
     Check(ctx, "Gamma space detection", CheckGammaSpaceDetection);
     Check(ctx, "Unbounded mode w/ integer output", CheckIntToFloatTransform);
     Check(ctx, "Corrupted built-in by using cmsWriteRawTag", CheckInducedCorruption);

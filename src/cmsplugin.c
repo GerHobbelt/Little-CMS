@@ -230,7 +230,7 @@ cmsBool CMSEXPORT  _cmsRead15Fixed16Number(cmsContext ContextID, cmsIOHANDLER* i
             return FALSE;
 
     if (n != NULL) {
-        *n = _cms15Fixed16toDouble(ContextID, (cmsS15Fixed16Number) _cmsAdjustEndianess32(tmp));
+        *n = _cms15Fixed16toDouble((cmsS15Fixed16Number) _cmsAdjustEndianess32(tmp));
     }
 
     return TRUE;
@@ -247,9 +247,9 @@ cmsBool CMSEXPORT  _cmsReadXYZNumber(cmsContext ContextID, cmsIOHANDLER* io, cms
 
     if (XYZ != NULL) {
 
-        XYZ->X = _cms15Fixed16toDouble(ContextID, (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) xyz.X));
-        XYZ->Y = _cms15Fixed16toDouble(ContextID, (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) xyz.Y));
-        XYZ->Z = _cms15Fixed16toDouble(ContextID, (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) xyz.Z));
+        XYZ->X = _cms15Fixed16toDouble((cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) xyz.X));
+        XYZ->Y = _cms15Fixed16toDouble((cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) xyz.Y));
+        XYZ->Z = _cms15Fixed16toDouble((cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) xyz.Z));
     }
     return TRUE;
 }
@@ -339,7 +339,7 @@ cmsBool CMSEXPORT  _cmsWrite15Fixed16Number(cmsContext ContextID, cmsIOHANDLER* 
 
     _cmsAssert(io != NULL);
 
-    tmp = _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, n));
+    tmp = _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(n));
     if (io -> Write(ContextID, io, sizeof(cmsUInt32Number), &tmp) != 1)
             return FALSE;
 
@@ -353,55 +353,35 @@ cmsBool CMSEXPORT  _cmsWriteXYZNumber(cmsContext ContextID, cmsIOHANDLER* io, co
     _cmsAssert(io != NULL);
     _cmsAssert(XYZ != NULL);
 
-    xyz.X = (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, XYZ->X));
-    xyz.Y = (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, XYZ->Y));
-    xyz.Z = (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, XYZ->Z));
+    xyz.X = (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(XYZ->X));
+    xyz.Y = (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(XYZ->Y));
+    xyz.Z = (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(XYZ->Z));
 
     return io -> Write(ContextID, io,  sizeof(cmsEncodedXYZNumber), &xyz);
 }
 
 // from Fixed point 8.8 to double
-cmsFloat64Number CMSEXPORT _cms8Fixed8toDouble(cmsContext ContextID, cmsUInt16Number fixed8)
+cmsFloat64Number CMSEXPORT _cms8Fixed8toDouble(cmsUInt16Number fixed8)
 {
-       cmsUInt8Number  msb, lsb;
-       cmsUNUSED_PARAMETER(ContextID);
-
-       lsb = (cmsUInt8Number) (fixed8 & 0xff);
-       msb = (cmsUInt8Number) (((cmsUInt16Number) fixed8 >> 8) & 0xff);
-
-       return (cmsFloat64Number) ((cmsFloat64Number) msb + ((cmsFloat64Number) lsb / 256.0));
+    return fixed8 / 256.0;
 }
 
-cmsUInt16Number CMSEXPORT _cmsDoubleTo8Fixed8(cmsContext ContextID, cmsFloat64Number val)
+cmsUInt16Number CMSEXPORT _cmsDoubleTo8Fixed8(cmsFloat64Number val)
 {
-    cmsS15Fixed16Number GammaFixed32 = _cmsDoubleTo15Fixed16(ContextID, val);
+    cmsS15Fixed16Number GammaFixed32 = _cmsDoubleTo15Fixed16(val);
     return  (cmsUInt16Number) ((GammaFixed32 >> 8) & 0xFFFF);
 }
 
 // from Fixed point 15.16 to double
-cmsFloat64Number CMSEXPORT _cms15Fixed16toDouble(cmsContext ContextID, cmsS15Fixed16Number fix32)
+cmsFloat64Number CMSEXPORT _cms15Fixed16toDouble(cmsS15Fixed16Number fix32)
 {
-    cmsFloat64Number floater, sign, mid;
-    int Whole, FracPart;
-    cmsUNUSED_PARAMETER(ContextID);
-
-    sign  = (fix32 < 0 ? -1 : 1);
-    fix32 = abs(fix32);
-
-    Whole     = (cmsUInt16Number)(fix32 >> 16) & 0xffff;
-    FracPart  = (cmsUInt16Number)(fix32 & 0xffff);
-
-    mid     = (cmsFloat64Number) FracPart / 65536.0;
-    floater = (cmsFloat64Number) Whole + mid;
-
-    return sign * floater;
+    return fix32 / 65536.0;
 }
 
 // from double to Fixed point 15.16
-cmsS15Fixed16Number CMSEXPORT _cmsDoubleTo15Fixed16(cmsContext ContextID, cmsFloat64Number v)
+cmsS15Fixed16Number CMSEXPORT _cmsDoubleTo15Fixed16(cmsFloat64Number v)
 {
-    cmsUNUSED_PARAMETER(ContextID);
-    return ((cmsS15Fixed16Number) floor((v)*65536.0 + 0.5));
+    return ((cmsS15Fixed16Number) floor((v) * 65536.0 + 0.5));
 }
 
 // Date/Time functions

@@ -61,6 +61,7 @@ DerivedData
 *.iobj
 *.idb
 *.recipe
+*.lastcodeanalysissucceeded
 
 /plugins/fast_float/Projects/VC2019/Win32/fast_float_plugin_Debug
 

@@ -176,11 +176,11 @@ CMSAPI cmsBool             CMSEXPORT _cmsWriteAlignment(cmsContext ContextID, cm
 CMSAPI cmsBool             CMSEXPORT _cmsIOPrintf(cmsContext ContextID, cmsIOHANDLER* io, const char* frm, ...);
 
 // Fixed point helper functions
-CMSAPI cmsFloat64Number    CMSEXPORT _cms8Fixed8toDouble(cmsContext ContextID, cmsUInt16Number fixed8);
-CMSAPI cmsUInt16Number     CMSEXPORT _cmsDoubleTo8Fixed8(cmsContext ContextID, cmsFloat64Number val);
+CMSAPI cmsFloat64Number    CMSEXPORT _cms8Fixed8toDouble(cmsUInt16Number fixed8);
+CMSAPI cmsUInt16Number     CMSEXPORT _cmsDoubleTo8Fixed8(cmsFloat64Number val);
 
-CMSAPI cmsFloat64Number    CMSEXPORT _cms15Fixed16toDouble(cmsContext ContextID, cmsS15Fixed16Number fix32);
-CMSAPI cmsS15Fixed16Number CMSEXPORT _cmsDoubleTo15Fixed16(cmsContext ContextID, cmsFloat64Number v);
+CMSAPI cmsFloat64Number    CMSEXPORT _cms15Fixed16toDouble(cmsS15Fixed16Number fix32);
+CMSAPI cmsS15Fixed16Number CMSEXPORT _cmsDoubleTo15Fixed16(cmsFloat64Number v);
 
 // Date/time helper functions
 CMSAPI void                CMSEXPORT _cmsEncodeDateTimeNumber(cmsContext ContextID, cmsDateTimeNumber *Dest, const struct tm *Source);

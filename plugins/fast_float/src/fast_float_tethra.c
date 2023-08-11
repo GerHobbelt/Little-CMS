@@ -294,6 +294,10 @@ cmsBool OptimizeCLUTRGBTransform(cmsContext ContextID,
 
             cmsPipelineInsertStage(ContextID, OriginalLut, cmsAT_END, lab_fix);
         }
+        else {
+            if (T_COLORSPACE(*OutputFormat) != PT_GRAY &&
+                T_COLORSPACE(*OutputFormat) != PT_RGB) return FALSE;
+        }
 
 
     // Resample the LUT

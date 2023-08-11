@@ -927,9 +927,9 @@ cmsBool _cmsWriteHeader(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsUInt32Numb
     Header.renderingIntent = _cmsAdjustEndianess32(Icc -> RenderingIntent);
 
     // Illuminant is always D50
-    Header.illuminant.X = (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, cmsD50_XYZ(ContextID)->X));
-    Header.illuminant.Y = (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, cmsD50_XYZ(ContextID)->Y));
-    Header.illuminant.Z = (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, cmsD50_XYZ(ContextID)->Z));
+    Header.illuminant.X = (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(cmsD50_XYZ(ContextID)->X));
+    Header.illuminant.Y = (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(cmsD50_XYZ(ContextID)->Y));
+    Header.illuminant.Z = (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(cmsD50_XYZ(ContextID)->Z));
 
     Header.creator      = _cmsAdjustEndianess32(Icc ->creator);
 
