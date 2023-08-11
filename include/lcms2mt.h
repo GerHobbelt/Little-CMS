@@ -1229,6 +1229,8 @@ CMSAPI cmsInt32Number    CMSEXPORT cmsGetToneCurveParametricType(cmsContext Cont
 CMSAPI cmsFloat64Number  CMSEXPORT cmsEstimateGamma(cmsContext ContextID, const cmsToneCurve* t, cmsFloat64Number Precision);
 CMSAPI cmsFloat64Number* CMSEXPORT cmsGetToneCurveParams(cmsContext ContextID, const cmsToneCurve* t);
 
+CMSAPI const cmsCurveSegment* CMSEXPORT cmsGetToneCurveSegment(cmsInt32Number n, const cmsToneCurve* t);
+
 // Tone curve tabular estimation
 CMSAPI cmsUInt32Number         CMSEXPORT cmsGetToneCurveEstimatedTableEntries(cmsContext ContextID, const cmsToneCurve* t);
 CMSAPI const cmsUInt16Number*  CMSEXPORT cmsGetToneCurveEstimatedTable(cmsContext ContextID, const cmsToneCurve* t);
