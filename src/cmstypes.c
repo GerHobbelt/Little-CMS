@@ -4486,8 +4486,8 @@ void *Type_MPEclut_Read(cmsContext ContextID, struct _cms_typehandler_struct* se
     if (!_cmsReadUInt16Number(ContextID, io, &InputChans)) return NULL;
     if (!_cmsReadUInt16Number(ContextID, io, &OutputChans)) return NULL;
 
-    if (InputChans == 0) goto Error;
-    if (OutputChans == 0) goto Error;
+    if (InputChans == 0 || InputChans >= cmsMAXCHANNELS) goto Error;
+    if (OutputChans == 0 || OutputChans >= cmsMAXCHANNELS) goto Error;
 
     if (io ->Read(ContextID, io,Dimensions8, sizeof(cmsUInt8Number), 16) != 16)
         goto Error;

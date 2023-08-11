@@ -8505,6 +8505,40 @@ int CheckLinearSpacesOptimization(cmsContext contextID)
 #endif
 
 
+
+static
+int CheckBadCGATS(cmsContext ContextID)
+{
+    const char* bad_it8 =
+        " \"\"\n"
+        "NUMBER_OF_FIELDS 4\n"
+        "BEGIN_DATA_FORMAT\n"
+        "I R G G\n"
+        "END_DATA_FORMAT\n"
+        "NUMBER_OF_FIELDS 9\n"
+        "NUMBER_OF_SETS 2\n"
+        "BEGIN_DATA\n"
+        "d\n"
+        "0 0Bd\n"
+        "0Ba	$ $ t .";
+
+    cmsHANDLE hIT8;
+    
+    cmsSetLogErrorHandler(NULL);
+
+    hIT8 = cmsIT8LoadFromMem(0, bad_it8, strlen(bad_it8));
+    
+    ResetFatalError();
+
+    if (hIT8 != NULL)
+    {
+        Fail("Wrong IT8 accepted as ok");
+        cmsIT8Free(hIT8);
+    }
+
+    return 1;
+}
+
 static
 int CheckIntToFloatTransform(cmsContext ContextID)
 {
@@ -9472,6 +9506,7 @@ int main(int argc, const char** argv)
     Check(ctx, "Gamma space detection", CheckGammaSpaceDetection);
     Check(ctx, "Unbounded mode w/ integer output", CheckIntToFloatTransform);
     Check(ctx, "Corrupted built-in by using cmsWriteRawTag", CheckInducedCorruption);
+    Check(ctx, "Bad CGATS file", CheckBadCGATS);
     }
 
     if (DoPluginTests)
