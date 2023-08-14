@@ -5776,8 +5776,8 @@ static _cmsTagTypeLinkedList SupportedTagTypes[] = {
 {TYPE_HANDLER(cmsMonacoBrokenCurveType,        Curve),               (_cmsTagTypeLinkedList*) &SupportedTagTypes[28] },
 {TYPE_HANDLER(cmsSigProfileSequenceIdType,     ProfileSequenceId),   (_cmsTagTypeLinkedList*) &SupportedTagTypes[29] },
 {TYPE_HANDLER(cmsSigDictType,                  Dictionary),          (_cmsTagTypeLinkedList*) &SupportedTagTypes[30] },
-{TYPE_HANDLER(cmsSigcicpType,                  VideoSignal),        (_cmsTagTypeLinkedList*) &SupportedTagTypes[31] },
-{TYPE_HANDLER(cmsSigVcgtType,                  vcgt),               (_cmsTagTypeLinkedList*) &SupportedTagTypes[32] },
+{TYPE_HANDLER(cmsSigcicpType,                  VideoSignal),         (_cmsTagTypeLinkedList*) &SupportedTagTypes[31] },
+{TYPE_HANDLER(cmsSigVcgtType,                  vcgt),                (_cmsTagTypeLinkedList*) &SupportedTagTypes[32] },
 {TYPE_HANDLER(cmsSigMHC2Type,                  MHC2),                NULL }
 };
 
