@@ -219,7 +219,7 @@ int GamutSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], C
     cmsUInt16Number Proof[cmsMAXCHANNELS], Proof2[cmsMAXCHANNELS];
     cmsFloat64Number dE1, dE2, ErrorRatio;
 
-    // Assume in-gamut by default.
+    // Assume in-gamut by default. NEVER READ, USED FOR DEBUG PURPOSES.
     ErrorRatio = 1.0;
 
     // Convert input to Lab

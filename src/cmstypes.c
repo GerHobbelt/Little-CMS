@@ -5279,10 +5279,12 @@ cmsBool WriteOneMLUC(cmsContext ContextID, struct _cms_typehandler_struct* self,
     }
 
     Before = io ->Tell(ContextID, io);
-    e ->Offsets[i] = Before - BaseOffset;
+    if (e->Offsets != NULL)
+        e ->Offsets[i] = Before - BaseOffset;
 
     if (!Type_MLU_Write(ContextID, self, io, (void*) mlu, 1)) return FALSE;
 
+    if (e->Sizes != NULL)
     e ->Sizes[i] = io ->Tell(ContextID, io) - Before;
     return TRUE;
 }
