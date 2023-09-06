@@ -1584,8 +1584,6 @@ void *Type_MLU_Read(cmsContext ContextID, struct _cms_typehandler_struct* self, 
     if (SizeOfTag == 0)
     {
         Block = NULL;
-        NumOfWchar = 0;
-
     }
     else
     {
