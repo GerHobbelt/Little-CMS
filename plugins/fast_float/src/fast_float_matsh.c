@@ -302,7 +302,7 @@ cmsBool OptimizeFloatMatrixShaper(cmsContext ContextID,
         }
     }
 
-      // Allocate an empty LUT
+    // Allocate an empty LUT 
     Dest =  cmsPipelineAlloc(ContextID, nChans, nChans);
     if (!Dest) return FALSE;
 

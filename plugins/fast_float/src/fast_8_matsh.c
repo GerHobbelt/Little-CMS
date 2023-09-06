@@ -309,9 +309,9 @@ cmsBool Optimize8MatrixShaper(    cmsContext ContextID,
     if (cmsStageInputChannels(ContextID, Matrix1) == 1 && cmsStageOutputChannels(ContextID, Matrix2) == 1)
     {
         // This is a gray to gray. Just multiply
-         factor = Data1->Double[0]*Data2->Double[0] +
-                  Data1->Double[1]*Data2->Double[1] +
-                  Data1->Double[2]*Data2->Double[2];
+        factor = Data1->Double[0]*Data2->Double[0] + 
+                 Data1->Double[1]*Data2->Double[1] + 
+                 Data1->Double[2]*Data2->Double[2];
 
         if (fabs(1 - factor) < (1.0 / 65535.0)) IdentityMat = TRUE;
     }
@@ -329,8 +329,8 @@ cmsBool Optimize8MatrixShaper(    cmsContext ContextID,
         }
     }
 
-      // Allocate an empty LUT
-    Dest =  cmsPipelineAlloc(ContextID, nChans, nChans);
+    // Allocate an empty LUT 
+    Dest = cmsPipelineAlloc(ContextID, nChans, nChans);
     if (!Dest) return FALSE;
 
     // Assemble the new LUT
@@ -359,7 +359,7 @@ cmsBool Optimize8MatrixShaper(    cmsContext ContextID,
         _cmsStageToneCurvesData* mpeC2 = (_cmsStageToneCurvesData*) cmsStageData(ContextID, Curve2);
 
         // In this particular optimization, cache does not help as it takes more time to deal with
-        // the cache that with the pixel handling
+        // the cache than with the pixel handling
         *dwFlags |= cmsFLAGS_NOCACHE;
 
 
