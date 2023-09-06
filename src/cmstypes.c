@@ -4487,7 +4487,7 @@ void *Type_MPEclut_Read(struct _cms_typehandler_struct* self, cmsIOHANDLER* io, 
     if (InputChans == 0 || InputChans >= cmsMAXCHANNELS) goto Error;
     if (OutputChans == 0 || OutputChans >= cmsMAXCHANNELS) goto Error;
 
-    if (io ->Read(io,Dimensions8, sizeof(cmsUInt8Number), 16) != 16)
+    if (io ->Read(io, Dimensions8, sizeof(cmsUInt8Number), 16) != 16)
         goto Error;
 
     // Copy MAX_INPUT_DIMENSIONS at most. Expand to cmsUInt32Number
@@ -4506,7 +4506,7 @@ void *Type_MPEclut_Read(struct _cms_typehandler_struct* self, cmsIOHANDLER* io, 
     clut = (_cmsStageCLutData*) mpe ->Data;
     for (i=0; i < clut ->nEntries; i++) {
 
-        if (!_cmsReadFloat32Number(io, &clut ->Tab.TFloat[i])) goto Error;
+        if (!_cmsReadFloat32Number(io, &clut->Tab.TFloat[i])) goto Error;
     }
 
     *nItems = 1;

@@ -248,7 +248,7 @@ typedef int                  cmsBool;
 #            define CMSAPI    __declspec(dllexport)
 #        else
 #           define CMSAPI     __declspec(dllimport)
-#       endif
+#        endif
 #     endif
 #  else
 #     define CMSEXPORT
