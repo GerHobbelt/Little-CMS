@@ -59,7 +59,7 @@ typedef struct {
 // reference to the real block is kept for later free
 static XMatShaperData* malloc_aligned(cmsContext ContextID)
 {
-       cmsUInt8Number* real_ptr = (cmsUInt8Number*)_cmsMallocZero(ContextID, sizeof(XMatShaperData) + 32);
+       cmsUInt8Number* real_ptr = (cmsUInt8Number*)_cmsMallocZero(sizeof(XMatShaperData) + 32);
        cmsUInt8Number* aligned = (cmsUInt8Number*)(((uintptr_t)real_ptr + 16) & ~0xf);
        XMatShaperData* p = (XMatShaperData*)aligned;
 
@@ -70,18 +70,18 @@ static XMatShaperData* malloc_aligned(cmsContext ContextID)
 
 // Free the private data container
 static
-void  FreeMatShaper(cmsContext ContextID, void* Data)
+void  FreeMatShaper(void* Data)
 {
 
        XMatShaperData* p = (XMatShaperData*)Data;
        if (p != NULL)
-              _cmsFree(ContextID, p->real_ptr);
+              _cmsFree(p->real_ptr);
 }
 
 
 // This table converts from 8 bits to 1.14 after applying the curve
 static
-void FillShaper(cmsContext ContextID, cmsUInt16Number* Table, cmsToneCurve* Curve)
+void FillShaper(cmsUInt16Number* Table, cmsToneCurve* Curve)
 {
        int i;
        cmsFloat32Number R, y;
@@ -89,7 +89,7 @@ void FillShaper(cmsContext ContextID, cmsUInt16Number* Table, cmsToneCurve* Curv
        for (i = 0; i < MAX_NODES_IN_CURVE; i++) {
 
               R = (cmsFloat32Number)i / (cmsFloat32Number) (MAX_NODES_IN_CURVE - 1);
-              y = cmsEvalToneCurveFloat(ContextID, Curve, R);
+              y = cmsEvalToneCurveFloat(Curve, R);
 
               Table[i] = (cmsUInt16Number) DOUBLE_TO_1FIXED15(y);
        }
@@ -98,7 +98,7 @@ void FillShaper(cmsContext ContextID, cmsUInt16Number* Table, cmsToneCurve* Curv
 
 // Compute the matrix-shaper structure
 static
-XMatShaperData* SetMatShaper(cmsContext ContextID, cmsToneCurve* Curve1[3], cmsMAT3* Mat, cmsVEC3* Off, cmsToneCurve* Curve2[3], cmsBool IdentityMat)
+XMatShaperData* SetMatShaper(cmsToneCurve* Curve1[3], cmsMAT3* Mat, cmsVEC3* Off, cmsToneCurve* Curve2[3], cmsBool IdentityMat)
 {
        XMatShaperData* p;
        int i, j;
@@ -110,13 +110,13 @@ XMatShaperData* SetMatShaper(cmsContext ContextID, cmsToneCurve* Curve1[3], cmsM
        p->IdentityMat = IdentityMat;
 
        // Precompute tables
-       FillShaper(ContextID, p->Shaper1R, Curve1[0]);
-       FillShaper(ContextID, p->Shaper1G, Curve1[1]);
-       FillShaper(ContextID, p->Shaper1B, Curve1[2]);
+       FillShaper(p->Shaper1R, Curve1[0]);
+       FillShaper(p->Shaper1G, Curve1[1]);
+       FillShaper(p->Shaper1B, Curve1[2]);
 
-       FillShaper(ContextID, p->Shaper2R, Curve2[0]);
-       FillShaper(ContextID, p->Shaper2G, Curve2[1]);
-       FillShaper(ContextID, p->Shaper2B, Curve2[2]);
+       FillShaper(p->Shaper2R, Curve2[0]);
+       FillShaper(p->Shaper2G, Curve2[1]);
+       FillShaper(p->Shaper2B, Curve2[2]);
 
        // Convert matrix to nFixed14. Note that those values may take more than 16 bits if negative
        for (i = 0; i < 3; i++) {
@@ -178,8 +178,8 @@ void MatShaperXform(cmsContext ContextID,
 
        cmsUInt32Number nalpha, strideIn, strideOut;
 
-       _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
-       _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
+       _cmsComputeComponentIncrements(cmsGetTransformInputFormat((cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
+       _cmsComputeComponentIncrements(cmsGetTransformOutputFormat((cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
 
        if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
            nalpha = 0;
@@ -287,25 +287,25 @@ cmsBool OptimizeMatrixShaper15(cmsContext ContextID,
        Src = *Lut;
 
        // Check for shaper-matrix-matrix-shaper structure, that is what this optimizer stands for
-       if (!cmsPipelineCheckAndRetreiveStages(ContextID, Src, 4,
+       if (!cmsPipelineCheckAndRetreiveStages(Src, 4,
               cmsSigCurveSetElemType, cmsSigMatrixElemType, cmsSigMatrixElemType, cmsSigCurveSetElemType,
               &Curve1, &Matrix1, &Matrix2, &Curve2)) return FALSE;
 
        nChans = T_CHANNELS(*InputFormat);
 
        // Get both matrices, which are 3x3
-       Data1 = (_cmsStageMatrixData*)cmsStageData(ContextID, Matrix1);
-       Data2 = (_cmsStageMatrixData*)cmsStageData(ContextID, Matrix2);
+       Data1 = (_cmsStageMatrixData*)cmsStageData(Matrix1);
+       Data2 = (_cmsStageMatrixData*)cmsStageData(Matrix2);
 
        // Input offset should be zero
        if (Data1->Offset != NULL) return FALSE;
 
        // Multiply both matrices to get the result
-       _cmsMAT3per(ContextID, &res, (cmsMAT3*)Data2->Double, (cmsMAT3*)Data1->Double);
+       _cmsMAT3per(&res, (cmsMAT3*)Data2->Double, (cmsMAT3*)Data1->Double);
 
        // Now the result is in res + Data2 -> Offset. Maybe is a plain identity?
        IdentityMat = FALSE;
-       if (_cmsMAT3isIdentity(ContextID, &res) && Data2->Offset == NULL) {
+       if (_cmsMAT3isIdentity(&res) && Data2->Offset == NULL) {
 
               // We can get rid of full matrix
               IdentityMat = TRUE;
@@ -313,37 +313,37 @@ cmsBool OptimizeMatrixShaper15(cmsContext ContextID,
 
 
        // Allocate an empty LUT
-       Dest = cmsPipelineAlloc(ContextID, nChans, nChans);
+       Dest = cmsPipelineAlloc(nChans, nChans);
        if (!Dest) return FALSE;
 
        // Assamble the new LUT
-       cmsPipelineInsertStage(ContextID, Dest, cmsAT_BEGIN, cmsStageDup(ContextID, Curve1));
+       cmsPipelineInsertStage(Dest, cmsAT_BEGIN, cmsStageDup(Curve1));
 
        if (!IdentityMat) {
 
-              cmsPipelineInsertStage(ContextID, Dest, cmsAT_END,
-                     cmsStageAllocMatrix(ContextID, 3, 3, (const cmsFloat64Number*)&res, Data2->Offset));
+              cmsPipelineInsertStage(Dest, cmsAT_END,
+                     cmsStageAllocMatrix(3, 3, (const cmsFloat64Number*)&res, Data2->Offset));
        }
 
-       cmsPipelineInsertStage(ContextID, Dest, cmsAT_END, cmsStageDup(ContextID, Curve2));
+       cmsPipelineInsertStage(Dest, cmsAT_END, cmsStageDup(Curve2));
 
        {
-              _cmsStageToneCurvesData* mpeC1 = (_cmsStageToneCurvesData*)cmsStageData(ContextID, Curve1);
-              _cmsStageToneCurvesData* mpeC2 = (_cmsStageToneCurvesData*)cmsStageData(ContextID, Curve2);
+              _cmsStageToneCurvesData* mpeC1 = (_cmsStageToneCurvesData*)cmsStageData(Curve1);
+              _cmsStageToneCurvesData* mpeC2 = (_cmsStageToneCurvesData*)cmsStageData(Curve2);
 
               // In this particular optimization, caché does not help as it takes more time to deal with
               // the cache that with the pixel handling
               *dwFlags |= cmsFLAGS_NOCACHE;
 
               // Setup the optimizarion routines
-              *UserData = SetMatShaper(ContextID, mpeC1->TheCurves, &res, (cmsVEC3*)Data2->Offset, mpeC2->TheCurves, IdentityMat);
+              *UserData = SetMatShaper(mpeC1->TheCurves, &res, (cmsVEC3*)Data2->Offset, mpeC2->TheCurves, IdentityMat);
               *FreeUserData = FreeMatShaper;
 
               *TransformFn = MatShaperXform;
        }
 
 
-       cmsPipelineFree(ContextID, Src);
+       cmsPipelineFree(Src);
        *dwFlags &= ~cmsFLAGS_CAN_CHANGE_FORMATTER;
        *Lut = Dest;
        return TRUE;

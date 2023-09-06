@@ -83,27 +83,27 @@ long int CMSEXPORT cmsfilelength(FILE* f)
 // required to be implemented: malloc, realloc and free, although the user may want to
 // replace the optional mallocZero, calloc and dup as well.
 
-cmsBool   _cmsRegisterMemHandlerPlugin(cmsContext ContextID, cmsPluginBase* Plugin);
+cmsBool   _cmsRegisterMemHandlerPlugin(cmsPluginBase* Plugin);
 
 // *********************************************************************************
 
 // This is the default memory allocation function. It does a very coarse
 // check of amount of memory, just to prevent exploits
 static
-void* _cmsMallocDefaultFn(cmsContext ContextID, cmsUInt32Number size)
+void* _cmsMallocDefaultFn(cmsUInt32Number size)
 {
     if (size > MAX_MEMORY_FOR_ALLOC) return NULL;  // Never allow over maximum
 
     return (void*) malloc(size);
 
-    cmsUNUSED_PARAMETER(ContextID);
+    
 }
 
 // Generic allocate & zero
 static
-void* _cmsMallocZeroDefaultFn(cmsContext ContextID, cmsUInt32Number size)
+void* _cmsMallocZeroDefaultFn(cmsUInt32Number size)
 {
-    void *pt = _cmsMalloc(ContextID, size);
+    void *pt = _cmsMalloc(size);
     if (pt == NULL) return NULL;
 
     memset(pt, 0, size);
@@ -113,34 +113,34 @@ void* _cmsMallocZeroDefaultFn(cmsContext ContextID, cmsUInt32Number size)
 
 // The default free function. The only check proformed is against NULL pointers
 static
-void _cmsFreeDefaultFn(cmsContext ContextID, void *Ptr)
+void _cmsFreeDefaultFn(void *Ptr)
 {
     // free(NULL) is defined a no-op by C99, therefore it is safe to
     // avoid the check, but it is here just in case...
 
     if (Ptr) free(Ptr);
 
-    cmsUNUSED_PARAMETER(ContextID);
+    
 }
 
 // The default realloc function. Again it checks for exploits. If Ptr is NULL,
 // realloc behaves the same way as malloc and allocates a new block of size bytes.
 static
-void* _cmsReallocDefaultFn(cmsContext ContextID, void* Ptr, cmsUInt32Number size)
+void* _cmsReallocDefaultFn(void* Ptr, cmsUInt32Number size)
 {
 
     if (size > MAX_MEMORY_FOR_ALLOC) return NULL;  // Never realloc over 512Mb
 
     return realloc(Ptr, size);
 
-    cmsUNUSED_PARAMETER(ContextID);
+    
 }
 
 
 // The default calloc function. Allocates an array of num elements, each one of size bytes
 // all memory is initialized to zero.
 static
-void* _cmsCallocDefaultFn(cmsContext ContextID, cmsUInt32Number num, cmsUInt32Number size)
+void* _cmsCallocDefaultFn(cmsUInt32Number num, cmsUInt32Number size)
 {
     cmsUInt32Number Total = num * size;
 
@@ -157,18 +157,18 @@ void* _cmsCallocDefaultFn(cmsContext ContextID, cmsUInt32Number num, cmsUInt32Nu
 
     if (Total > MAX_MEMORY_FOR_ALLOC) return NULL;  // Never alloc over 512Mb
 
-    return _cmsMallocZero(ContextID, Total);
+    return _cmsMallocZero(Total);
 }
 
 // Generic block duplication
 static
-void* _cmsDupDefaultFn(cmsContext ContextID, const void* Org, cmsUInt32Number size)
+void* _cmsDupDefaultFn(const void* Org, cmsUInt32Number size)
 {
     void* mem;
 
     if (size > MAX_MEMORY_FOR_ALLOC) return NULL;  // Never dup over 512Mb
 
-    mem = _cmsMalloc(ContextID, size);
+    mem = _cmsMalloc(size);
 
     if (mem != NULL && Org != NULL)
         memmove(mem, Org, size);
@@ -227,7 +227,7 @@ void _cmsInstallAllocFunctions(cmsPluginMemHandler* Plugin, _cmsMemPluginChunkTy
 
 
 // Plug-in replacement entry
-cmsBool  _cmsRegisterMemHandlerPlugin(cmsContext ContextID, cmsPluginBase *Data)
+cmsBool  _cmsRegisterMemHandlerPlugin(cmsPluginBase *Data)
 {
     cmsPluginMemHandler* Plugin = (cmsPluginMemHandler*) Data;
     _cmsMemPluginChunkType* ptr;
@@ -252,7 +252,7 @@ cmsBool  _cmsRegisterMemHandlerPlugin(cmsContext ContextID, cmsPluginBase *Data)
         Plugin -> ReallocPtr == NULL) return FALSE;
 
     // Set replacement functions
-    ptr = (_cmsMemPluginChunkType*) _cmsContextGetClientChunk(ContextID, MemPlugin);
+    ptr = (_cmsMemPluginChunkType*) _cmsContextGetClientChunk(MemPlugin);
     if (ptr == NULL)
         return FALSE;
 
@@ -261,47 +261,47 @@ cmsBool  _cmsRegisterMemHandlerPlugin(cmsContext ContextID, cmsPluginBase *Data)
 }
 
 // Generic allocate
-void* CMSEXPORT _cmsMalloc(cmsContext ContextID, cmsUInt32Number size)
+void* CMSEXPORT _cmsMalloc(cmsUInt32Number size)
 {
-    _cmsMemPluginChunkType* ptr = (_cmsMemPluginChunkType*) _cmsContextGetClientChunk(ContextID, MemPlugin);
-    return ptr ->MallocPtr(ContextID, size);
+    _cmsMemPluginChunkType* ptr = (_cmsMemPluginChunkType*) _cmsContextGetClientChunk(MemPlugin);
+    return ptr ->MallocPtr(size);
 }
 
 // Generic allocate & zero
-void* CMSEXPORT _cmsMallocZero(cmsContext ContextID, cmsUInt32Number size)
+void* CMSEXPORT _cmsMallocZero(cmsUInt32Number size)
 {
-    _cmsMemPluginChunkType* ptr = (_cmsMemPluginChunkType*) _cmsContextGetClientChunk(ContextID, MemPlugin);
-    return ptr->MallocZeroPtr(ContextID, size);
+    _cmsMemPluginChunkType* ptr = (_cmsMemPluginChunkType*) _cmsContextGetClientChunk(MemPlugin);
+    return ptr->MallocZeroPtr(size);
 }
 
 // Generic calloc
-void* CMSEXPORT _cmsCalloc(cmsContext ContextID, cmsUInt32Number num, cmsUInt32Number size)
+void* CMSEXPORT _cmsCalloc(cmsUInt32Number num, cmsUInt32Number size)
 {
-    _cmsMemPluginChunkType* ptr = (_cmsMemPluginChunkType*) _cmsContextGetClientChunk(ContextID, MemPlugin);
-    return ptr->CallocPtr(ContextID, num, size);
+    _cmsMemPluginChunkType* ptr = (_cmsMemPluginChunkType*) _cmsContextGetClientChunk(MemPlugin);
+    return ptr->CallocPtr(num, size);
 }
 
 // Generic reallocate
-void* CMSEXPORT _cmsRealloc(cmsContext ContextID, void* Ptr, cmsUInt32Number size)
+void* CMSEXPORT _cmsRealloc(void* Ptr, cmsUInt32Number size)
 {
-    _cmsMemPluginChunkType* ptr = (_cmsMemPluginChunkType*) _cmsContextGetClientChunk(ContextID, MemPlugin);
-    return ptr->ReallocPtr(ContextID, Ptr, size);
+    _cmsMemPluginChunkType* ptr = (_cmsMemPluginChunkType*) _cmsContextGetClientChunk(MemPlugin);
+    return ptr->ReallocPtr(Ptr, size);
 }
 
 // Generic free memory
-void CMSEXPORT _cmsFree(cmsContext ContextID, void* Ptr)
+void CMSEXPORT _cmsFree(void* Ptr)
 {
     if (Ptr != NULL) {
-        _cmsMemPluginChunkType* ptr = (_cmsMemPluginChunkType*) _cmsContextGetClientChunk(ContextID, MemPlugin);
-        ptr ->FreePtr(ContextID, Ptr);
+        _cmsMemPluginChunkType* ptr = (_cmsMemPluginChunkType*) _cmsContextGetClientChunk(MemPlugin);
+        ptr ->FreePtr(Ptr);
     }
 }
 
 // Generic block duplication
-void* CMSEXPORT _cmsDupMem(cmsContext ContextID, const void* Org, cmsUInt32Number size)
+void* CMSEXPORT _cmsDupMem(const void* Org, cmsUInt32Number size)
 {
-    _cmsMemPluginChunkType* ptr = (_cmsMemPluginChunkType*) _cmsContextGetClientChunk(ContextID, MemPlugin);
-    return ptr ->DupPtr(ContextID, Org, size);
+    _cmsMemPluginChunkType* ptr = (_cmsMemPluginChunkType*) _cmsContextGetClientChunk(MemPlugin);
+    return ptr ->DupPtr(Org, size);
 }
 
 // ********************************************************************************************
@@ -311,7 +311,7 @@ void* CMSEXPORT _cmsDupMem(cmsContext ContextID, const void* Org, cmsUInt32Numbe
 // I prefer this method over realloc due to the big impact on xput realloc may have if
 // memory is being swapped to disk. This approach is safer (although that may not be true on all platforms)
 static
-_cmsSubAllocator_chunk* _cmsCreateSubAllocChunk(cmsContext ContextID, cmsUInt32Number Initial)
+_cmsSubAllocator_chunk* _cmsCreateSubAllocChunk(cmsUInt32Number Initial)
 {
     _cmsSubAllocator_chunk* chunk;
 
@@ -320,15 +320,15 @@ _cmsSubAllocator_chunk* _cmsCreateSubAllocChunk(cmsContext ContextID, cmsUInt32N
         Initial = 20*1024;
 
     // Create the container
-    chunk = (_cmsSubAllocator_chunk*) _cmsMallocZero(ContextID, sizeof(_cmsSubAllocator_chunk));
+    chunk = (_cmsSubAllocator_chunk*) _cmsMallocZero(sizeof(_cmsSubAllocator_chunk));
     if (chunk == NULL) return NULL;
 
     // Initialize values
-    chunk ->Block     = (cmsUInt8Number*) _cmsMalloc(ContextID, Initial);
+    chunk ->Block     = (cmsUInt8Number*) _cmsMalloc(Initial);
     if (chunk ->Block == NULL) {
 
         // Something went wrong
-        _cmsFree(ContextID, chunk);
+        _cmsFree(chunk);
         return NULL;
     }
 
@@ -341,19 +341,19 @@ _cmsSubAllocator_chunk* _cmsCreateSubAllocChunk(cmsContext ContextID, cmsUInt32N
 
 // The suballocated is nothing but a pointer to the first element in the list. We also keep
 // the thread ID in this structure.
-_cmsSubAllocator* _cmsCreateSubAlloc(cmsContext ContextID, cmsUInt32Number Initial)
+_cmsSubAllocator* _cmsCreateSubAlloc(cmsUInt32Number Initial)
 {
     _cmsSubAllocator* sub;
 
     // Create the container
-    sub = (_cmsSubAllocator*) _cmsMallocZero(ContextID, sizeof(_cmsSubAllocator));
+    sub = (_cmsSubAllocator*) _cmsMallocZero(sizeof(_cmsSubAllocator));
     if (sub == NULL) return NULL;
 
     sub ->ContextID = ContextID;
 
-    sub ->h = _cmsCreateSubAllocChunk(ContextID, Initial);
+    sub ->h = _cmsCreateSubAllocChunk(Initial);
     if (sub ->h == NULL) {
-        _cmsFree(ContextID, sub);
+        _cmsFree(sub);
         return NULL;
     }
 
@@ -449,7 +449,7 @@ void* _cmsSubAllocDup(_cmsSubAllocator* s, const void *ptr, cmsUInt32Number size
 // ---------------------------------------------------------------------------------------------------------
 
 // This is our default log error
-static void DefaultLogErrorHandlerFunction(cmsContext ContextID, cmsUInt32Number ErrorCode, const char *Text);
+static void DefaultLogErrorHandlerFunction(cmsUInt32Number ErrorCode, const char *Text);
 
 // Context0 storage, which is global
 _cmsLogErrorChunkType _cmsLogErrorChunk = { DefaultLogErrorHandlerFunction };
@@ -474,20 +474,20 @@ void _cmsAllocLogErrorChunk(struct _cmsContext_struct* ctx,
 
 // The default error logger does nothing.
 static
-void DefaultLogErrorHandlerFunction(cmsContext ContextID, cmsUInt32Number ErrorCode, const char *Text)
+void DefaultLogErrorHandlerFunction(cmsUInt32Number ErrorCode, const char *Text)
 {
     // fprintf(stderr, "[lcms]: %s\n", Text);
     // fflush(stderr);
 
-     cmsUNUSED_PARAMETER(ContextID);
+     
      cmsUNUSED_PARAMETER(ErrorCode);
      cmsUNUSED_PARAMETER(Text);
 }
 
 // Change log error, context based
-void CMSEXPORT cmsSetLogErrorHandler(cmsContext ContextID, cmsLogErrorHandlerFunction Fn)
+void CMSEXPORT cmsSetLogErrorHandler(cmsLogErrorHandlerFunction Fn)
 {
-    _cmsLogErrorChunkType* lhg = (_cmsLogErrorChunkType*) _cmsContextGetClientChunk(ContextID, Logger);
+    _cmsLogErrorChunkType* lhg = (_cmsLogErrorChunkType*) _cmsContextGetClientChunk(Logger);
 
     if (lhg != NULL) {
 
@@ -500,7 +500,7 @@ void CMSEXPORT cmsSetLogErrorHandler(cmsContext ContextID, cmsLogErrorHandlerFun
 
 // Log an error
 // ErrorText is a text holding an english description of error.
-void CMSEXPORT cmsSignalError(cmsContext ContextID, cmsUInt32Number ErrorCode, const char *ErrorText, ...)
+void CMSEXPORT cmsSignalError(cmsUInt32Number ErrorCode, const char *ErrorText, ...)
 {
     va_list args;
     char Buffer[MAX_ERROR_MESSAGE_LEN];
@@ -512,9 +512,9 @@ void CMSEXPORT cmsSignalError(cmsContext ContextID, cmsUInt32Number ErrorCode, c
     va_end(args);
 
     // Check for the context, if specified go there. If not, go for the global
-    lhg = (_cmsLogErrorChunkType*) _cmsContextGetClientChunk(ContextID, Logger);
+    lhg = (_cmsLogErrorChunkType*) _cmsContextGetClientChunk(Logger);
     if (lhg ->LogErrorHandler) {
-        lhg ->LogErrorHandler(ContextID, ErrorCode, Buffer);
+        lhg ->LogErrorHandler(ErrorCode, Buffer);
     }
 }
 
@@ -589,10 +589,10 @@ void _cmsAllocMutexPluginChunk(struct _cmsContext_struct* ctx,
 }
 
 // Register new ways to transform
-cmsBool  _cmsRegisterMutexPlugin(cmsContext ContextID, cmsPluginBase* Data)
+cmsBool  _cmsRegisterMutexPlugin(cmsPluginBase* Data)
 {
     cmsPluginMutex* Plugin = (cmsPluginMutex*) Data;
-    _cmsMutexPluginChunkType* ctx = ( _cmsMutexPluginChunkType*) _cmsContextGetClientChunk(ContextID, MutexPlugin);
+    _cmsMutexPluginChunkType* ctx = ( _cmsMutexPluginChunkType*) _cmsContextGetClientChunk(MutexPlugin);
 
     if (Data == NULL) {
 
@@ -620,39 +620,39 @@ cmsBool  _cmsRegisterMutexPlugin(cmsContext ContextID, cmsPluginBase* Data)
 // Generic Mutex fns
 void* CMSEXPORT _cmsCreateMutex(cmsContext ContextID)
 {
-    _cmsMutexPluginChunkType* ptr = (_cmsMutexPluginChunkType*) _cmsContextGetClientChunk(ContextID, MutexPlugin);
+    _cmsMutexPluginChunkType* ptr = (_cmsMutexPluginChunkType*) _cmsContextGetClientChunk(MutexPlugin);
 
     if (ptr ->CreateMutexPtr == NULL) return NULL;
 
     return ptr ->CreateMutexPtr(ContextID);
 }
 
-void CMSEXPORT _cmsDestroyMutex(cmsContext ContextID, void* mtx)
+void CMSEXPORT _cmsDestroyMutex(void* mtx)
 {
-    _cmsMutexPluginChunkType* ptr = (_cmsMutexPluginChunkType*) _cmsContextGetClientChunk(ContextID, MutexPlugin);
+    _cmsMutexPluginChunkType* ptr = (_cmsMutexPluginChunkType*) _cmsContextGetClientChunk(MutexPlugin);
 
     if (ptr ->DestroyMutexPtr != NULL && mtx != NULL) {
 
-        ptr ->DestroyMutexPtr(ContextID, mtx);
+        ptr ->DestroyMutexPtr(mtx);
     }
 }
 
-cmsBool CMSEXPORT _cmsLockMutex(cmsContext ContextID, void* mtx)
+cmsBool CMSEXPORT _cmsLockMutex(void* mtx)
 {
-    _cmsMutexPluginChunkType* ptr = (_cmsMutexPluginChunkType*) _cmsContextGetClientChunk(ContextID, MutexPlugin);
+    _cmsMutexPluginChunkType* ptr = (_cmsMutexPluginChunkType*) _cmsContextGetClientChunk(MutexPlugin);
 
     if (ptr ->LockMutexPtr == NULL) return TRUE;
 
-    return ptr ->LockMutexPtr(ContextID, mtx);
+    return ptr ->LockMutexPtr(mtx);
 }
 
-void CMSEXPORT _cmsUnlockMutex(cmsContext ContextID, void* mtx)
+void CMSEXPORT _cmsUnlockMutex(void* mtx)
 {
-    _cmsMutexPluginChunkType* ptr = (_cmsMutexPluginChunkType*) _cmsContextGetClientChunk(ContextID, MutexPlugin);
+    _cmsMutexPluginChunkType* ptr = (_cmsMutexPluginChunkType*) _cmsContextGetClientChunk(MutexPlugin);
 
     if (ptr ->UnlockMutexPtr != NULL) {
 
-        ptr ->UnlockMutexPtr(ContextID, mtx);
+        ptr ->UnlockMutexPtr(mtx);
     }
 }
 
@@ -674,10 +674,10 @@ void _cmsAllocParallelizationPluginChunk(struct _cmsContext_struct* ctx,
 }
 
 // Register parallel processing
-cmsBool _cmsRegisterParallelizationPlugin(cmsContext ContextID, cmsPluginBase* Data)
+cmsBool _cmsRegisterParallelizationPlugin(cmsPluginBase* Data)
 {
     cmsPluginParalellization* Plugin = (cmsPluginParalellization*)Data;
-    _cmsParallelizationPluginChunkType* ctx = (_cmsParallelizationPluginChunkType*)_cmsContextGetClientChunk(ContextID, ParallelizationPlugin);
+    _cmsParallelizationPluginChunkType* ctx = (_cmsParallelizationPluginChunkType*)_cmsContextGetClientChunk(ParallelizationPlugin);
 
     if (Data == NULL) {
 

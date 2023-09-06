@@ -88,10 +88,10 @@ CIELAB (16 bit)     b*            -128.0 -> +127      0x0000 -> 0x8080 -> 0xffff
 */
 
 // Conversions
-void CMSEXPORT cmsXYZ2xyY(cmsContext ContextID, cmsCIExyY* Dest, const cmsCIEXYZ* Source)
+void CMSEXPORT cmsXYZ2xyY(cmsCIExyY* Dest, const cmsCIEXYZ* Source)
 {
     cmsFloat64Number ISum;
-    cmsUNUSED_PARAMETER(ContextID);
+    
 
     ISum = 1./(Source -> X + Source -> Y + Source -> Z);
 
@@ -100,9 +100,9 @@ void CMSEXPORT cmsXYZ2xyY(cmsContext ContextID, cmsCIExyY* Dest, const cmsCIEXYZ
     Dest -> Y = Source -> Y;
 }
 
-void CMSEXPORT cmsxyY2XYZ(cmsContext ContextID, cmsCIEXYZ* Dest, const cmsCIExyY* Source)
+void CMSEXPORT cmsxyY2XYZ(cmsCIEXYZ* Dest, const cmsCIExyY* Source)
 {
-    cmsUNUSED_PARAMETER(ContextID);
+    
     Dest -> X = (Source -> x / Source -> y) * Source -> Y;
     Dest -> Y = Source -> Y;
     Dest -> Z = ((1 - Source -> x - Source -> y) / Source -> y) * Source -> Y;
@@ -142,7 +142,7 @@ cmsFloat64Number f_1(cmsFloat64Number t)
 
 
 // Standard XYZ to Lab. it can handle negative XZY numbers in some cases
-void CMSEXPORT cmsXYZ2Lab(cmsContext ContextID, const cmsCIEXYZ* WhitePoint, cmsCIELab* Lab, const cmsCIEXYZ* xyz)
+void CMSEXPORT cmsXYZ2Lab(const cmsCIEXYZ* WhitePoint, cmsCIELab* Lab, const cmsCIEXYZ* xyz)
 {
     cmsFloat64Number fx, fy, fz;
 
@@ -160,7 +160,7 @@ void CMSEXPORT cmsXYZ2Lab(cmsContext ContextID, const cmsCIEXYZ* WhitePoint, cms
 
 
 // Standard XYZ to Lab. It can return negative XYZ in some cases
-void CMSEXPORT cmsLab2XYZ(cmsContext ContextID, const cmsCIEXYZ* WhitePoint, cmsCIEXYZ* xyz,  const cmsCIELab* Lab)
+void CMSEXPORT cmsLab2XYZ(const cmsCIEXYZ* WhitePoint, cmsCIEXYZ* xyz,  const cmsCIELab* Lab)
 {
     cmsFloat64Number x, y, z;
 
@@ -217,18 +217,18 @@ cmsFloat64Number ab2float4(cmsUInt16Number v)
 }
 
 
-void CMSEXPORT cmsLabEncoded2FloatV2(cmsContext ContextID, cmsCIELab* Lab, const cmsUInt16Number wLab[3])
+void CMSEXPORT cmsLabEncoded2FloatV2(cmsCIELab* Lab, const cmsUInt16Number wLab[3])
 {
-    cmsUNUSED_PARAMETER(ContextID);
+    
     Lab->L = L2float2(wLab[0]);
     Lab->a = ab2float2(wLab[1]);
     Lab->b = ab2float2(wLab[2]);
 }
 
 
-void CMSEXPORT cmsLabEncoded2Float(cmsContext ContextID, cmsCIELab* Lab, const cmsUInt16Number wLab[3])
+void CMSEXPORT cmsLabEncoded2Float(cmsCIELab* Lab, const cmsUInt16Number wLab[3])
 {
-    cmsUNUSED_PARAMETER(ContextID);
+    
     Lab->L = L2float4(wLab[0]);
     Lab->a = ab2float4(wLab[1]);
     Lab->b = ab2float4(wLab[2]);
@@ -255,10 +255,10 @@ cmsFloat64Number Clamp_ab_doubleV2(cmsFloat64Number ab)
     return ab;
 }
 
-void CMSEXPORT cmsFloat2LabEncodedV2(cmsContext ContextID, cmsUInt16Number wLab[3], const cmsCIELab* fLab)
+void CMSEXPORT cmsFloat2LabEncodedV2(cmsUInt16Number wLab[3], const cmsCIELab* fLab)
 {
     cmsCIELab Lab;
-    cmsUNUSED_PARAMETER(ContextID);
+    
 
     Lab.L = Clamp_L_doubleV2(fLab ->L);
     Lab.a = Clamp_ab_doubleV2(fLab ->a);
@@ -300,10 +300,10 @@ cmsUInt16Number ab2Fix4(cmsFloat64Number ab)
     return _cmsQuickSaturateWord((ab + 128.0) * 257.0);
 }
 
-void CMSEXPORT cmsFloat2LabEncoded(cmsContext ContextID, cmsUInt16Number wLab[3], const cmsCIELab* fLab)
+void CMSEXPORT cmsFloat2LabEncoded(cmsUInt16Number wLab[3], const cmsCIELab* fLab)
 {
     cmsCIELab Lab;
-    cmsUNUSED_PARAMETER(ContextID);
+    
 
     Lab.L = Clamp_L_doubleV4(fLab ->L);
     Lab.a = Clamp_ab_doubleV4(fLab ->a);
@@ -352,9 +352,9 @@ cmsFloat64Number Sqr(cmsFloat64Number v)
     return v *  v;
 }
 // From cylindrical coordinates. No check is performed, then negative values are allowed
-void CMSEXPORT cmsLab2LCh(cmsContext ContextID, cmsCIELCh* LCh, const cmsCIELab* Lab)
+void CMSEXPORT cmsLab2LCh(cmsCIELCh* LCh, const cmsCIELab* Lab)
 {
-    cmsUNUSED_PARAMETER(ContextID);
+    
     LCh -> L = Lab -> L;
     LCh -> C = pow(Sqr(Lab ->a) + Sqr(Lab ->b), 0.5);
     LCh -> h = atan2deg(Lab ->b, Lab ->a);
@@ -362,10 +362,10 @@ void CMSEXPORT cmsLab2LCh(cmsContext ContextID, cmsCIELCh* LCh, const cmsCIELab*
 
 
 // To cylindrical coordinates. No check is performed, then negative values are allowed
-void CMSEXPORT cmsLCh2Lab(cmsContext ContextID, cmsCIELab* Lab, const cmsCIELCh* LCh)
+void CMSEXPORT cmsLCh2Lab(cmsCIELab* Lab, const cmsCIELCh* LCh)
 {
     cmsFloat64Number h = (LCh -> h * M_PI) / 180.0;
-    cmsUNUSED_PARAMETER(ContextID);
+    
 
     Lab -> L = LCh -> L;
     Lab -> a = LCh -> C * cos(h);
@@ -379,10 +379,10 @@ cmsUInt16Number XYZ2Fix(cmsFloat64Number d)
     return _cmsQuickSaturateWord(d * 32768.0);
 }
 
-void CMSEXPORT cmsFloat2XYZEncoded(cmsContext ContextID, cmsUInt16Number XYZ[3], const cmsCIEXYZ* fXYZ)
+void CMSEXPORT cmsFloat2XYZEncoded(cmsUInt16Number XYZ[3], const cmsCIEXYZ* fXYZ)
 {
     cmsCIEXYZ xyz;
-    cmsUNUSED_PARAMETER(ContextID);
+    
 
     xyz.X = fXYZ -> X;
     xyz.Y = fXYZ -> Y;
@@ -423,7 +423,7 @@ void CMSEXPORT cmsFloat2XYZEncoded(cmsContext ContextID, cmsUInt16Number XYZ[3],
 
 //  To convert from Fixed 1.15 point to cmsFloat64Number
 static
-cmsFloat64Number XYZ2float(cmsContext ContextID, cmsUInt16Number v)
+cmsFloat64Number XYZ2float(cmsUInt16Number v)
 {
     cmsS15Fixed16Number fix32;
 
@@ -435,19 +435,19 @@ cmsFloat64Number XYZ2float(cmsContext ContextID, cmsUInt16Number v)
 }
 
 
-void CMSEXPORT cmsXYZEncoded2Float(cmsContext ContextID, cmsCIEXYZ* fXYZ, const cmsUInt16Number XYZ[3])
+void CMSEXPORT cmsXYZEncoded2Float(cmsCIEXYZ* fXYZ, const cmsUInt16Number XYZ[3])
 {
-    fXYZ -> X = XYZ2float(ContextID, XYZ[0]);
-    fXYZ -> Y = XYZ2float(ContextID, XYZ[1]);
-    fXYZ -> Z = XYZ2float(ContextID, XYZ[2]);
+    fXYZ -> X = XYZ2float(XYZ[0]);
+    fXYZ -> Y = XYZ2float(XYZ[1]);
+    fXYZ -> Z = XYZ2float(XYZ[2]);
 }
 
 
 // Returns dE on two Lab values
-cmsFloat64Number CMSEXPORT cmsDeltaE(cmsContext ContextID, const cmsCIELab* Lab1, const cmsCIELab* Lab2)
+cmsFloat64Number CMSEXPORT cmsDeltaE(const cmsCIELab* Lab1, const cmsCIELab* Lab2)
 {
     cmsFloat64Number dL, da, db;
-    cmsUNUSED_PARAMETER(ContextID);
+    
 
     dL = fabs(Lab1 -> L - Lab2 -> L);
     da = fabs(Lab1 -> a - Lab2 -> a);
@@ -458,7 +458,7 @@ cmsFloat64Number CMSEXPORT cmsDeltaE(cmsContext ContextID, const cmsCIELab* Lab1
 
 
 // Return the CIE94 Delta E
-cmsFloat64Number CMSEXPORT cmsCIE94DeltaE(cmsContext ContextID, const cmsCIELab* Lab1, const cmsCIELab* Lab2)
+cmsFloat64Number CMSEXPORT cmsCIE94DeltaE(const cmsCIELab* Lab1, const cmsCIELab* Lab2)
 {
     cmsCIELCh LCh1, LCh2;
     cmsFloat64Number dE, dL, dC, dh, dhsq;
@@ -466,11 +466,11 @@ cmsFloat64Number CMSEXPORT cmsCIE94DeltaE(cmsContext ContextID, const cmsCIELab*
 
     dL = fabs(Lab1 ->L - Lab2 ->L);
 
-    cmsLab2LCh(ContextID, &LCh1, Lab1);
-    cmsLab2LCh(ContextID, &LCh2, Lab2);
+    cmsLab2LCh(&LCh1, Lab1);
+    cmsLab2LCh(&LCh2, Lab2);
 
     dC  = fabs(LCh1.C - LCh2.C);
-    dE  = cmsDeltaE(ContextID, Lab1, Lab2);
+    dE  = cmsDeltaE(Lab1, Lab2);
 
     dhsq = Sqr(dE) - Sqr(dL) - Sqr(dC);
     if (dhsq < 0)
@@ -504,7 +504,7 @@ cmsFloat64Number ComputeLBFD(const cmsCIELab* Lab)
 
 
 // bfd - gets BFD(1:1) difference between Lab1, Lab2
-cmsFloat64Number CMSEXPORT cmsBFDdeltaE(cmsContext ContextID, const cmsCIELab* Lab1, const cmsCIELab* Lab2)
+cmsFloat64Number CMSEXPORT cmsBFDdeltaE(const cmsCIELab* Lab1, const cmsCIELab* Lab2)
 {
     cmsFloat64Number lbfd1,lbfd2,AveC,Aveh,dE,deltaL,
         deltaC,deltah,dc,t,g,dh,rh,rc,rt,bfd;
@@ -515,14 +515,14 @@ cmsFloat64Number CMSEXPORT cmsBFDdeltaE(cmsContext ContextID, const cmsCIELab* L
     lbfd2 = ComputeLBFD(Lab2);
     deltaL = lbfd2 - lbfd1;
 
-    cmsLab2LCh(ContextID, &LCh1, Lab1);
-    cmsLab2LCh(ContextID, &LCh2, Lab2);
+    cmsLab2LCh(&LCh1, Lab1);
+    cmsLab2LCh(&LCh2, Lab2);
 
     deltaC = LCh2.C - LCh1.C;
     AveC = (LCh1.C+LCh2.C)/2;
     Aveh = (LCh1.h+LCh2.h)/2;
 
-    dE = cmsDeltaE(ContextID, Lab1, Lab2);
+    dE = cmsDeltaE(Lab1, Lab2);
 
     if (Sqr(dE)>(Sqr(Lab2->L-Lab1->L)+Sqr(deltaC)))
         deltah = sqrt(Sqr(dE)-Sqr(Lab2->L-Lab1->L)-Sqr(deltaC));
@@ -555,21 +555,21 @@ cmsFloat64Number CMSEXPORT cmsBFDdeltaE(cmsContext ContextID, const cmsCIELab* L
 
 
 //  cmc - CMC(l:c) difference between Lab1, Lab2
-cmsFloat64Number CMSEXPORT cmsCMCdeltaE(cmsContext ContextID, const cmsCIELab* Lab1, const cmsCIELab* Lab2, cmsFloat64Number l, cmsFloat64Number c)
+cmsFloat64Number CMSEXPORT cmsCMCdeltaE(const cmsCIELab* Lab1, const cmsCIELab* Lab2, cmsFloat64Number l, cmsFloat64Number c)
 {
   cmsFloat64Number dE,dL,dC,dh,sl,sc,sh,t,f,cmc;
   cmsCIELCh LCh1, LCh2;
 
   if (Lab1 ->L == 0 && Lab2 ->L == 0) return 0;
 
-  cmsLab2LCh(ContextID, &LCh1, Lab1);
-  cmsLab2LCh(ContextID, &LCh2, Lab2);
+  cmsLab2LCh(&LCh1, Lab1);
+  cmsLab2LCh(&LCh2, Lab2);
 
 
   dL = Lab2->L-Lab1->L;
   dC = LCh2.C-LCh1.C;
 
-  dE = cmsDeltaE(ContextID, Lab1, Lab2);
+  dE = cmsDeltaE(Lab1, Lab2);
 
   if (Sqr(dE)>(Sqr(dL)+Sqr(dC)))
             dh = sqrt(Sqr(dE)-Sqr(dL)-Sqr(dC));
@@ -596,7 +596,7 @@ cmsFloat64Number CMSEXPORT cmsCMCdeltaE(cmsContext ContextID, const cmsCIELab* L
 
 // dE2000 The weightings KL, KC and KH can be modified to reflect the relative
 // importance of lightness, chroma and hue in different industrial applications
-cmsFloat64Number CMSEXPORT cmsCIE2000DeltaE(cmsContext ContextID, const cmsCIELab* Lab1, const cmsCIELab* Lab2,
+cmsFloat64Number CMSEXPORT cmsCIE2000DeltaE(const cmsCIELab* Lab1, const cmsCIELab* Lab2,
                                   cmsFloat64Number Kl, cmsFloat64Number Kc, cmsFloat64Number Kh)
 {
     cmsFloat64Number L1  = Lab1->L;
@@ -661,14 +661,14 @@ cmsFloat64Number CMSEXPORT cmsCIE2000DeltaE(cmsContext ContextID, const cmsCIELa
                             Sqr(delta_H/(Sh * Kh))  +
                             Rt*(delta_C/(Sc * Kc)) * (delta_H / (Sh * Kh)));
 
-    cmsUNUSED_PARAMETER(ContextID);
+    
 
     return deltaE00;
 }
 
 // This function returns a number of gridpoints to be used as LUT table. It assumes same number
 // of gripdpoints in all dimensions. Flags may override the choice.
-cmsUInt32Number CMSEXPORT _cmsReasonableGridpointsByColorspace(cmsContext ContextID, cmsColorSpaceSignature Colorspace, cmsUInt32Number dwFlags)
+cmsUInt32Number CMSEXPORT _cmsReasonableGridpointsByColorspace(cmsColorSpaceSignature Colorspace, cmsUInt32Number dwFlags)
 {
     cmsUInt32Number nChannels;
 
@@ -678,7 +678,7 @@ cmsUInt32Number CMSEXPORT _cmsReasonableGridpointsByColorspace(cmsContext Contex
             return (dwFlags >> 16) & 0xFF;
     }
 
-    nChannels = cmsChannelsOf(ContextID, Colorspace);
+    nChannels = cmsChannelsOf(Colorspace);
 
     // HighResPrecalc is maximum resolution
     if (dwFlags & cmsFLAGS_HIGHRESPRECALC) {
@@ -773,7 +773,7 @@ cmsBool  _cmsEndPointsBySpace(cmsColorSpaceSignature Space,
 
 // Translate from our colorspace to ICC representation
 
-cmsColorSpaceSignature CMSEXPORT _cmsICCcolorSpace(cmsContext ContextID, int OurNotation)
+cmsColorSpaceSignature CMSEXPORT _cmsICCcolorSpace(int OurNotation)
 {
     switch (OurNotation) {
 
@@ -816,13 +816,13 @@ cmsColorSpaceSignature CMSEXPORT _cmsICCcolorSpace(cmsContext ContextID, int Our
 
        default:  return (cmsColorSpaceSignature) 0;
        }
-    cmsUNUSED_PARAMETER(ContextID);
+    
 }
 
 
-int CMSEXPORT _cmsLCMScolorSpace(cmsContext ContextID, cmsColorSpaceSignature ProfileSpace)
+int CMSEXPORT _cmsLCMScolorSpace(cmsColorSpaceSignature ProfileSpace)
 {
-    cmsUNUSED_PARAMETER(ContextID);
+    
     switch (ProfileSpace) {
 
     case cmsSigGrayData: return  PT_GRAY;
@@ -888,9 +888,9 @@ int CMSEXPORT _cmsLCMScolorSpace(cmsContext ContextID, cmsColorSpaceSignature Pr
 }
 
 
-cmsInt32Number CMSEXPORT cmsChannelsOfColorSpace(cmsContext ContextID, cmsColorSpaceSignature ColorSpace)
+cmsInt32Number CMSEXPORT cmsChannelsOfColorSpace(cmsColorSpaceSignature ColorSpace)
 {
-    cmsUNUSED_PARAMETER(ContextID);
+    
     switch (ColorSpace) {
 
     case cmsSigMCH1Data:
@@ -957,9 +957,9 @@ cmsInt32Number CMSEXPORT cmsChannelsOfColorSpace(cmsContext ContextID, cmsColorS
 /**
 * DEPRECATED: Provided for compatibility only
 */
-cmsUInt32Number CMSEXPORT cmsChannelsOf(cmsContext ContextID, cmsColorSpaceSignature ColorSpace)
+cmsUInt32Number CMSEXPORT cmsChannelsOf(cmsColorSpaceSignature ColorSpace)
 {
-    int n = cmsChannelsOfColorSpace(ContextID, ColorSpace);
+    int n = cmsChannelsOfColorSpace(ColorSpace);
     if (n < 0) return 3;
     return (cmsUInt32Number)n;
 }

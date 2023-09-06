@@ -215,7 +215,7 @@ cmsInt32Number CheckAdaptationStateContext(cmsContext ContextID)
 
 // This fake interpolation takes always the closest lower node in the interpolation table for 1D
 static
-void Fake1Dfloat(cmsContext ContextID, const cmsFloat32Number Value[],
+void Fake1Dfloat(const cmsFloat32Number Value[],
                     cmsFloat32Number Output[],
                     const cmsInterpParams* p)
 {
@@ -247,7 +247,7 @@ void Fake3D16(cmsContext ContextID,
 }
 
 // The factory chooses interpolation routines on depending on certain conditions.
-cmsInterpFunction my_Interpolators_Factory(cmsContext ContextID, cmsUInt32Number nInputChannels,
+cmsInterpFunction my_Interpolators_Factory(cmsUInt32Number nInputChannels,
                                            cmsUInt32Number nOutputChannels,
                                            cmsUInt32Number dwFlags)
 {
@@ -434,7 +434,7 @@ Error:
 #define TYPE_TAN  1020
 #define TYPE_709  709
 
-static cmsFloat64Number my_fns(cmsContext ContextID, cmsInt32Number Type,
+static cmsFloat64Number my_fns(cmsInt32Number Type,
                         const cmsFloat64Number Params[],
                         cmsFloat64Number R)
 {
@@ -465,7 +465,7 @@ static cmsFloat64Number my_fns(cmsContext ContextID, cmsInt32Number Type,
 }
 
 static
-cmsFloat64Number my_fns2(cmsContext ContextID, cmsInt32Number Type,
+cmsFloat64Number my_fns2(cmsInt32Number Type,
                         const cmsFloat64Number Params[],
                         cmsFloat64Number R)
 {
@@ -487,7 +487,7 @@ cmsFloat64Number my_fns2(cmsContext ContextID, cmsInt32Number Type,
 }
 
 
-static double Rec709Math(cmsContext ContextID, int Type, const double Params[], double R)
+static double Rec709Math(int Type, const double Params[], double R)
 {
     double Fun = 0;
 
@@ -671,7 +671,7 @@ cmsUInt8Number* my_Pack565(cmsContext ContextID,
 }
 
 
-cmsFormatter my_FormatterFactory(cmsContext ContextID, cmsUInt32Number Type,
+cmsFormatter my_FormatterFactory(cmsUInt32Number Type,
                                   cmsFormatterDirection Dir,
                                   cmsUInt32Number dwFlags)
 {
@@ -686,7 +686,7 @@ cmsFormatter my_FormatterFactory(cmsContext ContextID, cmsUInt32Number Type,
 }
 
 
-cmsFormatter my_FormatterFactory2(cmsContext ContextID, cmsUInt32Number Type,
+cmsFormatter my_FormatterFactory2(cmsUInt32Number Type,
                                   cmsFormatterDirection Dir,
                                   cmsUInt32Number dwFlags)
 {
@@ -758,37 +758,37 @@ cmsInt32Number CheckFormattersPlugin(cmsContext ContextID)
 #define SigInt          ((cmsTagSignature)  0x74747448)       //   'tttH'
 
 static
-void *Type_int_Read(cmsContext ContextID, struct _cms_typehandler_struct* self,
+void *Type_int_Read(struct _cms_typehandler_struct* self,
  			    cmsIOHANDLER* io,
                cmsUInt32Number* nItems,
                cmsUInt32Number SizeOfTag)
 {
-    cmsUInt32Number* Ptr = (cmsUInt32Number*) _cmsMalloc(ContextID, sizeof(cmsUInt32Number));
+    cmsUInt32Number* Ptr = (cmsUInt32Number*) _cmsMalloc(sizeof(cmsUInt32Number));
     if (Ptr == NULL) return NULL;
-    if (!_cmsReadUInt32Number(ContextID, io, Ptr)) return NULL;
+    if (!_cmsReadUInt32Number(io, Ptr)) return NULL;
     *nItems = 1;
     return Ptr;
 }
 
 static
-cmsBool Type_int_Write(cmsContext ContextID, struct _cms_typehandler_struct* self,
+cmsBool Type_int_Write(struct _cms_typehandler_struct* self,
                         cmsIOHANDLER* io,
                         void* Ptr, cmsUInt32Number nItems)
 {
-    return _cmsWriteUInt32Number(ContextID, io, *(cmsUInt32Number*) Ptr);
+    return _cmsWriteUInt32Number(io, *(cmsUInt32Number*) Ptr);
 }
 
 static
-void* Type_int_Dup(cmsContext ContextID, struct _cms_typehandler_struct* self,
+void* Type_int_Dup(struct _cms_typehandler_struct* self,
                    const void *Ptr, cmsUInt32Number n)
 {
-    return _cmsDupMem(ContextID, Ptr, n * sizeof(cmsUInt32Number));
+    return _cmsDupMem(Ptr, n * sizeof(cmsUInt32Number));
 }
 
-void Type_int_Free(cmsContext ContextID, struct _cms_typehandler_struct* self,
+void Type_int_Free(struct _cms_typehandler_struct* self,
                    void* Ptr)
 {
-    _cmsFree(ContextID, Ptr);
+    _cmsFree(Ptr);
 }
 
 
@@ -860,21 +860,21 @@ cmsInt32Number CheckTagTypePlugin(cmsContext ContextID)
 
     cmsCloseProfile(cpy2, h);
 
-    cmsSetLogErrorHandler(ContextID, NULL);
-    h = cmsOpenProfileFromMem(ContextID, data, clen);
+    cmsSetLogErrorHandler(NULL);
+    h = cmsOpenProfileFromMem(data, clen);
     if (h == NULL) {
         Fail("Open profile failed");
         goto Error;
     }
 
-    ptr = (cmsUInt32Number*) cmsReadTag(ContextID, h, SigInt);
+    ptr = (cmsUInt32Number*) cmsReadTag(h, SigInt);
     if (ptr != NULL) {
 
         Fail("read tag/context switching failed");
         goto Error;
     }
 
-    cmsCloseProfile(ContextID, h);
+    cmsCloseProfile(h);
     ResetFatalError(ContextID);
 
     h = cmsOpenProfileFromMem(cpy2, data, clen);
@@ -916,7 +916,7 @@ Error:
 #define SigNegateType ((cmsStageSignature)0x6E202020)
 
 static
-void EvaluateNegate(cmsContext ContextID, const cmsFloat32Number In[],
+void EvaluateNegate(const cmsFloat32Number In[],
                      cmsFloat32Number Out[],
                      const cmsStage *mpe)
 {
@@ -934,13 +934,13 @@ cmsStage* StageAllocNegate(cmsContext ContextID)
 }
 
 static
-void *Type_negate_Read(cmsContext ContextID, struct _cms_typehandler_struct* self,
+void *Type_negate_Read(struct _cms_typehandler_struct* self,
  			    cmsIOHANDLER* io,
                 cmsUInt32Number* nItems,
                 cmsUInt32Number SizeOfTag)
 {
     cmsUInt16Number   Chans;
-    if (!_cmsReadUInt16Number(ContextID, io, &Chans)) return NULL;
+    if (!_cmsReadUInt16Number(io, &Chans)) return NULL;
     if (Chans != 3) return NULL;
 
     *nItems = 1;
@@ -948,12 +948,12 @@ void *Type_negate_Read(cmsContext ContextID, struct _cms_typehandler_struct* sel
 }
 
 static
-cmsBool Type_negate_Write(cmsContext ContextID, struct _cms_typehandler_struct* self,
+cmsBool Type_negate_Write(struct _cms_typehandler_struct* self,
                         cmsIOHANDLER* io,
                         void* Ptr, cmsUInt32Number nItems)
 {
 
-    if (!_cmsWriteUInt16Number(ContextID, io, 3)) return FALSE;
+    if (!_cmsWriteUInt16Number(io, 3)) return FALSE;
     return TRUE;
 }
 
@@ -1039,14 +1039,14 @@ cmsInt32Number CheckMPEPlugin(cmsContext ContextID)
 
     cmsCloseProfile(cpy2, h);
 
-    cmsSetLogErrorHandler(ContextID, NULL);
-    h = cmsOpenProfileFromMem(ContextID, data, clen);
+    cmsSetLogErrorHandler(NULL);
+    h = cmsOpenProfileFromMem(data, clen);
     if (h == NULL) {
         Fail("Open profile failed");
         goto Error;
     }
 
-    pipe = (cmsPipeline*) cmsReadTag(ContextID, h, cmsSigDToB3Tag);
+    pipe = (cmsPipeline*) cmsReadTag(h, cmsSigDToB3Tag);
     if (pipe != NULL) {
 
         // Unsupported stage, should fail
@@ -1054,7 +1054,7 @@ cmsInt32Number CheckMPEPlugin(cmsContext ContextID)
         goto Error;
     }
 
-    cmsCloseProfile(ContextID, h);
+    cmsCloseProfile(h);
 
     ResetFatalError(ContextID);
 
@@ -1111,7 +1111,7 @@ void FastEvaluateCurves(cmsContext ContextID,
 }
 
 static
-cmsBool MyOptimize(cmsContext ContextID, cmsPipeline** Lut,
+cmsBool MyOptimize(cmsPipeline** Lut,
                    cmsUInt32Number  Intent,
                    cmsUInt32Number* InputFormat,
                    cmsUInt32Number* OutputFormat,
@@ -1121,21 +1121,21 @@ cmsBool MyOptimize(cmsContext ContextID, cmsPipeline** Lut,
      _cmsStageToneCurvesData* Data;
 
     //  Only curves in this LUT? All are identities?
-    for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, *Lut);
+    for (mpe = cmsPipelineGetPtrToFirstStage(*Lut);
          mpe != NULL;
-         mpe = cmsStageNext(ContextID, mpe)) {
+         mpe = cmsStageNext(mpe)) {
 
-            if (cmsStageType(ContextID, mpe) != cmsSigCurveSetElemType) return FALSE;
+            if (cmsStageType(mpe) != cmsSigCurveSetElemType) return FALSE;
 
             // Check for identity
-            Data = (_cmsStageToneCurvesData*) cmsStageData(ContextID, mpe);
+            Data = (_cmsStageToneCurvesData*) cmsStageData(mpe);
             if (Data ->nCurves != 1) return FALSE;
-            if (cmsEstimateGamma(ContextID, Data->TheCurves[0], 0.1) > 1.0) return FALSE;
+            if (cmsEstimateGamma(Data->TheCurves[0], 0.1) > 1.0) return FALSE;
 
     }
 
     *dwFlags |= cmsFLAGS_NOCACHE;
-    _cmsPipelineSetOptimizationParameters(ContextID, *Lut, FastEvaluateCurves, NULL, NULL, NULL);
+    _cmsPipelineSetOptimizationParameters(*Lut, FastEvaluateCurves, NULL, NULL, NULL);
 
     return TRUE;
 }
@@ -1212,18 +1212,18 @@ cmsPipeline*  MyNewIntent(cmsContext      ContextID,
         ICCIntents[i] = (TheIntents[i] == INTENT_DECEPTIVE) ? INTENT_PERCEPTUAL :
                                                  TheIntents[i];
 
- if (cmsGetColorSpace(ContextID, hProfiles[0]) != cmsSigGrayData ||
-     cmsGetColorSpace(ContextID, hProfiles[nProfiles-1]) != cmsSigGrayData)
-           return _cmsDefaultICCintents(ContextID, nProfiles,
+ if (cmsGetColorSpace(hProfiles[0]) != cmsSigGrayData ||
+     cmsGetColorSpace(hProfiles[nProfiles-1]) != cmsSigGrayData)
+           return _cmsDefaultICCintents(nProfiles,
                                    ICCIntents, hProfiles,
                                    BPC, AdaptationStates,
                                    dwFlags);
 
-    Result = cmsPipelineAlloc(ContextID, 1, 1);
+    Result = cmsPipelineAlloc(1, 1);
     if (Result == NULL) return NULL;
 
-    cmsPipelineInsertStage(ContextID, Result, cmsAT_BEGIN,
-                            cmsStageAllocIdentity(ContextID, 1));
+    cmsPipelineInsertStage(Result, cmsAT_BEGIN,
+                            cmsStageAllocIdentity(1));
 
     return Result;
 }
@@ -1281,7 +1281,7 @@ cmsInt32Number CheckIntentPlugin(cmsContext ContextID)
 
 // This is a sample intent that only works for gray8 as output, and always returns '42'
 static
-void TrancendentalTransform(cmsContext ContextID, struct _cmstransform_struct * CMM,
+void TrancendentalTransform(struct _cmstransform_struct * CMM,
                               const void* InputBuffer,
                               void* OutputBuffer,
 							  cmsUInt32Number PixelsPerLine,
@@ -1298,7 +1298,7 @@ void TrancendentalTransform(cmsContext ContextID, struct _cmstransform_struct * 
 }
 
 
-cmsBool  TransformFactory(cmsContext ContextID, _cmsTransform2Fn* xformPtr,
+cmsBool  TransformFactory(_cmsTransform2Fn* xformPtr,
                           void** UserData,
                            _cmsFreeUserDataFn* FreePrivateDataFn,
                            cmsPipeline** Lut,

@@ -30,39 +30,39 @@
 // -----------------------------------------------------------------------------------
 
 static
-cmsBool SetTextTags(cmsContext ContextID, cmsHPROFILE hProfile, const wchar_t* Description)
+cmsBool SetTextTags(cmsHPROFILE hProfile, const wchar_t* Description)
 {
     cmsMLU *DescriptionMLU, *CopyrightMLU;
     cmsBool  rc = FALSE;
 
-    DescriptionMLU  = cmsMLUalloc(ContextID, 1);
-    CopyrightMLU    = cmsMLUalloc(ContextID, 1);
+    DescriptionMLU  = cmsMLUalloc(1);
+    CopyrightMLU    = cmsMLUalloc(1);
 
     if (DescriptionMLU == NULL || CopyrightMLU == NULL) goto Error;
 
-    if (!cmsMLUsetWide(ContextID, DescriptionMLU,  "en", "US", Description)) goto Error;
-    if (!cmsMLUsetWide(ContextID, CopyrightMLU,    "en", "US", L"No copyright, use freely")) goto Error;
+    if (!cmsMLUsetWide(DescriptionMLU,  "en", "US", Description)) goto Error;
+    if (!cmsMLUsetWide(CopyrightMLU,    "en", "US", L"No copyright, use freely")) goto Error;
 
-    if (!cmsWriteTag(ContextID, hProfile, cmsSigProfileDescriptionTag,  DescriptionMLU)) goto Error;
-    if (!cmsWriteTag(ContextID, hProfile, cmsSigCopyrightTag,           CopyrightMLU)) goto Error;
+    if (!cmsWriteTag(hProfile, cmsSigProfileDescriptionTag,  DescriptionMLU)) goto Error;
+    if (!cmsWriteTag(hProfile, cmsSigCopyrightTag,           CopyrightMLU)) goto Error;
 
     rc = TRUE;
 
 Error:
 
     if (DescriptionMLU)
-        cmsMLUfree(ContextID, DescriptionMLU);
+        cmsMLUfree(DescriptionMLU);
     if (CopyrightMLU)
-        cmsMLUfree(ContextID, CopyrightMLU);
+        cmsMLUfree(CopyrightMLU);
     return rc;
 }
 
 
 static
-cmsBool  SetSeqDescTag(cmsContext ContextID, cmsHPROFILE hProfile, const char* Model)
+cmsBool  SetSeqDescTag(cmsHPROFILE hProfile, const char* Model)
 {
     cmsBool  rc = FALSE;
-    cmsSEQ* Seq = cmsAllocProfileSequenceDescription(ContextID, 1);
+    cmsSEQ* Seq = cmsAllocProfileSequenceDescription(1);
 
     if (Seq == NULL) return FALSE;
 
@@ -78,16 +78,16 @@ cmsBool  SetSeqDescTag(cmsContext ContextID, cmsHPROFILE hProfile, const char* M
 
     Seq->seq[0].technology = (cmsTechnologySignature) 0;
 
-    cmsMLUsetASCII(ContextID,  Seq->seq[0].Manufacturer, cmsNoLanguage, cmsNoCountry, "Little CMS");
-    cmsMLUsetASCII(ContextID,  Seq->seq[0].Model,        cmsNoLanguage, cmsNoCountry, Model);
+    cmsMLUsetASCII( Seq->seq[0].Manufacturer, cmsNoLanguage, cmsNoCountry, "Little CMS");
+    cmsMLUsetASCII( Seq->seq[0].Model,        cmsNoLanguage, cmsNoCountry, Model);
 
-    if (!_cmsWriteProfileSequence(ContextID, hProfile, Seq)) goto Error;
+    if (!_cmsWriteProfileSequence(hProfile, Seq)) goto Error;
 
     rc = TRUE;
 
 Error:
     if (Seq)
-        cmsFreeProfileSequenceDescription(ContextID, Seq);
+        cmsFreeProfileSequenceDescription(Seq);
 
     return rc;
 }
@@ -112,13 +112,13 @@ cmsHPROFILE CMSEXPORT cmsCreateRGBProfile(cmsContext ContextID,
     if (!hICC)                          // can't allocate
         return NULL;
 
-    cmsSetProfileVersion(ContextID, hICC, 4.4);
+    cmsSetProfileVersion(hICC, 4.4);
 
-    cmsSetDeviceClass(ContextID, hICC,      cmsSigDisplayClass);
-    cmsSetColorSpace(ContextID, hICC,       cmsSigRgbData);
-    cmsSetPCS(ContextID, hICC,              cmsSigXYZData);
+    cmsSetDeviceClass(hICC,      cmsSigDisplayClass);
+    cmsSetColorSpace(hICC,       cmsSigRgbData);
+    cmsSetPCS(hICC,              cmsSigXYZData);
 
-    cmsSetHeaderRenderingIntent(ContextID, hICC,  INTENT_PERCEPTUAL);
+    cmsSetHeaderRenderingIntent(hICC,  INTENT_PERCEPTUAL);
 
 
     // Implement profile using following tags:
@@ -136,17 +136,17 @@ cmsHPROFILE CMSEXPORT cmsCreateRGBProfile(cmsContext ContextID,
     // 10 cmsSigChromaticityTag
 
 
-    if (!SetTextTags(ContextID, hICC, L"RGB built-in")) goto Error;
+    if (!SetTextTags(hICC, L"RGB built-in")) goto Error;
 
     if (WhitePoint) {
 
-        if (!cmsWriteTag(ContextID, hICC, cmsSigMediaWhitePointTag, cmsD50_XYZ(ContextID))) goto Error;
+        if (!cmsWriteTag(hICC, cmsSigMediaWhitePointTag, cmsD50_XYZ(ContextID))) goto Error;
 
-        cmsxyY2XYZ(ContextID, &WhitePointXYZ, WhitePoint);
-        _cmsAdaptationMatrix(ContextID, &CHAD, NULL, &WhitePointXYZ, cmsD50_XYZ(ContextID));
+        cmsxyY2XYZ(&WhitePointXYZ, WhitePoint);
+        _cmsAdaptationMatrix(&CHAD, NULL, &WhitePointXYZ, cmsD50_XYZ(ContextID));
 
         // This is a V4 tag, but many CMM does read and understand it no matter which version
-        if (!cmsWriteTag(ContextID, hICC, cmsSigChromaticAdaptationTag, (void*) &CHAD)) goto Error;
+        if (!cmsWriteTag(hICC, cmsSigChromaticAdaptationTag, (void*) &CHAD)) goto Error;
     }
 
     if (WhitePoint && Primaries) {
@@ -155,7 +155,7 @@ cmsHPROFILE CMSEXPORT cmsCreateRGBProfile(cmsContext ContextID,
         MaxWhite.y =  WhitePoint -> y;
         MaxWhite.Y =  1.0;
 
-        if (!_cmsBuildRGB2XYZtransferMatrix(ContextID, &MColorants, &MaxWhite, Primaries)) goto Error;
+        if (!_cmsBuildRGB2XYZtransferMatrix(&MColorants, &MaxWhite, Primaries)) goto Error;
 
         Colorants.Red.X   = MColorants.v[0].n[0];
         Colorants.Red.Y   = MColorants.v[1].n[0];
@@ -169,38 +169,38 @@ cmsHPROFILE CMSEXPORT cmsCreateRGBProfile(cmsContext ContextID,
         Colorants.Blue.Y  = MColorants.v[1].n[2];
         Colorants.Blue.Z  = MColorants.v[2].n[2];
 
-        if (!cmsWriteTag(ContextID, hICC, cmsSigRedColorantTag,   (void*) &Colorants.Red)) goto Error;
-        if (!cmsWriteTag(ContextID, hICC, cmsSigBlueColorantTag,  (void*) &Colorants.Blue)) goto Error;
-        if (!cmsWriteTag(ContextID, hICC, cmsSigGreenColorantTag, (void*) &Colorants.Green)) goto Error;
+        if (!cmsWriteTag(hICC, cmsSigRedColorantTag,   (void*) &Colorants.Red)) goto Error;
+        if (!cmsWriteTag(hICC, cmsSigBlueColorantTag,  (void*) &Colorants.Blue)) goto Error;
+        if (!cmsWriteTag(hICC, cmsSigGreenColorantTag, (void*) &Colorants.Green)) goto Error;
     }
 
 
     if (TransferFunction) {
 
         // Tries to minimize space. Thanks to Richard Hughes for this nice idea
-        if (!cmsWriteTag(ContextID, hICC, cmsSigRedTRCTag,   (void*) TransferFunction[0])) goto Error;
+        if (!cmsWriteTag(hICC, cmsSigRedTRCTag,   (void*) TransferFunction[0])) goto Error;
 
         if (TransferFunction[1] == TransferFunction[0]) {
 
-            if (!cmsLinkTag (ContextID, hICC, cmsSigGreenTRCTag, cmsSigRedTRCTag)) goto Error;
+            if (!cmsLinkTag (hICC, cmsSigGreenTRCTag, cmsSigRedTRCTag)) goto Error;
 
         } else {
 
-            if (!cmsWriteTag(ContextID, hICC, cmsSigGreenTRCTag, (void*) TransferFunction[1])) goto Error;
+            if (!cmsWriteTag(hICC, cmsSigGreenTRCTag, (void*) TransferFunction[1])) goto Error;
         }
 
         if (TransferFunction[2] == TransferFunction[0]) {
 
-            if (!cmsLinkTag (ContextID, hICC, cmsSigBlueTRCTag, cmsSigRedTRCTag)) goto Error;
+            if (!cmsLinkTag (hICC, cmsSigBlueTRCTag, cmsSigRedTRCTag)) goto Error;
 
         } else {
 
-            if (!cmsWriteTag(ContextID, hICC, cmsSigBlueTRCTag, (void*) TransferFunction[2])) goto Error;
+            if (!cmsWriteTag(hICC, cmsSigBlueTRCTag, (void*) TransferFunction[2])) goto Error;
         }
     }
 
     if (Primaries) {
-        if (!cmsWriteTag(ContextID, hICC, cmsSigChromaticityTag, (void*) Primaries)) goto Error;
+        if (!cmsWriteTag(hICC, cmsSigChromaticityTag, (void*) Primaries)) goto Error;
     }
 
 
@@ -208,7 +208,7 @@ cmsHPROFILE CMSEXPORT cmsCreateRGBProfile(cmsContext ContextID,
 
 Error:
     if (hICC)
-        cmsCloseProfile(ContextID, hICC);
+        cmsCloseProfile(hICC);
     return NULL;
 }
 
@@ -226,12 +226,12 @@ cmsHPROFILE CMSEXPORT cmsCreateGrayProfile(cmsContext ContextID,
     if (!hICC)                          // can't allocate
         return NULL;
 
-    cmsSetProfileVersion(ContextID, hICC, 4.4);
+    cmsSetProfileVersion(hICC, 4.4);
 
-    cmsSetDeviceClass(ContextID, hICC,      cmsSigDisplayClass);
-    cmsSetColorSpace(ContextID, hICC,       cmsSigGrayData);
-    cmsSetPCS(ContextID, hICC,              cmsSigXYZData);
-    cmsSetHeaderRenderingIntent(ContextID, hICC,  INTENT_PERCEPTUAL);
+    cmsSetDeviceClass(hICC,      cmsSigDisplayClass);
+    cmsSetColorSpace(hICC,       cmsSigGrayData);
+    cmsSetPCS(hICC,              cmsSigXYZData);
+    cmsSetHeaderRenderingIntent(hICC,  INTENT_PERCEPTUAL);
 
 
     // Implement profile using following tags:
@@ -244,25 +244,25 @@ cmsHPROFILE CMSEXPORT cmsCreateGrayProfile(cmsContext ContextID,
 
     // Fill-in the tags
 
-    if (!SetTextTags(ContextID, hICC, L"gray built-in")) goto Error;
+    if (!SetTextTags(hICC, L"gray built-in")) goto Error;
 
 
     if (WhitePoint) {
 
-        cmsxyY2XYZ(ContextID, &tmp, WhitePoint);
-        if (!cmsWriteTag(ContextID, hICC, cmsSigMediaWhitePointTag, (void*) &tmp)) goto Error;
+        cmsxyY2XYZ(&tmp, WhitePoint);
+        if (!cmsWriteTag(hICC, cmsSigMediaWhitePointTag, (void*) &tmp)) goto Error;
     }
 
     if (TransferFunction) {
 
-        if (!cmsWriteTag(ContextID, hICC, cmsSigGrayTRCTag, (void*) TransferFunction)) goto Error;
+        if (!cmsWriteTag(hICC, cmsSigGrayTRCTag, (void*) TransferFunction)) goto Error;
     }
 
     return hICC;
 
 Error:
     if (hICC)
-        cmsCloseProfile(ContextID, hICC);
+        cmsCloseProfile(hICC);
     return NULL;
 }
 
@@ -283,41 +283,41 @@ cmsHPROFILE CMSEXPORT cmsCreateLinearizationDeviceLink(cmsContext ContextID,
     if (!hICC)
         return NULL;
 
-    cmsSetProfileVersion(ContextID, hICC, 4.4);
+    cmsSetProfileVersion(hICC, 4.4);
 
-    cmsSetDeviceClass(ContextID, hICC,      cmsSigLinkClass);
-    cmsSetColorSpace(ContextID, hICC,       ColorSpace);
-    cmsSetPCS(ContextID, hICC,              ColorSpace);
+    cmsSetDeviceClass(hICC,      cmsSigLinkClass);
+    cmsSetColorSpace(hICC,       ColorSpace);
+    cmsSetPCS(hICC,              ColorSpace);
 
-    cmsSetHeaderRenderingIntent(ContextID, hICC,  INTENT_PERCEPTUAL);
+    cmsSetHeaderRenderingIntent(hICC,  INTENT_PERCEPTUAL);
 
     // Set up channels
-    nChannels = cmsChannelsOfColorSpace(ContextID, ColorSpace);
+    nChannels = cmsChannelsOfColorSpace(ColorSpace);
 
     // Creates a Pipeline with prelinearization step only
-    Pipeline = cmsPipelineAlloc(ContextID, nChannels, nChannels);
+    Pipeline = cmsPipelineAlloc(nChannels, nChannels);
     if (Pipeline == NULL) goto Error;
 
 
     // Copy tables to Pipeline
-    if (!cmsPipelineInsertStage(ContextID, Pipeline, cmsAT_BEGIN, cmsStageAllocToneCurves(ContextID, nChannels, TransferFunctions)))
+    if (!cmsPipelineInsertStage(Pipeline, cmsAT_BEGIN, cmsStageAllocToneCurves(nChannels, TransferFunctions)))
         goto Error;
 
     // Create tags
-    if (!SetTextTags(ContextID, hICC, L"Linearization built-in")) goto Error;
-    if (!cmsWriteTag(ContextID, hICC, cmsSigAToB0Tag, (void*) Pipeline)) goto Error;
-    if (!SetSeqDescTag(ContextID, hICC, "Linearization built-in")) goto Error;
+    if (!SetTextTags(hICC, L"Linearization built-in")) goto Error;
+    if (!cmsWriteTag(hICC, cmsSigAToB0Tag, (void*) Pipeline)) goto Error;
+    if (!SetSeqDescTag(hICC, "Linearization built-in")) goto Error;
 
     // Pipeline is already on virtual profile
-    cmsPipelineFree(ContextID, Pipeline);
+    cmsPipelineFree(Pipeline);
 
     // Ok, done
     return hICC;
 
 Error:
-    cmsPipelineFree(ContextID, Pipeline);
+    cmsPipelineFree(Pipeline);
     if (hICC)
-        cmsCloseProfile(ContextID, hICC);
+        cmsCloseProfile(hICC);
 
 
     return NULL;
@@ -341,11 +341,11 @@ Error:
 //     K: Does not change
 
 static
-int InkLimitingSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], CMSREGISTER cmsUInt16Number Out[], CMSREGISTER void* Cargo)
+int InkLimitingSampler(CMSREGISTER const cmsUInt16Number In[], CMSREGISTER cmsUInt16Number Out[], CMSREGISTER void* Cargo)
 {
     cmsFloat64Number InkLimit = *(cmsFloat64Number *) Cargo;
     cmsFloat64Number SumCMY, SumCMYK, Ratio;
-    cmsUNUSED_PARAMETER(ContextID);
+    
 
     InkLimit = (InkLimit * 655.35);
 
@@ -381,13 +381,13 @@ cmsHPROFILE CMSEXPORT cmsCreateInkLimitingDeviceLink(cmsContext ContextID,
     cmsInt32Number nChannels;
 
     if (ColorSpace != cmsSigCmykData) {
-        cmsSignalError(ContextID, cmsERROR_COLORSPACE_CHECK, "InkLimiting: Only CMYK currently supported");
+        cmsSignalError(cmsERROR_COLORSPACE_CHECK, "InkLimiting: Only CMYK currently supported");
         return NULL;
     }
 
     if (Limit < 0.0 || Limit > 400) {
 
-        cmsSignalError(ContextID, cmsERROR_RANGE, "InkLimiting: Limit should be between 0..400");
+        cmsSignalError(cmsERROR_RANGE, "InkLimiting: Limit should be between 0..400");
         if (Limit < 0) Limit = 0;
         if (Limit > 400) Limit = 400;
 
@@ -397,91 +397,91 @@ cmsHPROFILE CMSEXPORT cmsCreateInkLimitingDeviceLink(cmsContext ContextID,
     if (!hICC)                          // can't allocate
         return NULL;
 
-    cmsSetProfileVersion(ContextID, hICC, 4.4);
+    cmsSetProfileVersion(hICC, 4.4);
 
-    cmsSetDeviceClass(ContextID, hICC,      cmsSigLinkClass);
-    cmsSetColorSpace(ContextID, hICC,       ColorSpace);
-    cmsSetPCS(ContextID, hICC,              ColorSpace);
+    cmsSetDeviceClass(hICC,      cmsSigLinkClass);
+    cmsSetColorSpace(hICC,       ColorSpace);
+    cmsSetPCS(hICC,              ColorSpace);
 
-    cmsSetHeaderRenderingIntent(ContextID, hICC,  INTENT_PERCEPTUAL);
+    cmsSetHeaderRenderingIntent(hICC,  INTENT_PERCEPTUAL);
 
 
     // Creates a Pipeline with 3D grid only
-    LUT = cmsPipelineAlloc(ContextID, 4, 4);
+    LUT = cmsPipelineAlloc(4, 4);
     if (LUT == NULL) goto Error;
 
 
-    nChannels = cmsChannelsOf(ContextID, ColorSpace);
+    nChannels = cmsChannelsOf(ColorSpace);
 
-    CLUT = cmsStageAllocCLut16bit(ContextID, 17, nChannels, nChannels, NULL);
+    CLUT = cmsStageAllocCLut16bit(17, nChannels, nChannels, NULL);
     if (CLUT == NULL) goto Error;
 
-    if (!cmsStageSampleCLut16bit(ContextID, CLUT, InkLimitingSampler, (void*) &Limit, 0)) goto Error;
+    if (!cmsStageSampleCLut16bit(CLUT, InkLimitingSampler, (void*) &Limit, 0)) goto Error;
 
-    if (!cmsPipelineInsertStage(ContextID, LUT, cmsAT_BEGIN, _cmsStageAllocIdentityCurves(ContextID, nChannels)) ||
-        !cmsPipelineInsertStage(ContextID, LUT, cmsAT_END, CLUT) ||
-        !cmsPipelineInsertStage(ContextID, LUT, cmsAT_END, _cmsStageAllocIdentityCurves(ContextID, nChannels)))
+    if (!cmsPipelineInsertStage(LUT, cmsAT_BEGIN, _cmsStageAllocIdentityCurves(nChannels)) ||
+        !cmsPipelineInsertStage(LUT, cmsAT_END, CLUT) ||
+        !cmsPipelineInsertStage(LUT, cmsAT_END, _cmsStageAllocIdentityCurves(nChannels)))
         goto Error;
 
     // Create tags
-    if (!SetTextTags(ContextID, hICC, L"ink-limiting built-in")) goto Error;
+    if (!SetTextTags(hICC, L"ink-limiting built-in")) goto Error;
 
-    if (!cmsWriteTag(ContextID, hICC, cmsSigAToB0Tag, (void*) LUT))  goto Error;
-    if (!SetSeqDescTag(ContextID, hICC, "ink-limiting built-in")) goto Error;
+    if (!cmsWriteTag(hICC, cmsSigAToB0Tag, (void*) LUT))  goto Error;
+    if (!SetSeqDescTag(hICC, "ink-limiting built-in")) goto Error;
 
     // cmsPipeline is already on virtual profile
-    cmsPipelineFree(ContextID, LUT);
+    cmsPipelineFree(LUT);
 
     // Ok, done
     return hICC;
 
 Error:
     if (LUT != NULL)
-        cmsPipelineFree(ContextID, LUT);
+        cmsPipelineFree(LUT);
 
     if (hICC != NULL)
-        cmsCloseProfile(ContextID, hICC);
+        cmsCloseProfile(hICC);
 
     return NULL;
 }
 
 
 // Creates a fake Lab identity.
-cmsHPROFILE CMSEXPORT cmsCreateLab2Profile(cmsContext ContextID, const cmsCIExyY* WhitePoint)
+cmsHPROFILE CMSEXPORT cmsCreateLab2Profile(const cmsCIExyY* WhitePoint)
 {
     cmsHPROFILE hProfile;
     cmsPipeline* LUT = NULL;
 
-    hProfile = cmsCreateRGBProfile(ContextID, WhitePoint == NULL ? cmsD50_xyY(ContextID) : WhitePoint, NULL, NULL);
+    hProfile = cmsCreateRGBProfile(WhitePoint == NULL ? cmsD50_xyY(ContextID) : WhitePoint, NULL, NULL);
     if (hProfile == NULL) return NULL;
 
-    cmsSetProfileVersion(ContextID, hProfile, 2.1);
+    cmsSetProfileVersion(hProfile, 2.1);
 
-    cmsSetDeviceClass(ContextID, hProfile, cmsSigAbstractClass);
-    cmsSetColorSpace(ContextID, hProfile,  cmsSigLabData);
-    cmsSetPCS(ContextID, hProfile,         cmsSigLabData);
+    cmsSetDeviceClass(hProfile, cmsSigAbstractClass);
+    cmsSetColorSpace(hProfile,  cmsSigLabData);
+    cmsSetPCS(hProfile,         cmsSigLabData);
 
-    if (!SetTextTags(ContextID, hProfile, L"Lab identity built-in")) goto Error;
+    if (!SetTextTags(hProfile, L"Lab identity built-in")) goto Error;
 
     // An identity LUT is all we need
-    LUT = cmsPipelineAlloc(ContextID, 3, 3);
+    LUT = cmsPipelineAlloc(3, 3);
     if (LUT == NULL) goto Error;
 
-    if (!cmsPipelineInsertStage(ContextID, LUT, cmsAT_BEGIN, _cmsStageAllocIdentityCLut(ContextID, 3)))
+    if (!cmsPipelineInsertStage(LUT, cmsAT_BEGIN, _cmsStageAllocIdentityCLut(3)))
         goto Error;
 
-    if (!cmsWriteTag(ContextID, hProfile, cmsSigAToB0Tag, LUT)) goto Error;
-    cmsPipelineFree(ContextID, LUT);
+    if (!cmsWriteTag(hProfile, cmsSigAToB0Tag, LUT)) goto Error;
+    cmsPipelineFree(LUT);
 
     return hProfile;
 
 Error:
 
     if (LUT != NULL)
-        cmsPipelineFree(ContextID, LUT);
+        cmsPipelineFree(LUT);
 
     if (hProfile != NULL)
-        cmsCloseProfile(ContextID, hProfile);
+        cmsCloseProfile(hProfile);
 
     return NULL;
 }
@@ -489,41 +489,41 @@ Error:
 
 
 // Creates a fake Lab V4 identity.
-cmsHPROFILE CMSEXPORT cmsCreateLab4Profile(cmsContext ContextID, const cmsCIExyY* WhitePoint)
+cmsHPROFILE CMSEXPORT cmsCreateLab4Profile(const cmsCIExyY* WhitePoint)
 {
     cmsHPROFILE hProfile;
     cmsPipeline* LUT = NULL;
 
-    hProfile = cmsCreateRGBProfile(ContextID, WhitePoint == NULL ? cmsD50_xyY(ContextID) : WhitePoint, NULL, NULL);
+    hProfile = cmsCreateRGBProfile(WhitePoint == NULL ? cmsD50_xyY(ContextID) : WhitePoint, NULL, NULL);
     if (hProfile == NULL) return NULL;
 
-    cmsSetProfileVersion(ContextID, hProfile, 4.4);
+    cmsSetProfileVersion(hProfile, 4.4);
 
-    cmsSetDeviceClass(ContextID, hProfile, cmsSigAbstractClass);
-    cmsSetColorSpace(ContextID, hProfile,  cmsSigLabData);
-    cmsSetPCS(ContextID, hProfile,         cmsSigLabData);
+    cmsSetDeviceClass(hProfile, cmsSigAbstractClass);
+    cmsSetColorSpace(hProfile,  cmsSigLabData);
+    cmsSetPCS(hProfile,         cmsSigLabData);
 
-    if (!SetTextTags(ContextID, hProfile, L"Lab identity built-in")) goto Error;
+    if (!SetTextTags(hProfile, L"Lab identity built-in")) goto Error;
 
     // An empty LUTs is all we need
-    LUT = cmsPipelineAlloc(ContextID, 3, 3);
+    LUT = cmsPipelineAlloc(3, 3);
     if (LUT == NULL) goto Error;
 
-    if (!cmsPipelineInsertStage(ContextID, LUT, cmsAT_BEGIN, _cmsStageAllocIdentityCurves(ContextID, 3)))
+    if (!cmsPipelineInsertStage(LUT, cmsAT_BEGIN, _cmsStageAllocIdentityCurves(3)))
         goto Error;
 
-    if (!cmsWriteTag(ContextID, hProfile, cmsSigAToB0Tag, LUT)) goto Error;
-    cmsPipelineFree(ContextID, LUT);
+    if (!cmsWriteTag(hProfile, cmsSigAToB0Tag, LUT)) goto Error;
+    cmsPipelineFree(LUT);
 
     return hProfile;
 
 Error:
 
     if (LUT != NULL)
-        cmsPipelineFree(ContextID, LUT);
+        cmsPipelineFree(LUT);
 
     if (hProfile != NULL)
-        cmsCloseProfile(ContextID, hProfile);
+        cmsCloseProfile(hProfile);
 
     return NULL;
 }
@@ -535,36 +535,36 @@ cmsHPROFILE CMSEXPORT cmsCreateXYZProfile(cmsContext ContextID)
     cmsHPROFILE hProfile;
     cmsPipeline* LUT = NULL;
 
-    hProfile = cmsCreateRGBProfile(ContextID, cmsD50_xyY(ContextID), NULL, NULL);
+    hProfile = cmsCreateRGBProfile(cmsD50_xyY(ContextID), NULL, NULL);
     if (hProfile == NULL) return NULL;
 
-    cmsSetProfileVersion(ContextID, hProfile, 4.4);
+    cmsSetProfileVersion(hProfile, 4.4);
 
-    cmsSetDeviceClass(ContextID, hProfile, cmsSigAbstractClass);
-    cmsSetColorSpace(ContextID, hProfile,  cmsSigXYZData);
-    cmsSetPCS(ContextID, hProfile,         cmsSigXYZData);
+    cmsSetDeviceClass(hProfile, cmsSigAbstractClass);
+    cmsSetColorSpace(hProfile,  cmsSigXYZData);
+    cmsSetPCS(hProfile,         cmsSigXYZData);
 
-    if (!SetTextTags(ContextID, hProfile, L"XYZ identity built-in")) goto Error;
+    if (!SetTextTags(hProfile, L"XYZ identity built-in")) goto Error;
 
     // An identity LUT is all we need
-    LUT = cmsPipelineAlloc(ContextID, 3, 3);
+    LUT = cmsPipelineAlloc(3, 3);
     if (LUT == NULL) goto Error;
 
-    if (!cmsPipelineInsertStage(ContextID, LUT, cmsAT_BEGIN, _cmsStageAllocIdentityCurves(ContextID, 3)))
+    if (!cmsPipelineInsertStage(LUT, cmsAT_BEGIN, _cmsStageAllocIdentityCurves(3)))
         goto Error;
 
-    if (!cmsWriteTag(ContextID, hProfile, cmsSigAToB0Tag, LUT)) goto Error;
-    cmsPipelineFree(ContextID, LUT);
+    if (!cmsWriteTag(hProfile, cmsSigAToB0Tag, LUT)) goto Error;
+    cmsPipelineFree(LUT);
 
     return hProfile;
 
 Error:
 
     if (LUT != NULL)
-        cmsPipelineFree(ContextID, LUT);
+        cmsPipelineFree(LUT);
 
     if (hProfile != NULL)
-        cmsCloseProfile(ContextID, hProfile);
+        cmsCloseProfile(hProfile);
 
     return NULL;
 }
@@ -597,7 +597,7 @@ cmsToneCurve* Build_sRGBGamma(cmsContext ContextID)
     Parameters[3] = 1. / 12.92;
     Parameters[4] = 0.04045;
 
-    return cmsBuildParametricToneCurve(ContextID, 4, Parameters);
+    return cmsBuildParametricToneCurve(4, Parameters);
 }
 
 // Create the ICC virtual profile for sRGB space
@@ -612,16 +612,16 @@ cmsHPROFILE CMSEXPORT cmsCreate_sRGBProfile(cmsContext ContextID)
        cmsToneCurve* Gamma22[3];
        cmsHPROFILE  hsRGB;
 
-      // cmsWhitePointFromTemp(ContextID, &D65, 6504);
+      // cmsWhitePointFromTemp(&D65, 6504);
        Gamma22[0] = Gamma22[1] = Gamma22[2] = Build_sRGBGamma(ContextID);
        if (Gamma22[0] == NULL) return NULL;
 
-       hsRGB = cmsCreateRGBProfile(ContextID, &D65, &Rec709Primaries, Gamma22);
-       cmsFreeToneCurve(ContextID, Gamma22[0]);
+       hsRGB = cmsCreateRGBProfile(&D65, &Rec709Primaries, Gamma22);
+       cmsFreeToneCurve(Gamma22[0]);
        if (hsRGB == NULL) return NULL;
 
-       if (!SetTextTags(ContextID, hsRGB, L"sRGB built-in")) {
-           cmsCloseProfile(ContextID, hsRGB);
+       if (!SetTextTags(hsRGB, L"sRGB built-in")) {
+           cmsCloseProfile(hsRGB);
            return NULL;
        }
 
@@ -763,7 +763,7 @@ typedef struct {
 
 
 static
-int bchswSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], CMSREGISTER cmsUInt16Number Out[], CMSREGISTER void* Cargo)
+int bchswSampler(CMSREGISTER const cmsUInt16Number In[], CMSREGISTER cmsUInt16Number Out[], CMSREGISTER void* Cargo)
 {
     cmsCIELab LabIn, LabOut;
     cmsCIELCh LChIn, LChOut;
@@ -771,10 +771,10 @@ int bchswSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], C
     LPBCHSWADJUSTS bchsw = (LPBCHSWADJUSTS) Cargo;
 
 
-    cmsLabEncoded2Float(ContextID, &LabIn, In);
+    cmsLabEncoded2Float(&LabIn, In);
 
 
-    cmsLab2LCh(ContextID, &LChIn, &LabIn);
+    cmsLab2LCh(&LChIn, &LabIn);
 
     // Do some adjusts on LCh
 
@@ -783,17 +783,17 @@ int bchswSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], C
     LChOut.h = LChIn.h + bchsw -> Hue;
 
 
-    cmsLCh2Lab(ContextID, &LabOut, &LChOut);
+    cmsLCh2Lab(&LabOut, &LChOut);
 
     // Move white point in Lab
     if (bchsw->lAdjustWP) {
-           cmsLab2XYZ(ContextID, &bchsw->WPsrc, &XYZ, &LabOut);
-           cmsXYZ2Lab(ContextID, &bchsw->WPdest, &LabOut, &XYZ);
+           cmsLab2XYZ(&bchsw->WPsrc, &XYZ, &LabOut);
+           cmsXYZ2Lab(&bchsw->WPdest, &LabOut, &XYZ);
     }
 
     // Back to encoded
 
-    cmsFloat2LabEncoded(ContextID, Out, &LabOut);
+    cmsFloat2LabEncoded(Out, &LabOut);
 
     return TRUE;
 }
@@ -829,10 +829,10 @@ cmsHPROFILE CMSEXPORT cmsCreateBCHSWabstractProfile(cmsContext ContextID,
     }
     else {
            bchsw.lAdjustWP = TRUE;
-           cmsWhitePointFromTemp(ContextID, &WhitePnt, TempSrc);
-           cmsxyY2XYZ(ContextID, &bchsw.WPsrc, &WhitePnt);
-           cmsWhitePointFromTemp(ContextID, &WhitePnt, TempDest);
-           cmsxyY2XYZ(ContextID, &bchsw.WPdest, &WhitePnt);
+           cmsWhitePointFromTemp(&WhitePnt, TempSrc);
+           cmsxyY2XYZ(&bchsw.WPsrc, &WhitePnt);
+           cmsWhitePointFromTemp(&WhitePnt, TempDest);
+           cmsxyY2XYZ(&bchsw.WPdest, &WhitePnt);
 
     }
 
@@ -840,50 +840,50 @@ cmsHPROFILE CMSEXPORT cmsCreateBCHSWabstractProfile(cmsContext ContextID,
     if (!hICC)                          // can't allocate
         return NULL;
 
-    cmsSetDeviceClass(ContextID, hICC,      cmsSigAbstractClass);
-    cmsSetColorSpace(ContextID, hICC,       cmsSigLabData);
-    cmsSetPCS(ContextID, hICC,              cmsSigLabData);
+    cmsSetDeviceClass(hICC,      cmsSigAbstractClass);
+    cmsSetColorSpace(hICC,       cmsSigLabData);
+    cmsSetPCS(hICC,              cmsSigLabData);
 
-    cmsSetHeaderRenderingIntent(ContextID, hICC,  INTENT_PERCEPTUAL);
+    cmsSetHeaderRenderingIntent(hICC,  INTENT_PERCEPTUAL);
 
     // Creates a Pipeline with 3D grid only
-    Pipeline = cmsPipelineAlloc(ContextID, 3, 3);
+    Pipeline = cmsPipelineAlloc(3, 3);
     if (Pipeline == NULL) {
-        cmsCloseProfile(ContextID, hICC);
+        cmsCloseProfile(hICC);
         return NULL;
     }
 
     for (i=0; i < MAX_INPUT_DIMENSIONS; i++) Dimensions[i] = nLUTPoints;
-    CLUT = cmsStageAllocCLut16bitGranular(ContextID, Dimensions, 3, 3, NULL);
+    CLUT = cmsStageAllocCLut16bitGranular(Dimensions, 3, 3, NULL);
     if (CLUT == NULL) goto Error;
 
 
-    if (!cmsStageSampleCLut16bit(ContextID, CLUT, bchswSampler, (void*) &bchsw, 0)) {
+    if (!cmsStageSampleCLut16bit(CLUT, bchswSampler, (void*) &bchsw, 0)) {
 
         // Shouldn't reach here
         goto Error;
     }
 
-    if (!cmsPipelineInsertStage(ContextID, Pipeline, cmsAT_END, CLUT)) {
+    if (!cmsPipelineInsertStage(Pipeline, cmsAT_END, CLUT)) {
         goto Error;
     }
 
     // Create tags
-    if (!SetTextTags(ContextID, hICC, L"BCHS built-in")) return NULL;
+    if (!SetTextTags(hICC, L"BCHS built-in")) return NULL;
 
-    cmsWriteTag(ContextID, hICC, cmsSigMediaWhitePointTag, (void*) cmsD50_XYZ(ContextID));
+    cmsWriteTag(hICC, cmsSigMediaWhitePointTag, (void*) cmsD50_XYZ(ContextID));
 
-    cmsWriteTag(ContextID, hICC, cmsSigAToB0Tag, (void*) Pipeline);
+    cmsWriteTag(hICC, cmsSigAToB0Tag, (void*) Pipeline);
 
     // Pipeline is already on virtual profile
-    cmsPipelineFree(ContextID, Pipeline);
+    cmsPipelineFree(Pipeline);
 
     // Ok, done
     return hICC;
 
 Error:
-    cmsPipelineFree(ContextID, Pipeline);
-    cmsCloseProfile(ContextID, hICC);
+    cmsPipelineFree(Pipeline);
+    cmsCloseProfile(hICC);
     return NULL;
 }
 
@@ -905,46 +905,46 @@ cmsHPROFILE CMSEXPORT cmsCreateNULLProfile(cmsContext ContextID)
     if (!hProfile)                          // can't allocate
         return NULL;
 
-    cmsSetProfileVersion(ContextID, hProfile, 4.4);
+    cmsSetProfileVersion(hProfile, 4.4);
 
-    if (!SetTextTags(ContextID, hProfile, L"NULL profile built-in")) goto Error;
+    if (!SetTextTags(hProfile, L"NULL profile built-in")) goto Error;
 
 
-    cmsSetDeviceClass(ContextID, hProfile, cmsSigOutputClass);
-    cmsSetColorSpace(ContextID, hProfile,  cmsSigGrayData);
-    cmsSetPCS(ContextID, hProfile,         cmsSigLabData);
+    cmsSetDeviceClass(hProfile, cmsSigOutputClass);
+    cmsSetColorSpace(hProfile,  cmsSigGrayData);
+    cmsSetPCS(hProfile,         cmsSigLabData);
 
     // Create a valid ICC 4 structure
-    LUT = cmsPipelineAlloc(ContextID, 3, 1);
+    LUT = cmsPipelineAlloc(3, 1);
     if (LUT == NULL) goto Error;
 
-    EmptyTab[0] = EmptyTab[1] = EmptyTab[2] = cmsBuildTabulatedToneCurve16(ContextID, 2, Zero);
-    PostLin = cmsStageAllocToneCurves(ContextID, 3, EmptyTab);
-    OutLin  = cmsStageAllocToneCurves(ContextID, 1, EmptyTab);
-    cmsFreeToneCurve(ContextID, EmptyTab[0]);
+    EmptyTab[0] = EmptyTab[1] = EmptyTab[2] = cmsBuildTabulatedToneCurve16(2, Zero);
+    PostLin = cmsStageAllocToneCurves(3, EmptyTab);
+    OutLin  = cmsStageAllocToneCurves(1, EmptyTab);
+    cmsFreeToneCurve(EmptyTab[0]);
 
-    if (!cmsPipelineInsertStage(ContextID, LUT, cmsAT_END, PostLin))
+    if (!cmsPipelineInsertStage(LUT, cmsAT_END, PostLin))
         goto Error;
 
-    if (!cmsPipelineInsertStage(ContextID, LUT, cmsAT_END, cmsStageAllocMatrix(ContextID, 1, 3, PickLstarMatrix, NULL)))
+    if (!cmsPipelineInsertStage(LUT, cmsAT_END, cmsStageAllocMatrix(1, 3, PickLstarMatrix, NULL)))
         goto Error;
 
-    if (!cmsPipelineInsertStage(ContextID, LUT, cmsAT_END, OutLin))
+    if (!cmsPipelineInsertStage(LUT, cmsAT_END, OutLin))
         goto Error;
 
-    if (!cmsWriteTag(ContextID, hProfile, cmsSigBToA0Tag, (void*) LUT)) goto Error;
-    if (!cmsWriteTag(ContextID, hProfile, cmsSigMediaWhitePointTag, cmsD50_XYZ(ContextID))) goto Error;
+    if (!cmsWriteTag(hProfile, cmsSigBToA0Tag, (void*) LUT)) goto Error;
+    if (!cmsWriteTag(hProfile, cmsSigMediaWhitePointTag, cmsD50_XYZ(ContextID))) goto Error;
 
-    cmsPipelineFree(ContextID, LUT);
+    cmsPipelineFree(LUT);
     return hProfile;
 
 Error:
 
     if (LUT != NULL)
-        cmsPipelineFree(ContextID, LUT);
+        cmsPipelineFree(LUT);
 
     if (hProfile != NULL)
-        cmsCloseProfile(ContextID, hProfile);
+        cmsCloseProfile(hProfile);
 
     return NULL;
 }
@@ -959,7 +959,7 @@ int IsPCS(cmsColorSpaceSignature ColorSpace)
 
 
 static
-void FixColorSpaces(cmsContext ContextID, cmsHPROFILE hProfile,
+void FixColorSpaces(cmsHPROFILE hProfile,
                               cmsColorSpaceSignature ColorSpace,
                               cmsColorSpaceSignature PCS,
                               cmsUInt32Number dwFlags)
@@ -968,32 +968,32 @@ void FixColorSpaces(cmsContext ContextID, cmsHPROFILE hProfile,
 
             if (IsPCS(ColorSpace) && IsPCS(PCS)) {
 
-                    cmsSetDeviceClass(ContextID, hProfile,      cmsSigAbstractClass);
-                    cmsSetColorSpace(ContextID, hProfile,       ColorSpace);
-                    cmsSetPCS(ContextID, hProfile,              PCS);
+                    cmsSetDeviceClass(hProfile,      cmsSigAbstractClass);
+                    cmsSetColorSpace(hProfile,       ColorSpace);
+                    cmsSetPCS(hProfile,              PCS);
                     return;
             }
 
             if (IsPCS(ColorSpace) && !IsPCS(PCS)) {
 
-                    cmsSetDeviceClass(ContextID, hProfile, cmsSigOutputClass);
-                    cmsSetPCS(ContextID, hProfile,         ColorSpace);
-                    cmsSetColorSpace(ContextID, hProfile,  PCS);
+                    cmsSetDeviceClass(hProfile, cmsSigOutputClass);
+                    cmsSetPCS(hProfile,         ColorSpace);
+                    cmsSetColorSpace(hProfile,  PCS);
                     return;
             }
 
             if (IsPCS(PCS) && !IsPCS(ColorSpace)) {
 
-                   cmsSetDeviceClass(ContextID, hProfile,  cmsSigInputClass);
-                   cmsSetColorSpace(ContextID, hProfile,   ColorSpace);
-                   cmsSetPCS(ContextID, hProfile,          PCS);
+                   cmsSetDeviceClass(hProfile,  cmsSigInputClass);
+                   cmsSetColorSpace(hProfile,   ColorSpace);
+                   cmsSetPCS(hProfile,          PCS);
                    return;
             }
     }
 
-    cmsSetDeviceClass(ContextID, hProfile,      cmsSigLinkClass);
-    cmsSetColorSpace(ContextID, hProfile,       ColorSpace);
-    cmsSetPCS(ContextID, hProfile,              PCS);
+    cmsSetDeviceClass(hProfile,      cmsSigLinkClass);
+    cmsSetColorSpace(hProfile,       ColorSpace);
+    cmsSetPCS(hProfile,              PCS);
 }
 
 
@@ -1003,7 +1003,7 @@ void FixColorSpaces(cmsContext ContextID, cmsHPROFILE hProfile,
 // It has, however, several minor limitations. PCS is always Lab, which is not very critic since this
 // is the normal PCS for named color profiles.
 static
-cmsHPROFILE CreateNamedColorDevicelink(cmsContext ContextID, cmsHTRANSFORM xform)
+cmsHPROFILE CreateNamedColorDevicelink(cmsHTRANSFORM xform)
 {
     _cmsTRANSFORM* v = (_cmsTRANSFORM*) xform;
     cmsHPROFILE hICC = NULL;
@@ -1017,40 +1017,40 @@ cmsHPROFILE CreateNamedColorDevicelink(cmsContext ContextID, cmsHTRANSFORM xform
     if (hICC == NULL) return NULL;
 
     // Critical information
-    cmsSetDeviceClass(ContextID, hICC, cmsSigNamedColorClass);
-    cmsSetColorSpace(ContextID, hICC, v ->core->ExitColorSpace);
-    cmsSetPCS(ContextID, hICC, cmsSigLabData);
+    cmsSetDeviceClass(hICC, cmsSigNamedColorClass);
+    cmsSetColorSpace(hICC, v ->core->ExitColorSpace);
+    cmsSetPCS(hICC, cmsSigLabData);
 
     // Tag profile with information
-    if (!SetTextTags(ContextID, hICC, L"Named color devicelink")) goto Error;
+    if (!SetTextTags(hICC, L"Named color devicelink")) goto Error;
 
     Original = cmsGetNamedColorList(xform);
     if (Original == NULL) goto Error;
 
-    nColors = cmsNamedColorCount(ContextID, Original);
-    nc2     = cmsDupNamedColorList(ContextID, Original);
+    nColors = cmsNamedColorCount(Original);
+    nc2     = cmsDupNamedColorList(Original);
     if (nc2 == NULL) goto Error;
 
     // Colorant count now depends on the output space
-    nc2 ->ColorantCount = cmsPipelineOutputChannels(ContextID, v ->core->Lut);
+    nc2 ->ColorantCount = cmsPipelineOutputChannels(v ->core->Lut);
 
     // Make sure we have proper formatters
     // We only can afford to change formatters if previous transform is at least 16 bits
     if (!(v->core->dwOriginalFlags & cmsFLAGS_CAN_CHANGE_FORMATTER)) {
-        cmsSignalError(ContextID, cmsERROR_NOT_SUITABLE,
+        cmsSignalError(cmsERROR_NOT_SUITABLE,
                        "CreateNamedColorDevicelink needs transforms created with at least 16 bits of precision");
         goto Error;
     }
     InputFormat = TYPE_NAMED_COLOR_INDEX;
     OutputFormat = FLOAT_SH(0) |
-                   COLORSPACE_SH(_cmsLCMScolorSpace(ContextID, v ->core->ExitColorSpace)) |
+                   COLORSPACE_SH(_cmsLCMScolorSpace(v ->core->ExitColorSpace)) |
                    BYTES_SH(2) |
-                   CHANNELS_SH(cmsChannelsOfColorSpace(ContextID, v ->core->ExitColorSpace));
-    FromInput = _cmsGetFormatter(ContextID, InputFormat, cmsFormatterInput, CMS_PACK_FLAGS_16BITS).Fmt16;
-    ToOutput  = _cmsGetFormatter(ContextID, OutputFormat, cmsFormatterOutput, CMS_PACK_FLAGS_16BITS).Fmt16;
+                   CHANNELS_SH(cmsChannelsOfColorSpace(v ->core->ExitColorSpace));
+    FromInput = _cmsGetFormatter(InputFormat, cmsFormatterInput, CMS_PACK_FLAGS_16BITS).Fmt16;
+    ToOutput  = _cmsGetFormatter(OutputFormat, cmsFormatterOutput, CMS_PACK_FLAGS_16BITS).Fmt16;
 
     if (FromInput == NULL || ToOutput == NULL) {
-        cmsSignalError(ContextID, cmsERROR_UNKNOWN_EXTENSION, "Unsupported raster format");
+        cmsSignalError(cmsERROR_UNKNOWN_EXTENSION, "Unsupported raster format");
         goto Error;
     }
 
@@ -1062,16 +1062,16 @@ cmsHPROFILE CreateNamedColorDevicelink(cmsContext ContextID, cmsHTRANSFORM xform
 
     // Apply the transfor to colorants.
     for (i=0; i < nColors; i++) {
-        cmsDoTransform(ContextID, xform, &i, nc2 ->List[i].DeviceColorant, 1);
+        cmsDoTransform(xform, &i, nc2 ->List[i].DeviceColorant, 1);
     }
 
-    if (!cmsWriteTag(ContextID, hICC, cmsSigNamedColor2Tag, (void*) nc2)) goto Error;
-    cmsFreeNamedColorList(ContextID, nc2);
+    if (!cmsWriteTag(hICC, cmsSigNamedColor2Tag, (void*) nc2)) goto Error;
+    cmsFreeNamedColorList(nc2);
 
     return hICC;
 
 Error:
-    if (hICC != NULL) cmsCloseProfile(ContextID, hICC);
+    if (hICC != NULL) cmsCloseProfile(hICC);
     return NULL;
 }
 
@@ -1108,7 +1108,7 @@ static const cmsAllowedLUT AllowedLUTTypes[] = {
 
 // Check a single entry
 static
-cmsBool CheckOne(cmsContext ContextID, const cmsAllowedLUT* Tab, const cmsPipeline* Lut)
+cmsBool CheckOne(const cmsAllowedLUT* Tab, const cmsPipeline* Lut)
 {
     cmsStage* mpe;
     int n;
@@ -1116,7 +1116,7 @@ cmsBool CheckOne(cmsContext ContextID, const cmsAllowedLUT* Tab, const cmsPipeli
     for (n=0, mpe = Lut ->Elements; mpe != NULL; mpe = mpe ->Next, n++) {
 
         if (n > Tab ->nTypes) return FALSE;
-        if (cmsStageType(ContextID, mpe) != Tab ->MpeTypes[n]) return FALSE;
+        if (cmsStageType(mpe) != Tab ->MpeTypes[n]) return FALSE;
     }
 
     return (n == Tab ->nTypes);
@@ -1124,7 +1124,7 @@ cmsBool CheckOne(cmsContext ContextID, const cmsAllowedLUT* Tab, const cmsPipeli
 
 
 static
-const cmsAllowedLUT* FindCombination(cmsContext ContextID, const cmsPipeline* Lut, cmsBool IsV4, cmsTagSignature DestinationTag)
+const cmsAllowedLUT* FindCombination(const cmsPipeline* Lut, cmsBool IsV4, cmsTagSignature DestinationTag)
 {
     cmsUInt32Number n;
 
@@ -1135,7 +1135,7 @@ const cmsAllowedLUT* FindCombination(cmsContext ContextID, const cmsPipeline* Lu
         if (IsV4 ^ Tab -> IsV4) continue;
         if ((Tab ->RequiredTag != 0) && (Tab ->RequiredTag != DestinationTag)) continue;
 
-        if (CheckOne(ContextID, Tab, Lut)) return Tab;
+        if (CheckOne(Tab, Lut)) return Tab;
     }
 
     return NULL;
@@ -1143,7 +1143,7 @@ const cmsAllowedLUT* FindCombination(cmsContext ContextID, const cmsPipeline* Lu
 
 
 // Does convert a transform into a device link profile
-cmsHPROFILE CMSEXPORT cmsTransform2DeviceLink(cmsContext ContextID, cmsHTRANSFORM hTransform, cmsFloat64Number Version, cmsUInt32Number dwFlags)
+cmsHPROFILE CMSEXPORT cmsTransform2DeviceLink(cmsHTRANSFORM hTransform, cmsFloat64Number Version, cmsUInt32Number dwFlags)
 {
     cmsHPROFILE hProfile = NULL;
     cmsUInt32Number FrmIn, FrmOut;
@@ -1159,24 +1159,24 @@ cmsHPROFILE CMSEXPORT cmsTransform2DeviceLink(cmsContext ContextID, cmsHTRANSFOR
     _cmsAssert(hTransform != NULL);
 
     // Get the first mpe to check for named color
-    mpe = cmsPipelineGetPtrToFirstStage(ContextID, xform ->core->Lut);
+    mpe = cmsPipelineGetPtrToFirstStage(xform ->core->Lut);
 
     // Check if is a named color transform
     if (mpe != NULL) {
 
-        if (cmsStageType(ContextID, mpe) == cmsSigNamedColorElemType) {
-            return CreateNamedColorDevicelink(ContextID, hTransform);
+        if (cmsStageType(mpe) == cmsSigNamedColorElemType) {
+            return CreateNamedColorDevicelink(hTransform);
         }
     }
 
     // First thing to do is to get a copy of the transformation
-    LUT = cmsPipelineDup(ContextID, xform ->core->Lut);
+    LUT = cmsPipelineDup(xform ->core->Lut);
     if (LUT == NULL) return NULL;
 
     // Time to fix the Lab2/Lab4 issue.
     if ((xform ->core->EntryColorSpace == cmsSigLabData) && (Version < 4.0)) {
 
-        if (!cmsPipelineInsertStage(ContextID, LUT, cmsAT_BEGIN, _cmsStageAllocLabV2ToV4curves(ContextID)))
+        if (!cmsPipelineInsertStage(LUT, cmsAT_BEGIN, _cmsStageAllocLabV2ToV4curves(ContextID)))
             goto Error;
     }
 
@@ -1184,7 +1184,7 @@ cmsHPROFILE CMSEXPORT cmsTransform2DeviceLink(cmsContext ContextID, cmsHTRANSFOR
     if ((xform ->core->ExitColorSpace) == cmsSigLabData && (Version < 4.0)) {
 
         dwFlags |= cmsFLAGS_NOWHITEONWHITEFIXUP;
-        if (!cmsPipelineInsertStage(ContextID, LUT, cmsAT_END, _cmsStageAllocLabV4ToV2(ContextID)))
+        if (!cmsPipelineInsertStage(LUT, cmsAT_END, _cmsStageAllocLabV4ToV2(ContextID)))
             goto Error;
     }
 
@@ -1192,22 +1192,22 @@ cmsHPROFILE CMSEXPORT cmsTransform2DeviceLink(cmsContext ContextID, cmsHTRANSFOR
     hProfile = cmsCreateProfilePlaceholder(ContextID);
     if (!hProfile) goto Error;                    // can't allocate
 
-    cmsSetProfileVersion(ContextID, hProfile, Version);
+    cmsSetProfileVersion(hProfile, Version);
 
-    FixColorSpaces(ContextID, hProfile, xform ->core->EntryColorSpace, xform ->core->ExitColorSpace, dwFlags);
+    FixColorSpaces(hProfile, xform ->core->EntryColorSpace, xform ->core->ExitColorSpace, dwFlags);
 
     // Optimize the LUT and precalculate a devicelink
 
-    ChansIn  = cmsChannelsOfColorSpace(ContextID, xform -> core -> EntryColorSpace);
-    ChansOut = cmsChannelsOfColorSpace(ContextID, xform -> core -> ExitColorSpace);
+    ChansIn  = cmsChannelsOfColorSpace(xform -> core -> EntryColorSpace);
+    ChansOut = cmsChannelsOfColorSpace(xform -> core -> ExitColorSpace);
 
-    ColorSpaceBitsIn  = _cmsLCMScolorSpace(ContextID, xform ->core->EntryColorSpace);
-    ColorSpaceBitsOut = _cmsLCMScolorSpace(ContextID, xform ->core->ExitColorSpace);
+    ColorSpaceBitsIn  = _cmsLCMScolorSpace(xform ->core->EntryColorSpace);
+    ColorSpaceBitsOut = _cmsLCMScolorSpace(xform ->core->ExitColorSpace);
 
     FrmIn  = COLORSPACE_SH(ColorSpaceBitsIn) | CHANNELS_SH(ChansIn)|BYTES_SH(2);
     FrmOut = COLORSPACE_SH(ColorSpaceBitsOut) | CHANNELS_SH(ChansOut)|BYTES_SH(2);
 
-    deviceClass = cmsGetDeviceClass(ContextID, hProfile);
+    deviceClass = cmsGetDeviceClass(hProfile);
 
      if (deviceClass == cmsSigOutputClass)
          DestinationTag = cmsSigBToA0Tag;
@@ -1218,13 +1218,13 @@ cmsHPROFILE CMSEXPORT cmsTransform2DeviceLink(cmsContext ContextID, cmsHTRANSFOR
     if (dwFlags & cmsFLAGS_FORCE_CLUT)
         AllowedLUT = NULL;
     else
-        AllowedLUT = FindCombination(ContextID, LUT, Version >= 4.0, DestinationTag);
+        AllowedLUT = FindCombination(LUT, Version >= 4.0, DestinationTag);
 
     if (AllowedLUT == NULL) {
 
         // Try to optimize
-        _cmsOptimizePipeline(ContextID, &LUT, xform->core->RenderingIntent, &FrmIn, &FrmOut, &dwFlags);
-        AllowedLUT = FindCombination(ContextID, LUT, Version >= 4.0, DestinationTag);
+        _cmsOptimizePipeline(&LUT, xform->core->RenderingIntent, &FrmIn, &FrmOut, &dwFlags);
+        AllowedLUT = FindCombination(LUT, Version >= 4.0, DestinationTag);
 
     }
 
@@ -1235,20 +1235,20 @@ cmsHPROFILE CMSEXPORT cmsTransform2DeviceLink(cmsContext ContextID, cmsHTRANSFOR
         cmsStage* LastStage;
 
         dwFlags |= cmsFLAGS_FORCE_CLUT;
-        _cmsOptimizePipeline(ContextID, &LUT, xform->core->RenderingIntent, &FrmIn, &FrmOut, &dwFlags);
+        _cmsOptimizePipeline(&LUT, xform->core->RenderingIntent, &FrmIn, &FrmOut, &dwFlags);
 
         // Put identity curves if needed
-        FirstStage = cmsPipelineGetPtrToFirstStage(ContextID, LUT);
+        FirstStage = cmsPipelineGetPtrToFirstStage(LUT);
         if (FirstStage != NULL && FirstStage ->Type != cmsSigCurveSetElemType)
-             if (!cmsPipelineInsertStage(ContextID, LUT, cmsAT_BEGIN, _cmsStageAllocIdentityCurves(ContextID, ChansIn)))
+             if (!cmsPipelineInsertStage(LUT, cmsAT_BEGIN, _cmsStageAllocIdentityCurves(ChansIn)))
                  goto Error;
 
-        LastStage = cmsPipelineGetPtrToLastStage(ContextID, LUT);
+        LastStage = cmsPipelineGetPtrToLastStage(LUT);
         if (LastStage != NULL && LastStage ->Type != cmsSigCurveSetElemType)
-             if (!cmsPipelineInsertStage(ContextID, LUT, cmsAT_END,   _cmsStageAllocIdentityCurves(ContextID, ChansOut)))
+             if (!cmsPipelineInsertStage(LUT, cmsAT_END,   _cmsStageAllocIdentityCurves(ChansOut)))
                  goto Error;
 
-        AllowedLUT = FindCombination(ContextID, LUT, Version >= 4.0, DestinationTag);
+        AllowedLUT = FindCombination(LUT, Version >= 4.0, DestinationTag);
     }
 
     // Somethings is wrong...
@@ -1258,44 +1258,44 @@ cmsHPROFILE CMSEXPORT cmsTransform2DeviceLink(cmsContext ContextID, cmsHTRANSFOR
 
 
     if (dwFlags & cmsFLAGS_8BITS_DEVICELINK)
-                     cmsPipelineSetSaveAs8bitsFlag(ContextID, LUT, TRUE);
+                     cmsPipelineSetSaveAs8bitsFlag(LUT, TRUE);
 
     // Tag profile with information
-    if (!SetTextTags(ContextID, hProfile, L"devicelink")) goto Error;
+    if (!SetTextTags(hProfile, L"devicelink")) goto Error;
 
     // Store result
-    if (!cmsWriteTag(ContextID, hProfile, DestinationTag, LUT)) goto Error;
+    if (!cmsWriteTag(hProfile, DestinationTag, LUT)) goto Error;
 
 
     if (xform->core->InputColorant != NULL) {
-           if (!cmsWriteTag(ContextID, hProfile, cmsSigColorantTableTag, xform->core->InputColorant)) goto Error;
+           if (!cmsWriteTag(hProfile, cmsSigColorantTableTag, xform->core->InputColorant)) goto Error;
     }
 
     if (xform->core->OutputColorant != NULL) {
-           if (!cmsWriteTag(ContextID, hProfile, cmsSigColorantTableOutTag, xform->core->OutputColorant)) goto Error;
+           if (!cmsWriteTag(hProfile, cmsSigColorantTableOutTag, xform->core->OutputColorant)) goto Error;
     }
 
     if ((deviceClass == cmsSigLinkClass) && (xform ->core->Sequence != NULL)) {
-        if (!_cmsWriteProfileSequence(ContextID, hProfile, xform ->core->Sequence)) goto Error;
+        if (!_cmsWriteProfileSequence(hProfile, xform ->core->Sequence)) goto Error;
     }
 
     // Set the white point
     if (deviceClass == cmsSigInputClass) {
-        if (!cmsWriteTag(ContextID, hProfile, cmsSigMediaWhitePointTag, &xform->core->EntryWhitePoint)) goto Error;
+        if (!cmsWriteTag(hProfile, cmsSigMediaWhitePointTag, &xform->core->EntryWhitePoint)) goto Error;
     }
     else {
-         if (!cmsWriteTag(ContextID, hProfile, cmsSigMediaWhitePointTag, &xform ->core->ExitWhitePoint)) goto Error;
+         if (!cmsWriteTag(hProfile, cmsSigMediaWhitePointTag, &xform ->core->ExitWhitePoint)) goto Error;
     }
 
 
     // Per 7.2.15 in spec 4.3
-    cmsSetHeaderRenderingIntent(ContextID, hProfile, xform->core->RenderingIntent);
+    cmsSetHeaderRenderingIntent(hProfile, xform->core->RenderingIntent);
 
-    cmsPipelineFree(ContextID, LUT);
+    cmsPipelineFree(LUT);
     return hProfile;
 
 Error:
-    if (LUT != NULL) cmsPipelineFree(ContextID, LUT);
-    cmsCloseProfile(ContextID, hProfile);
+    if (LUT != NULL) cmsPipelineFree(LUT);
+    cmsCloseProfile(hProfile);
     return NULL;
 }

@@ -81,7 +81,7 @@ cmsBool FatalError(const char *frm, ...)
 // This is the handler passed to lcms
 
 static
-void MatLabErrorHandler(cmsContext ContextID, cmsUInt32Number ErrorCode, 
+void MatLabErrorHandler(cmsUInt32Number ErrorCode, 
 						const char *Text)
 {      
 	mexErrMsgTxt(Text);    
@@ -281,20 +281,20 @@ cmsHPROFILE OpenProfile(const char* File)
             return cmsCreate_sRGBProfileTHR(ContextID);    
 
        if (cmsstrcasecmp(File, "*Lab2") == 0)
-                return cmsCreateLab2ProfileTHR(ContextID, NULL);
+                return cmsCreateLab2ProfileTHR(NULL);
 
        if (cmsstrcasecmp(File, "*Lab4") == 0)
-                return cmsCreateLab4ProfileTHR(ContextID, NULL);
+                return cmsCreateLab4ProfileTHR(NULL);
 
        if (cmsstrcasecmp(File, "*Lab") == 0)
-                return cmsCreateLab4ProfileTHR(ContextID, NULL);
+                return cmsCreateLab4ProfileTHR(NULL);
        
        if (cmsstrcasecmp(File, "*LabD65") == 0) {
 
            cmsCIExyY D65xyY;
            
            cmsWhitePointFromTemp( &D65xyY, 6504);           
-           return cmsCreateLab4ProfileTHR(ContextID, &D65xyY);
+           return cmsCreateLab4ProfileTHR(&D65xyY);
        }
 
        if (cmsstrcasecmp(File, "*XYZ") == 0)
@@ -302,16 +302,16 @@ cmsHPROFILE OpenProfile(const char* File)
 
        if (cmsstrcasecmp(File, "*Gray22") == 0) {
 
-           cmsToneCurve* Curve = cmsBuildGamma(ContextID, 2.2);
-           cmsHPROFILE hProfile = cmsCreateGrayProfileTHR(ContextID, cmsD50_xyY(), Curve);
+           cmsToneCurve* Curve = cmsBuildGamma(2.2);
+           cmsHPROFILE hProfile = cmsCreateGrayProfileTHR(cmsD50_xyY(), Curve);
            cmsFreeToneCurve(Curve);
            return hProfile;
        }
 
         if (cmsstrcasecmp(File, "*Gray30") == 0) {
 
-           cmsToneCurve* Curve = cmsBuildGamma(ContextID, 3.0);
-           cmsHPROFILE hProfile = cmsCreateGrayProfileTHR(ContextID, cmsD50_xyY(), Curve);
+           cmsToneCurve* Curve = cmsBuildGamma(3.0);
+           cmsHPROFILE hProfile = cmsCreateGrayProfileTHR(cmsD50_xyY(), Curve);
            cmsFreeToneCurve(Curve);
            return hProfile;
        }
@@ -336,7 +336,7 @@ cmsHPROFILE OpenProfile(const char* File)
        }
 
            
-        return cmsOpenProfileFromFileTHR(ContextID, File, "r");
+        return cmsOpenProfileFromFileTHR(File, "r");
 }
 
 

@@ -37,14 +37,14 @@ typedef struct {
 
 // Precomputes tables for 8-bit on input devicelink.
 static
-Performance8Data* Performance8alloc(cmsContext ContextID, const cmsInterpParams* p, cmsToneCurve* G[3])
+Performance8Data* Performance8alloc(const cmsInterpParams* p, cmsToneCurve* G[3])
 {
     int i;
     cmsUInt16Number Input[3];
     cmsS15Fixed16Number v1, v2, v3;
     Performance8Data* p8;
 
-    p8 = (Performance8Data*) _cmsMallocZero(ContextID, sizeof(Performance8Data));
+    p8 = (Performance8Data*) _cmsMallocZero(sizeof(Performance8Data));
     if (p8 == NULL) return NULL;
 
     // Since this only works for 8 bit input, values comes always as x * 257,
@@ -54,9 +54,9 @@ Performance8Data* Performance8alloc(cmsContext ContextID, const cmsInterpParams*
         if (G != NULL) {
 
             // Get 16-bit representation
-            Input[0] = cmsEvalToneCurve16(ContextID, G[0], FROM_8_TO_16(i));
-            Input[1] = cmsEvalToneCurve16(ContextID, G[1], FROM_8_TO_16(i));
-            Input[2] = cmsEvalToneCurve16(ContextID, G[2], FROM_8_TO_16(i));
+            Input[0] = cmsEvalToneCurve16(G[0], FROM_8_TO_16(i));
+            Input[1] = cmsEvalToneCurve16(G[1], FROM_8_TO_16(i));
+            Input[2] = cmsEvalToneCurve16(G[2], FROM_8_TO_16(i));
         }
         else {
             Input[0] = FROM_8_TO_16(i);
@@ -87,19 +87,19 @@ Performance8Data* Performance8alloc(cmsContext ContextID, const cmsInterpParams*
 }
 
 static
-void Performance8free(cmsContext ContextID, void* ptr)
+void Performance8free(void* ptr)
 {
-    _cmsFree(ContextID, ptr);
+    _cmsFree(ptr);
 }
 
 
 // Sampler implemented by another LUT. This is a clean way to precalculate the devicelink 3D CLUT for
 // almost any transform. We use floating point precision and then convert from floating point to 16 bits.
 static
-int XFormSampler16(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], CMSREGISTER cmsUInt16Number Out[], CMSREGISTER void* Cargo)
+int XFormSampler16(CMSREGISTER const cmsUInt16Number In[], CMSREGISTER cmsUInt16Number Out[], CMSREGISTER void* Cargo)
 {
     // Evaluate in 16 bits
-    cmsPipelineEval16(ContextID, In, Out, (cmsPipeline*) Cargo);
+    cmsPipelineEval16(In, Out, (cmsPipeline*) Cargo);
 
     // Always succeed
     return TRUE;
@@ -146,8 +146,8 @@ void PerformanceEval8(cmsContext ContextID,
 
     cmsUInt32Number nalpha, strideIn, strideOut;
 
-    _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
-    _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
+    _cmsComputeComponentIncrements(cmsGetTransformInputFormat((cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
+    _cmsComputeComponentIncrements(cmsGetTransformOutputFormat((cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
 
     if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
         nalpha = 0;
@@ -267,11 +267,11 @@ void PerformanceEval8(cmsContext ContextID,
 
 // Curves that contain wide empty areas are not optimizeable
 static
-cmsBool IsDegenerated(cmsContext ContextID, const cmsToneCurve* g)
+cmsBool IsDegenerated(const cmsToneCurve* g)
 {
     int i, Zeros = 0, Poles = 0;
-    int nEntries = cmsGetToneCurveEstimatedTableEntries(ContextID, g);
-    const cmsUInt16Number* Table16 = cmsGetToneCurveEstimatedTable(ContextID, g);
+    int nEntries = cmsGetToneCurveEstimatedTableEntries(g);
+    const cmsUInt16Number* Table16 = cmsGetToneCurveEstimatedTable(g);
 
     for (i=0; i < nEntries; i++) {
 
@@ -372,9 +372,9 @@ cmsBool Optimize8BitRGBTransform( cmsContext ContextID,
     memset(Trans, 0, sizeof(Trans));
     memset(TransReverse, 0, sizeof(TransReverse));
 
-    MyTable[0] = (cmsUInt16Number*) _cmsMallocZero(ContextID, sizeof(cmsUInt16Number) * PRELINEARIZATION_POINTS);
-    MyTable[1] = (cmsUInt16Number*) _cmsMallocZero(ContextID, sizeof(cmsUInt16Number) * PRELINEARIZATION_POINTS);
-    MyTable[2] = (cmsUInt16Number*) _cmsMallocZero(ContextID, sizeof(cmsUInt16Number) * PRELINEARIZATION_POINTS);
+    MyTable[0] = (cmsUInt16Number*) _cmsMallocZero(sizeof(cmsUInt16Number) * PRELINEARIZATION_POINTS);
+    MyTable[1] = (cmsUInt16Number*) _cmsMallocZero(sizeof(cmsUInt16Number) * PRELINEARIZATION_POINTS);
+    MyTable[2] = (cmsUInt16Number*) _cmsMallocZero(sizeof(cmsUInt16Number) * PRELINEARIZATION_POINTS);
 
     if (MyTable[0] == NULL || MyTable[1] == NULL || MyTable[2] == NULL) goto Error;
 
@@ -389,7 +389,7 @@ cmsBool Optimize8BitRGBTransform( cmsContext ContextID,
             In[j] = v;
 
         // Evaluate the gray value
-        cmsPipelineEvalFloat(ContextID, In, Out, OriginalLut);
+        cmsPipelineEvalFloat(In, Out, OriginalLut);
 
         // Store result in curve
         for (j=0; j < 3; j++)
@@ -400,17 +400,17 @@ cmsBool Optimize8BitRGBTransform( cmsContext ContextID,
 
         SlopeLimiting(MyTable[t], PRELINEARIZATION_POINTS);
 
-        Trans[t] = cmsBuildTabulatedToneCurve16(ContextID, PRELINEARIZATION_POINTS, MyTable[t]);
+        Trans[t] = cmsBuildTabulatedToneCurve16(PRELINEARIZATION_POINTS, MyTable[t]);
         if (Trans[t] == NULL) goto Error;
 
-        _cmsFree(ContextID, MyTable[t]);
+        _cmsFree(MyTable[t]);
     }
 
     // Check for validity
     lIsSuitable = TRUE;
     for (t=0; (lIsSuitable && (t < 3)); t++) {
         
-        if (IsDegenerated(ContextID, Trans[t]))
+        if (IsDegenerated(Trans[t]))
             lIsSuitable = FALSE;
     }
 
@@ -418,52 +418,52 @@ cmsBool Optimize8BitRGBTransform( cmsContext ContextID,
     if (!lIsSuitable) goto Error;
 
     // Invert curves if possible
-    for (t = 0; t < cmsPipelineInputChannels(ContextID, OriginalLut); t++) {
-        TransReverse[t] = cmsReverseToneCurveEx(ContextID, PRELINEARIZATION_POINTS, Trans[t]);
+    for (t = 0; t < cmsPipelineInputChannels(OriginalLut); t++) {
+        TransReverse[t] = cmsReverseToneCurveEx(PRELINEARIZATION_POINTS, Trans[t]);
         if (TransReverse[t] == NULL) goto Error;
     }
 
     // Now insert the reversed curves at the begin of transform
-    LutPlusCurves = cmsPipelineDup(ContextID, OriginalLut);
+    LutPlusCurves = cmsPipelineDup(OriginalLut);
     if (LutPlusCurves == NULL) goto Error;
 
-    cmsPipelineInsertStage(ContextID, LutPlusCurves, cmsAT_BEGIN, cmsStageAllocToneCurves(ContextID, 3, TransReverse));
+    cmsPipelineInsertStage(LutPlusCurves, cmsAT_BEGIN, cmsStageAllocToneCurves(3, TransReverse));
 
     // Create the result LUT
-    OptimizedLUT = cmsPipelineAlloc(ContextID, 3, cmsPipelineOutputChannels(ContextID, OriginalLut));
+    OptimizedLUT = cmsPipelineAlloc(3, cmsPipelineOutputChannels(OriginalLut));
     if (OptimizedLUT == NULL) goto Error;
 
-    OptimizedPrelinMpe = cmsStageAllocToneCurves(ContextID, 3, Trans);
+    OptimizedPrelinMpe = cmsStageAllocToneCurves(3, Trans);
 
     // Create and insert the curves at the beginning
-    cmsPipelineInsertStage(ContextID, OptimizedLUT, cmsAT_BEGIN, OptimizedPrelinMpe);
+    cmsPipelineInsertStage(OptimizedLUT, cmsAT_BEGIN, OptimizedPrelinMpe);
 
     // Allocate the CLUT for result
-    OptimizedCLUTmpe = cmsStageAllocCLut16bit(ContextID, nGridPoints, 3, cmsPipelineOutputChannels(ContextID, OriginalLut), NULL);
+    OptimizedCLUTmpe = cmsStageAllocCLut16bit(nGridPoints, 3, cmsPipelineOutputChannels(OriginalLut), NULL);
 
     // Add the CLUT to the destination LUT
-    cmsPipelineInsertStage(ContextID, OptimizedLUT, cmsAT_END, OptimizedCLUTmpe);
+    cmsPipelineInsertStage(OptimizedLUT, cmsAT_END, OptimizedCLUTmpe);
 
     // Resample the LUT
-    if (!cmsStageSampleCLut16bit(ContextID, OptimizedCLUTmpe, XFormSampler16, (void*) LutPlusCurves, 0)) goto Error;
+    if (!cmsStageSampleCLut16bit(OptimizedCLUTmpe, XFormSampler16, (void*) LutPlusCurves, 0)) goto Error;
 
     // Set the evaluator
-    data = (_cmsStageCLutData*) cmsStageData(ContextID, OptimizedCLUTmpe);
+    data = (_cmsStageCLutData*) cmsStageData(OptimizedCLUTmpe);
 
-    p8 = Performance8alloc(ContextID, data ->Params, Trans);
+    p8 = Performance8alloc(data ->Params, Trans);
     if (p8 == NULL) return FALSE;
 
     // Free resources
     for (t = 0; t <3; t++) {
 
-        if (Trans[t]) cmsFreeToneCurve(ContextID, Trans[t]);
-        if (TransReverse[t]) cmsFreeToneCurve(ContextID, TransReverse[t]);
+        if (Trans[t]) cmsFreeToneCurve(Trans[t]);
+        if (TransReverse[t]) cmsFreeToneCurve(TransReverse[t]);
     }
 
-    cmsPipelineFree(ContextID, LutPlusCurves);
+    cmsPipelineFree(LutPlusCurves);
 
     // And return the obtained LUT
-    cmsPipelineFree(ContextID, OriginalLut);
+    cmsPipelineFree(OriginalLut);
 
     *dwFlags &= ~cmsFLAGS_CAN_CHANGE_FORMATTER;
     *Lut = OptimizedLUT;
@@ -477,12 +477,12 @@ Error:
 
     for (t = 0; t < 3; t++) {
 
-        if (Trans[t]) cmsFreeToneCurve(ContextID, Trans[t]);
-        if (TransReverse[t]) cmsFreeToneCurve(ContextID, TransReverse[t]);
+        if (Trans[t]) cmsFreeToneCurve(Trans[t]);
+        if (TransReverse[t]) cmsFreeToneCurve(TransReverse[t]);
     }
 
-    if (LutPlusCurves != NULL) cmsPipelineFree(ContextID, LutPlusCurves);
-    if (OptimizedLUT != NULL) cmsPipelineFree(ContextID, OptimizedLUT);
+    if (LutPlusCurves != NULL) cmsPipelineFree(LutPlusCurves);
+    if (OptimizedLUT != NULL) cmsPipelineFree(OptimizedLUT);
 
     return FALSE;
 }

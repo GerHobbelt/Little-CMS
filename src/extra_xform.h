@@ -331,7 +331,7 @@ void FUNCTION_NAME(cmsContext ContextID,
 
 #ifdef BULK_COPY_EXTRAS
     if (core->dwOriginalFlags & cmsFLAGS_COPY_ALPHA)
-        _cmsHandleExtraChannels(ContextID, p, in, out, PixelsPerLine, LineCount, Stride);
+        _cmsHandleExtraChannels(p, in, out, PixelsPerLine, LineCount, Stride);
 #endif
 
     if (PixelsPerLine == 0)
@@ -418,14 +418,14 @@ void FUNCTION_NAME(cmsContext ContextID,
  #else
                     cmsUInt16Number wOutOfGamut;
 
-                    evalGamut(ContextID, currIn, &wOutOfGamut, core->GamutCheck->Data);
+                    evalGamut(currIn, &wOutOfGamut, core->GamutCheck->Data);
                     if (wOutOfGamut >= 1)
                         /* RJW: Could be faster? copy once to a local buffer? */
-                        cmsGetAlarmCodes(ContextID, wOut);
+                        cmsGetAlarmCodes(wOut);
                     else
  #endif /* FLOAT_XFORM */
 #endif /* GAMUTCHECK */
-                        eval(ContextID, currIn, wOut, data);
+                        eval(currIn, wOut, data);
 #ifdef NO_UNPACK
  #ifdef CACHED
                     prevIn = currIn;

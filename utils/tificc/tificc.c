@@ -147,7 +147,7 @@ int FromLabV4ToLabV2(int x)
 
 // Formatter for 8bit Lab TIFF (photometric 8)
 static
-unsigned char* UnrollTIFFLab8(cmsContext ContextID, struct _cmstransform_struct* CMMcargo,
+unsigned char* UnrollTIFFLab8(struct _cmstransform_struct* CMMcargo,
                               register cmsUInt16Number wIn[],
                               register cmsUInt8Number* accum,
                               register cmsUInt32Number Stride)
@@ -164,7 +164,7 @@ unsigned char* UnrollTIFFLab8(cmsContext ContextID, struct _cmstransform_struct*
 
 // Formatter for 16bit Lab TIFF (photometric 8)
 static
-unsigned char* UnrollTIFFLab16(cmsContext ContextID, struct _cmstransform_struct* CMMcargo,
+unsigned char* UnrollTIFFLab16(struct _cmstransform_struct* CMMcargo,
                               register cmsUInt16Number wIn[],
                               register cmsUInt8Number* accum,
                               register cmsUInt32Number Stride )
@@ -183,7 +183,7 @@ unsigned char* UnrollTIFFLab16(cmsContext ContextID, struct _cmstransform_struct
 
 
 static
-unsigned char* PackTIFFLab8(cmsContext ContextID, struct _cmstransform_struct* CMMcargo,
+unsigned char* PackTIFFLab8(struct _cmstransform_struct* CMMcargo,
                             register cmsUInt16Number wOut[],
                             register cmsUInt8Number* output,
                             register cmsUInt32Number Stride)
@@ -205,7 +205,7 @@ unsigned char* PackTIFFLab8(cmsContext ContextID, struct _cmstransform_struct* C
 }
 
 static
-unsigned char* PackTIFFLab16(cmsContext ContextID, struct _cmstransform_struct* CMMcargo,
+unsigned char* PackTIFFLab16(struct _cmstransform_struct* CMMcargo,
                             register cmsUInt16Number wOut[],
                             register cmsUInt8Number* output,
                             register cmsUInt32Number Stride)
@@ -229,7 +229,7 @@ unsigned char* PackTIFFLab16(cmsContext ContextID, struct _cmstransform_struct* 
 
 
 static
-cmsFormatter TiffFormatterFactory(cmsContext ContextID, cmsUInt32Number Type,
+cmsFormatter TiffFormatterFactory(cmsUInt32Number Type,
                                   cmsFormatterDirection Dir,
                                   cmsUInt32Number dwFlags)
 {
@@ -403,7 +403,7 @@ cmsUInt32Number ComputeOutputFormatDescriptor(cmsUInt32Number dwInput, int OutCo
 
 // Tile based transforms
 static
-int TileBasedXform(cmsContext ContextID, cmsHTRANSFORM hXForm, TIFF* in, TIFF* out, int nPlanes)
+int TileBasedXform(cmsHTRANSFORM hXForm, TIFF* in, TIFF* out, int nPlanes)
 {
     tsize_t BufSizeIn  = TIFFTileSize(in);
     tsize_t BufSizeOut = TIFFTileSize(out);
@@ -439,7 +439,7 @@ int TileBasedXform(cmsContext ContextID, cmsHTRANSFORM hXForm, TIFF* in, TIFF* o
         if (PixelCount < 0)
             FatalError("TIFF is corrupted");
 
-        cmsDoTransform(ContextID, hXForm, BufferIn, BufferOut, PixelCount);
+        cmsDoTransform(hXForm, BufferIn, BufferOut, PixelCount);
 
         for (j=0; j < nPlanes; j++) {
 
@@ -463,7 +463,7 @@ cleanup:
 
 // Strip based transforms
 static
-int StripBasedXform(cmsContext ContextID, cmsHTRANSFORM hXForm, TIFF* in, TIFF* out, int nPlanes)
+int StripBasedXform(cmsHTRANSFORM hXForm, TIFF* in, TIFF* out, int nPlanes)
 {
     tsize_t BufSizeIn  = TIFFStripSize(in);
     tsize_t BufSizeOut = TIFFStripSize(out);
@@ -508,7 +508,7 @@ int StripBasedXform(cmsContext ContextID, cmsHTRANSFORM hXForm, TIFF* in, TIFF* 
         if (PixelCount < 0)
             FatalError("TIFF is corrupted");
 
-        cmsDoTransform(ContextID, hXForm, BufferIn, BufferOut, PixelCount);
+        cmsDoTransform(hXForm, BufferIn, BufferOut, PixelCount);
 
         for (j=0; j < nPlanes; j++) {
             if (TIFFWriteEncodedStrip(out, i + (j * StripCount),
@@ -747,7 +747,7 @@ void DoEmbedProfile(TIFF* Out, const char* ProfileFile)
 
 // Read or create a ICC profile from the TIFF data
 static
-cmsHPROFILE GetTIFFProfile(cmsContext ContextID, TIFF* in)
+cmsHPROFILE GetTIFFProfile(TIFF* in)
 {
     cmsCIExyYTRIPLE Primaries;
     cmsFloat32Number* chr;
@@ -764,13 +764,13 @@ cmsHPROFILE GetTIFFProfile(cmsContext ContextID, TIFF* in)
 
     if (TIFFGetField(in, TIFFTAG_ICCPROFILE, &EmbedLen, &EmbedBuffer)) {
 
-        hProfile = cmsOpenProfileFromMem(ContextID, EmbedBuffer, EmbedLen);
+        hProfile = cmsOpenProfileFromMem(EmbedBuffer, EmbedLen);
 
         // Print description found in the profile
         if (Verbose && (hProfile != NULL)) {
 
             fprintf(stdout, "\n[Embedded profile]\n");
-            PrintProfileInformation(ContextID, hProfile);
+            PrintProfileInformation(hProfile);
             fflush(stdout);
         }
 
@@ -804,14 +804,14 @@ cmsHPROFILE GetTIFFProfile(cmsContext ContextID, TIFF* in)
                 &gmg,
                 &gmb);
 
-            Curve[0] = cmsBuildTabulatedToneCurve16(ContextID, 256, gmr);
-            Curve[1] = cmsBuildTabulatedToneCurve16(ContextID, 256, gmg);
-            Curve[2] = cmsBuildTabulatedToneCurve16(ContextID, 256, gmb);
+            Curve[0] = cmsBuildTabulatedToneCurve16(256, gmr);
+            Curve[1] = cmsBuildTabulatedToneCurve16(256, gmg);
+            Curve[2] = cmsBuildTabulatedToneCurve16(256, gmb);
 
-            hProfile = cmsCreateRGBProfile(ContextID, &WhitePoint, &Primaries, Curve);
+            hProfile = cmsCreateRGBProfile(&WhitePoint, &Primaries, Curve);
 
             for (i=0; i < 3; i++)
-                cmsFreeToneCurve(ContextID, Curve[i]);
+                cmsFreeToneCurve(Curve[i]);
 
             if (Verbose) {
                 fprintf(stdout, "\n[Colorimetric TIFF]\n");
@@ -828,7 +828,7 @@ cmsHPROFILE GetTIFFProfile(cmsContext ContextID, TIFF* in)
 
 // Transform one image
 static
-int TransformImage(cmsContext ContextID, TIFF* in, TIFF* out, const char *cDefInpProf)
+int TransformImage(TIFF* in, TIFF* out, const char *cDefInpProf)
 {
     cmsHPROFILE hIn, hOut, hProof, hInkLimit = NULL;
     cmsHTRANSFORM xform;
@@ -842,7 +842,7 @@ int TransformImage(cmsContext ContextID, TIFF* in, TIFF* out, const char *cDefIn
     dwFlags = cmsFLAGS_COPY_ALPHA;
 
     // Observer adaptation state (only meaningful on absolute colorimetric intent)
-    cmsSetAdaptationState(ContextID, ObserverAdaptationState);
+    cmsSetAdaptationState(ObserverAdaptationState);
 
     if (EmbedProfile && cOutProf)
         DoEmbedProfile(out, cOutProf);
@@ -868,20 +868,20 @@ int TransformImage(cmsContext ContextID, TIFF* in, TIFF* out, const char *cDefIn
 
     if (lIsDeviceLink) {
 
-        hIn = cmsOpenProfileFromFile(ContextID, cDefInpProf, "r");
+        hIn = cmsOpenProfileFromFile(cDefInpProf, "r");
     }
     else {
 
-        hIn =  GetTIFFProfile(ContextID, in);
+        hIn =  GetTIFFProfile(in);
 
         if (hIn == NULL)
-            hIn = OpenStockProfile(ContextID, cDefInpProf);
+            hIn = OpenStockProfile(cDefInpProf);
 
-        hOut = OpenStockProfile(ContextID, cOutProf);
+        hOut = OpenStockProfile(cOutProf);
 
         if (cProofing != NULL) {
 
-            hProof = OpenStockProfile(ContextID, cProofing);
+            hProof = OpenStockProfile(cProofing);
             dwFlags |= cmsFLAGS_SOFTPROOFING;
         }
     }
@@ -890,14 +890,14 @@ int TransformImage(cmsContext ContextID, TIFF* in, TIFF* out, const char *cDefIn
     wInput = GetInputPixelType(in);
 
     // Assure both, input profile and input TIFF are on same colorspace
-    if (_cmsLCMScolorSpace(ContextID, cmsGetColorSpace(ContextID, hIn)) != (int) T_COLORSPACE(wInput))
+    if (_cmsLCMScolorSpace(cmsGetColorSpace(hIn)) != (int) T_COLORSPACE(wInput))
         FatalError("Input profile is not operating in proper color space");
 
 
     if (!lIsDeviceLink)
-        OutputColorSpace = _cmsLCMScolorSpace(ContextID, cmsGetColorSpace(ContextID, hOut));
+        OutputColorSpace = _cmsLCMScolorSpace(cmsGetColorSpace(hOut));
     else
-        OutputColorSpace = _cmsLCMScolorSpace(ContextID, cmsGetPCS(ContextID, hIn));
+        OutputColorSpace = _cmsLCMScolorSpace(cmsGetPCS(hIn));
 
     wOutput  = ComputeOutputFormatDescriptor(wInput, OutputColorSpace, BytesPerSample);
 
@@ -911,7 +911,7 @@ int TransformImage(cmsContext ContextID, TIFF* in, TIFF* out, const char *cDefIn
             cmsHPROFILE hProfiles[10];
             int nProfiles = 0;
 
-            hInkLimit = cmsCreateInkLimitingDeviceLink(ContextID, cmsGetColorSpace(ContextID, hOut), InkLimit);
+            hInkLimit = cmsCreateInkLimitingDeviceLink(cmsGetColorSpace(hOut), InkLimit);
 
             hProfiles[nProfiles++] = hIn;
             if (hProof) {
@@ -922,26 +922,26 @@ int TransformImage(cmsContext ContextID, TIFF* in, TIFF* out, const char *cDefIn
             hProfiles[nProfiles++] = hOut;
             hProfiles[nProfiles++] = hInkLimit;
 
-            xform = cmsCreateMultiprofileTransform(ContextID, hProfiles, nProfiles,
+            xform = cmsCreateMultiprofileTransform(hProfiles, nProfiles,
                                                    wInput, wOutput, Intent, dwFlags);
 
     }
     else {
 
-        xform = cmsCreateProofingTransform(ContextID, hIn, wInput,
+        xform = cmsCreateProofingTransform(hIn, wInput,
                                            hOut, wOutput,
                                            hProof, Intent,
                                            ProofingIntent,
                                            dwFlags);
     }
 
-    cmsCloseProfile(ContextID, hIn);
-    cmsCloseProfile(ContextID, hOut);
+    cmsCloseProfile(hIn);
+    cmsCloseProfile(hOut);
 
     if (hInkLimit)
-        cmsCloseProfile(ContextID, hInkLimit);
+        cmsCloseProfile(hInkLimit);
     if (hProof)
-        cmsCloseProfile(ContextID, hProof);
+        cmsCloseProfile(hProof);
 
     if (xform == NULL) return 0;
 
@@ -955,14 +955,14 @@ int TransformImage(cmsContext ContextID, TIFF* in, TIFF* out, const char *cDefIn
     // Handle tile by tile or strip by strip
     if (TIFFIsTiled(in)) {
 
-        TileBasedXform(ContextID, xform, in, out, nPlanes);
+        TileBasedXform(xform, in, out, nPlanes);
     }
     else {
-        StripBasedXform(ContextID, xform, in, out, nPlanes);
+        StripBasedXform(xform, in, out, nPlanes);
     }
 
 
-    cmsDeleteTransform(ContextID, xform);
+    cmsDeleteTransform(xform);
 
     TIFFWriteDirectory(out);
 
@@ -972,7 +972,7 @@ int TransformImage(cmsContext ContextID, TIFF* in, TIFF* out, const char *cDefIn
 
 // Print help
 static
-void Help(cmsContext ContextID, int level)
+void Help(int level)
 {
     UTILS_UNUSED_PARAMETER(level);
 
@@ -1042,7 +1042,7 @@ void Help(cmsContext ContextID, int level)
 // The toggles stuff
 
 static
-void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
+void HandleSwitches(int argc, char *argv[])
 {
     int s;
 
@@ -1054,7 +1054,7 @@ void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
         case '-':
             if (strcmp(xoptarg, "help") == 0)
             {
-                Help(ContextID, 0);
+                Help(0);
             }
             else
             {
@@ -1168,7 +1168,7 @@ void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
         case 'h':  {
 
             int a =  atoi(xoptarg);
-            Help(ContextID, a);
+            Help(a);
             }
             break;
 
@@ -1194,15 +1194,15 @@ int main(int argc, char* argv[])
     fprintf(stderr, "Copyright (c) 1998-2023 Marti Maria Saguer. See COPYING file for details.\n");
     fflush(stderr);
 
-    cmsPlugin(ContextID, &TiffLabPlugin);
+    cmsPlugin(&TiffLabPlugin);
 
-    InitUtils(ContextID, "tificc");
+    InitUtils("tificc");
 
-    HandleSwitches(ContextID, argc, argv);
+    HandleSwitches(argc, argv);
 
     if ((argc - xoptind) != 2) {
 
-        Help(ContextID, 0);
+        Help(0);
     }
 
 
@@ -1222,7 +1222,7 @@ int main(int argc, char* argv[])
 
     do {
 
-        TransformImage(ContextID, in, out, cInpProf);
+        TransformImage(in, out, cInpProf);
 
 
     } while (TIFFReadDirectory(in));

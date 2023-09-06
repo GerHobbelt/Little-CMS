@@ -56,20 +56,20 @@ typedef struct {
 } _cmsWorkSlice;
 
 // Count the number of threads needed for this job
-cmsUInt32Number _cmsThrCountSlices(cmsContext ContextID, struct _cmstransform_struct* CMMcargo, cmsInt32Number MaxWorkers,
+cmsUInt32Number _cmsThrCountSlices(struct _cmstransform_struct* CMMcargo, cmsInt32Number MaxWorkers,
 								   cmsUInt32Number PixelsPerLine, cmsUInt32Number LineCount, 
 								   cmsStride* Stride);
 
 // Split work following several expert rules
-cmsBool		    _cmsThrSplitWork(cmsContext ContextID, const _cmsWorkSlice* master, cmsInt32Number nslices, _cmsWorkSlice slices[]);
+cmsBool		    _cmsThrSplitWork(const _cmsWorkSlice* master, cmsInt32Number nslices, _cmsWorkSlice slices[]);
 
 // Thread primitives
-cmsHANDLE       _cmsThrCreateWorker(cmsContext ContextID, _cmsTransform2Fn worker, _cmsWorkSlice* param);
-void            _cmsThrJoinWorker(cmsContext ContextID, cmsHANDLE hWorker);
+cmsHANDLE       _cmsThrCreateWorker(_cmsTransform2Fn worker, _cmsWorkSlice* param);
+void            _cmsThrJoinWorker(cmsHANDLE hWorker);
 cmsInt32Number  _cmsThrIdealThreadCount(void);
 
 // The scheduler
-void  _cmsThrScheduler(cmsContext ContextID, struct _cmstransform_struct* CMMcargo,
+void  _cmsThrScheduler(struct _cmstransform_struct* CMMcargo,
 				       const void* InputBuffer,
 				       void* OutputBuffer,
 				       cmsUInt32Number PixelsPerLine,

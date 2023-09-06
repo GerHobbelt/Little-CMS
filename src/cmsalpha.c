@@ -535,7 +535,7 @@ cmsBool ComputeComponentIncrements(cmsUInt32Number Format,
 }
 
 // Handles extra channels copying alpha if requested by the flags
-void _cmsHandleExtraChannels(cmsContext ContextID, _cmsTRANSFORM* p, const void* in,
+void _cmsHandleExtraChannels(_cmsTRANSFORM* p, const void* in,
                                                void* out,
                                                cmsUInt32Number PixelsPerLine,
                                                cmsUInt32Number LineCount,
@@ -574,7 +574,7 @@ void _cmsHandleExtraChannels(cmsContext ContextID, _cmsTRANSFORM* p, const void*
         return;
 
     // Check for conversions 8, 16, half, float, dbl
-    copyValueFn = _cmsGetFormatterAlpha(ContextID, p->InputFormat, p->OutputFormat);
+    copyValueFn = _cmsGetFormatterAlpha(p->InputFormat, p->OutputFormat);
     if (copyValueFn == NULL)
         return;
 

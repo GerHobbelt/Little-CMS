@@ -71,7 +71,7 @@ void trace(const char* frm, ...)
 
 // The callback function used by cmsSetLogErrorHandler()
 static
-void FatalErrorQuit(cmsContext ContextID, cmsUInt32Number ErrorCode, const char *Text)
+void FatalErrorQuit(cmsUInt32Number ErrorCode, const char *Text)
 {
        UNUSED_PARAMETER(ContextID);
        UNUSED_PARAMETER(ErrorCode);
@@ -99,14 +99,14 @@ void Fail(const char* frm, ...)
 static
 cmsHPROFILE CreateCurves(cmsContext ContextID)
 {
-       cmsToneCurve* Gamma = cmsBuildGamma(ContextID, 1.1);
+       cmsToneCurve* Gamma = cmsBuildGamma(1.1);
        cmsToneCurve* Transfer[3];
        cmsHPROFILE h;
 
        Transfer[0] = Transfer[1] = Transfer[2] = Gamma;
-       h = cmsCreateLinearizationDeviceLink(ContextID, cmsSigRgbData, Transfer);
+       h = cmsCreateLinearizationDeviceLink(cmsSigRgbData, Transfer);
 
-       cmsFreeToneCurve(ContextID, Gamma);
+       cmsFreeToneCurve(Gamma);
 
        return h;
 }
@@ -379,7 +379,7 @@ void Check15bitMacros(void)
 // Results should be same except for 2 contone levels allowed for roundoff. Note 15 bits is more
 // precise than 8 bits and this is a source of discrepancies. Cache is disabled
 static
-void TryAllValues15(cmsContext ContextID, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
+void TryAllValues15(cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
 {
        Scanline_rgb8bits* buffer8in;
        Scanline_rgb15bits* buffer15in;
@@ -388,11 +388,11 @@ void TryAllValues15(cmsContext ContextID, cmsHPROFILE hlcmsProfileIn, cmsHPROFIL
        int r, g, b, j;
        cmsUInt32Number npixels = 256 * 256 * 256;  // All RGB cube in 8 bits
 
-       cmsHTRANSFORM xform15 = cmsCreateTransform(ContextID, hlcmsProfileIn, TYPE_RGB_15, hlcmsProfileOut, TYPE_RGB_15, Intent, cmsFLAGS_NOCACHE);
-       cmsHTRANSFORM xform8 = cmsCreateTransform(ContextID, hlcmsProfileIn, TYPE_RGB_8, hlcmsProfileOut, TYPE_RGB_8, Intent, cmsFLAGS_NOCACHE);       // Transforms already created
+       cmsHTRANSFORM xform15 = cmsCreateTransform(hlcmsProfileIn, TYPE_RGB_15, hlcmsProfileOut, TYPE_RGB_15, Intent, cmsFLAGS_NOCACHE);
+       cmsHTRANSFORM xform8 = cmsCreateTransform(hlcmsProfileIn, TYPE_RGB_8, hlcmsProfileOut, TYPE_RGB_8, Intent, cmsFLAGS_NOCACHE);       // Transforms already created
 
-       cmsCloseProfile(ContextID, hlcmsProfileIn);
-       cmsCloseProfile(ContextID, hlcmsProfileOut);
+       cmsCloseProfile(hlcmsProfileIn);
+       cmsCloseProfile(hlcmsProfileOut);
 
        if (xform15 == NULL || xform8 == NULL) {
 
@@ -422,8 +422,8 @@ void TryAllValues15(cmsContext ContextID, cmsHPROFILE hlcmsProfileIn, cmsHPROFIL
               j++;
        }
 
-       cmsDoTransform(ContextID, xform15, buffer15in, buffer15out, npixels);
-       cmsDoTransform(ContextID, xform8,  buffer8in, buffer8out,  npixels);
+       cmsDoTransform(xform15, buffer15in, buffer15out, npixels);
+       cmsDoTransform(xform8,  buffer8in, buffer8out,  npixels);
 
        j = 0;
        for (r = 0; r < 256; r++)
@@ -442,8 +442,8 @@ void TryAllValues15(cmsContext ContextID, cmsHPROFILE hlcmsProfileIn, cmsHPROFIL
 
        free(buffer8in); free(buffer15in);
        free(buffer8out); free(buffer15out);
-       cmsDeleteTransform(ContextID, xform15);
-       cmsDeleteTransform(ContextID, xform8);
+       cmsDeleteTransform(xform15);
+       cmsDeleteTransform(xform8);
 }
 
 // Convert some known values
@@ -453,15 +453,15 @@ void Check15bitsConversions(cmsContext ContextID)
        Check15bitMacros();
 
        trace("Checking accuracy of 15 bits on CLUT...");
-       TryAllValues15(ContextID, cmsOpenProfileFromFile(ContextID, PROFILES_DIR "test5.icc", "r"), cmsOpenProfileFromFile(ContextID, PROFILES_DIR "test3.icc", "r"), INTENT_PERCEPTUAL);
+       TryAllValues15(cmsOpenProfileFromFile(PROFILES_DIR "test5.icc", "r"), cmsOpenProfileFromFile(PROFILES_DIR "test3.icc", "r"), INTENT_PERCEPTUAL);
        trace("Ok\n");
 
        trace("Checking accuracy of 15 bits on same profile ...");
-       TryAllValues15(ContextID, cmsOpenProfileFromFile(ContextID, PROFILES_DIR "test0.icc", "r"), cmsOpenProfileFromFile(ContextID, PROFILES_DIR "test0.icc", "r"), INTENT_PERCEPTUAL);
+       TryAllValues15(cmsOpenProfileFromFile(PROFILES_DIR "test0.icc", "r"), cmsOpenProfileFromFile(PROFILES_DIR "test0.icc", "r"), INTENT_PERCEPTUAL);
        trace("Ok\n");
 
        trace("Checking accuracy of 15 bits on Matrix...");
-       TryAllValues15(ContextID, cmsOpenProfileFromFile(ContextID, PROFILES_DIR "test5.icc", "r"), cmsOpenProfileFromFile(ContextID, PROFILES_DIR "test0.icc", "r"), INTENT_PERCEPTUAL);
+       TryAllValues15(cmsOpenProfileFromFile(PROFILES_DIR "test5.icc", "r"), cmsOpenProfileFromFile(PROFILES_DIR "test0.icc", "r"), INTENT_PERCEPTUAL);
        trace("Ok\n");
 
        trace("All 15 bits tests passed OK\n\n");
@@ -1024,17 +1024,17 @@ void CheckChangeFormat(cmsContext ContextID)
     trace("Checking change format feature...");
 
     hsRGB = cmsCreate_sRGBProfile(ContextID);
-    hLab = cmsCreateLab4Profile(ContextID, NULL);
+    hLab = cmsCreateLab4Profile(NULL);
 
-    xform = cmsCreateTransform(ContextID, hsRGB, TYPE_RGB_16, hLab, TYPE_Lab_16, INTENT_PERCEPTUAL, 0);
+    xform = cmsCreateTransform(hsRGB, TYPE_RGB_16, hLab, TYPE_Lab_16, INTENT_PERCEPTUAL, 0);
 
-    cmsDoTransform(ContextID, xform, rgb16, lab16_1, 1);
+    cmsDoTransform(xform, rgb16, lab16_1, 1);
 
-    xform2 = cmsCloneTransformChangingFormats(ContextID, xform, TYPE_RGB_8, TYPE_Lab_16);
+    xform2 = cmsCloneTransformChangingFormats(xform, TYPE_RGB_8, TYPE_Lab_16);
 
-    cmsDoTransform(ContextID, xform2, rgb8, lab16_2, 1);
-    cmsDeleteTransform(ContextID, xform);
-    cmsDeleteTransform(ContextID, xform2);
+    cmsDoTransform(xform2, rgb8, lab16_2, 1);
+    cmsDeleteTransform(xform);
+    cmsDeleteTransform(xform2);
 
     if (memcmp(lab16_1, lab16_2, sizeof(lab16_1)) != 0)
         Fail("Change format failed!");
@@ -1063,14 +1063,14 @@ void CheckLab2Roundtrip(cmsContext ContextID)
     trace("Checking lab2 roundtrip...");
 
     hsRGB = cmsCreate_sRGBProfile(ContextID);
-    hLab = cmsCreateLab2Profile(ContextID, NULL);
+    hLab = cmsCreateLab2Profile(NULL);
 
 
-    xform = cmsCreateTransform(ContextID, hsRGB, TYPE_RGB_8, hLab, TYPE_Lab_8, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_BLACKPOINTCOMPENSATION);
-    xform2 = cmsCreateTransform(ContextID, hLab, TYPE_Lab_8, hsRGB, TYPE_RGB_8, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_NOOPTIMIZE | cmsFLAGS_BLACKPOINTCOMPENSATION);
+    xform = cmsCreateTransform(hsRGB, TYPE_RGB_8, hLab, TYPE_Lab_8, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_BLACKPOINTCOMPENSATION);
+    xform2 = cmsCreateTransform(hLab, TYPE_Lab_8, hsRGB, TYPE_RGB_8, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_NOOPTIMIZE | cmsFLAGS_BLACKPOINTCOMPENSATION);
 
-    cmsCloseProfile(ContextID, hsRGB);
-    cmsCloseProfile(ContextID, hLab);
+    cmsCloseProfile(hsRGB);
+    cmsCloseProfile(hLab);
 
 
     Mb = 256 * 256 * 256 * sizeof(Scanline_rgb8bits);
@@ -1091,11 +1091,11 @@ void CheckLab2Roundtrip(cmsContext ContextID)
             }
 
 
-    cmsDoTransform(ContextID, xform, In, lab, 256 * 256 * 256);
-    cmsDoTransform(ContextID, xform2, lab, Out, 256 * 256 * 256);
+    cmsDoTransform(xform, In, lab, 256 * 256 * 256);
+    cmsDoTransform(xform2, lab, Out, 256 * 256 * 256);
 
-    cmsDeleteTransform(ContextID, xform);
-    cmsDeleteTransform(ContextID, xform2);
+    cmsDeleteTransform(xform);
+    cmsDeleteTransform(xform2);
 
 
     j = 0;
@@ -1731,7 +1731,7 @@ cmsFloat64Number SpeedTest16bitsRGB(cmsContext ct, cmsHPROFILE hlcmsProfileIn, c
 }
 
 static
-cmsFloat64Number SpeedTest16bitsCMYK(cmsContext ContextID, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut)
+cmsFloat64Number SpeedTest16bitsCMYK(cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut)
 {
 
     cmsInt32Number r, g, b, j;
@@ -1744,9 +1744,9 @@ cmsFloat64Number SpeedTest16bitsCMYK(cmsContext ContextID, cmsHPROFILE hlcmsProf
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Fail("Unable to open profiles");
 
-    hlcmsxform = cmsCreateTransform(ContextID, hlcmsProfileIn, TYPE_CMYK_16, hlcmsProfileOut, TYPE_CMYK_16, INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE);
-    cmsCloseProfile(ContextID, hlcmsProfileIn);
-    cmsCloseProfile(ContextID, hlcmsProfileOut);
+    hlcmsxform = cmsCreateTransform(hlcmsProfileIn, TYPE_CMYK_16, hlcmsProfileOut, TYPE_CMYK_16, INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE);
+    cmsCloseProfile(hlcmsProfileIn);
+    cmsCloseProfile(hlcmsProfileOut);
 
     Mb = 256 * 256 * 256 * sizeof(Scanline_cmyk16bits);
     In = (Scanline_cmyk16bits*)malloc(Mb);
@@ -1766,12 +1766,12 @@ cmsFloat64Number SpeedTest16bitsCMYK(cmsContext ContextID, cmsHPROFILE hlcmsProf
 
     atime = clock();
 
-    cmsDoTransform(ContextID, hlcmsxform, In, In, 256 * 256 * 256);
+    cmsDoTransform(hlcmsxform, In, In, 256 * 256 * 256);
 
     diff = clock() - atime;
     free(In);
 
-    cmsDeleteTransform(ContextID, hlcmsxform);
+    cmsDeleteTransform(hlcmsxform);
     return MPixSec(diff);
 }
 

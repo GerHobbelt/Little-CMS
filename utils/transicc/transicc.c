@@ -141,7 +141,7 @@ void Help(void)
 // The toggles stuff
 
 static
-void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
+void HandleSwitches(int argc, char *argv[])
 {
     int s;
 
@@ -185,7 +185,7 @@ void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
                 ObserverAdaptationState > 1.0)
                 FatalError("Adaptation states should be between 0 and 1");
 
-            cmsSetAdaptationState(ContextID, ObserverAdaptationState);
+            cmsSetAdaptationState(ObserverAdaptationState);
                   }
                   break;
 
@@ -307,7 +307,7 @@ void SetRange(cmsFloat64Number range, cmsBool IsInput)
 // I am using the first Colorant channel to store the range, but it works since
 // this space is not used anyway.
 static
-cmsNAMEDCOLORLIST* ComponentNames(cmsContext ContextID, cmsColorSpaceSignature space, cmsBool IsInput)
+cmsNAMEDCOLORLIST* ComponentNames(cmsColorSpaceSignature space, cmsBool IsInput)
 {
     cmsNAMEDCOLORLIST* out;
     int i, n;
@@ -320,91 +320,91 @@ cmsNAMEDCOLORLIST* ComponentNames(cmsContext ContextID, cmsColorSpaceSignature s
 
     case cmsSigXYZData:
         SetRange(100, IsInput);
-        cmsAppendNamedColor(ContextID, out, "X", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "Y", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "Z", NULL, NULL);
+        cmsAppendNamedColor(out, "X", NULL, NULL);
+        cmsAppendNamedColor(out, "Y", NULL, NULL);
+        cmsAppendNamedColor(out, "Z", NULL, NULL);
         break;
 
     case cmsSigLabData:
         SetRange(1, IsInput);
-        cmsAppendNamedColor(ContextID, out, "L*", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "a*", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "b*", NULL, NULL);
+        cmsAppendNamedColor(out, "L*", NULL, NULL);
+        cmsAppendNamedColor(out, "a*", NULL, NULL);
+        cmsAppendNamedColor(out, "b*", NULL, NULL);
         break;
 
     case cmsSigLuvData:
         SetRange(1, IsInput);
-        cmsAppendNamedColor(ContextID, out, "L", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "u", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "v", NULL, NULL);
+        cmsAppendNamedColor(out, "L", NULL, NULL);
+        cmsAppendNamedColor(out, "u", NULL, NULL);
+        cmsAppendNamedColor(out, "v", NULL, NULL);
         break;
 
     case cmsSigYCbCrData:
         SetRange(255, IsInput);
-        cmsAppendNamedColor(ContextID, out, "Y", NULL, NULL );
-        cmsAppendNamedColor(ContextID, out, "Cb", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "Cr", NULL, NULL);
+        cmsAppendNamedColor(out, "Y", NULL, NULL );
+        cmsAppendNamedColor(out, "Cb", NULL, NULL);
+        cmsAppendNamedColor(out, "Cr", NULL, NULL);
         break;
 
 
     case cmsSigYxyData:
         SetRange(1, IsInput);
-        cmsAppendNamedColor(ContextID, out, "Y", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "x", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "y", NULL, NULL);
+        cmsAppendNamedColor(out, "Y", NULL, NULL);
+        cmsAppendNamedColor(out, "x", NULL, NULL);
+        cmsAppendNamedColor(out, "y", NULL, NULL);
         break;
 
     case cmsSigRgbData:
         SetRange(255, IsInput);
-        cmsAppendNamedColor(ContextID, out, "R", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "G", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "B", NULL, NULL);
+        cmsAppendNamedColor(out, "R", NULL, NULL);
+        cmsAppendNamedColor(out, "G", NULL, NULL);
+        cmsAppendNamedColor(out, "B", NULL, NULL);
         break;
 
     case cmsSigGrayData:
         SetRange(255, IsInput);
-        cmsAppendNamedColor(ContextID, out, "G", NULL, NULL);
+        cmsAppendNamedColor(out, "G", NULL, NULL);
         break;
 
     case cmsSigHsvData:
         SetRange(255, IsInput);
-        cmsAppendNamedColor(ContextID, out, "H", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "s", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "v", NULL, NULL);
+        cmsAppendNamedColor(out, "H", NULL, NULL);
+        cmsAppendNamedColor(out, "s", NULL, NULL);
+        cmsAppendNamedColor(out, "v", NULL, NULL);
         break;
 
     case cmsSigHlsData:
         SetRange(255, IsInput);
-        cmsAppendNamedColor(ContextID, out, "H", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "l", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "s", NULL, NULL);
+        cmsAppendNamedColor(out, "H", NULL, NULL);
+        cmsAppendNamedColor(out, "l", NULL, NULL);
+        cmsAppendNamedColor(out, "s", NULL, NULL);
         break;
 
     case cmsSigCmykData:
         SetRange(1, IsInput);
-        cmsAppendNamedColor(ContextID, out, "C", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "M", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "Y", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "K", NULL, NULL);
+        cmsAppendNamedColor(out, "C", NULL, NULL);
+        cmsAppendNamedColor(out, "M", NULL, NULL);
+        cmsAppendNamedColor(out, "Y", NULL, NULL);
+        cmsAppendNamedColor(out, "K", NULL, NULL);
         break;
 
     case cmsSigCmyData:
         SetRange(1, IsInput);
-        cmsAppendNamedColor(ContextID, out, "C", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "M", NULL, NULL);
-        cmsAppendNamedColor(ContextID, out, "Y", NULL, NULL);
+        cmsAppendNamedColor(out, "C", NULL, NULL);
+        cmsAppendNamedColor(out, "M", NULL, NULL);
+        cmsAppendNamedColor(out, "Y", NULL, NULL);
         break;
 
     default:
 
         SetRange(1, IsInput);
 
-        n = cmsChannelsOfColorSpace(ContextID, space);
+        n = cmsChannelsOfColorSpace(space);
 
         for (i=0; i < n; i++) {
 
             sprintf(Buffer, "Channel #%d", i + 1);
-            cmsAppendNamedColor(ContextID, out, Buffer, NULL, NULL);
+            cmsAppendNamedColor(out, Buffer, NULL, NULL);
         }
     }
 
@@ -432,30 +432,30 @@ cmsBool OpenTransforms(cmsContext ContextID)
         hOutput = NULL;
         hProof  = NULL;
 
-        if (cmsGetDeviceClass(ContextID, hInput) == cmsSigNamedColorClass) {
-            OutputColorSpace  = cmsGetColorSpace(ContextID, hInput);
-            InputColorSpace = cmsGetPCS(ContextID, hInput);
+        if (cmsGetDeviceClass(hInput) == cmsSigNamedColorClass) {
+            OutputColorSpace  = cmsGetColorSpace(hInput);
+            InputColorSpace = cmsGetPCS(hInput);
         }
         else {
-            InputColorSpace  = cmsGetColorSpace(ContextID, hInput);
-            OutputColorSpace = cmsGetPCS(ContextID, hInput);
+            InputColorSpace  = cmsGetColorSpace(hInput);
+            OutputColorSpace = cmsGetPCS(hInput);
         }
 
         // Read colorant tables if present
-        if (cmsIsTag(ContextID, hInput, cmsSigColorantTableTag)) {
-            List = cmsReadTag(ContextID, hInput, cmsSigColorantTableTag);
-            InputColorant = cmsDupNamedColorList(ContextID, List);
+        if (cmsIsTag(hInput, cmsSigColorantTableTag)) {
+            List = cmsReadTag(hInput, cmsSigColorantTableTag);
+            InputColorant = cmsDupNamedColorList(List);
             InputRange = 1;
         }
-        else InputColorant = ComponentNames(ContextID, InputColorSpace, TRUE);
+        else InputColorant = ComponentNames(InputColorSpace, TRUE);
 
-        if (cmsIsTag(ContextID, hInput, cmsSigColorantTableOutTag)){
+        if (cmsIsTag(hInput, cmsSigColorantTableOutTag)){
 
-            List = cmsReadTag(ContextID, hInput, cmsSigColorantTableOutTag);
-            OutputColorant = cmsDupNamedColorList(ContextID, List);
+            List = cmsReadTag(hInput, cmsSigColorantTableOutTag);
+            OutputColorant = cmsDupNamedColorList(List);
             OutputRange = 1;
         }
-        else OutputColorant = ComponentNames(ContextID, OutputColorSpace, FALSE);
+        else OutputColorant = ComponentNames(OutputColorSpace, FALSE);
 
     }
     else {
@@ -468,36 +468,36 @@ cmsBool OpenTransforms(cmsContext ContextID)
         hProof  = NULL;
 
 
-        if (cmsGetDeviceClass(ContextID, hInput) == cmsSigLinkClass ||
-            cmsGetDeviceClass(ContextID, hOutput) == cmsSigLinkClass)
+        if (cmsGetDeviceClass(hInput) == cmsSigLinkClass ||
+            cmsGetDeviceClass(hOutput) == cmsSigLinkClass)
             FatalError("Use -l flag for devicelink profiles!\n");
 
 
-        InputColorSpace   = cmsGetColorSpace(ContextID, hInput);
-        OutputColorSpace  = cmsGetColorSpace(ContextID, hOutput);
+        InputColorSpace   = cmsGetColorSpace(hInput);
+        OutputColorSpace  = cmsGetColorSpace(hOutput);
 
         // Read colorant tables if present
-        if (cmsIsTag(ContextID, hInput, cmsSigColorantTableTag)) {
-            List = cmsReadTag(ContextID, hInput, cmsSigColorantTableTag);
-            InputColorant = cmsDupNamedColorList(ContextID, List);
-            if (cmsNamedColorCount(ContextID, InputColorant) <= 3)
+        if (cmsIsTag(hInput, cmsSigColorantTableTag)) {
+            List = cmsReadTag(hInput, cmsSigColorantTableTag);
+            InputColorant = cmsDupNamedColorList(List);
+            if (cmsNamedColorCount(InputColorant) <= 3)
                 SetRange(255, TRUE);
             else
                 SetRange(1, TRUE);  // Inks are already divided by 100 in the formatter
 
         }
-        else InputColorant = ComponentNames(ContextID, InputColorSpace, TRUE);
+        else InputColorant = ComponentNames(InputColorSpace, TRUE);
 
-        if (cmsIsTag(ContextID, hOutput, cmsSigColorantTableTag)){
+        if (cmsIsTag(hOutput, cmsSigColorantTableTag)){
 
-            List = cmsReadTag(ContextID, hOutput, cmsSigColorantTableTag);
-            OutputColorant = cmsDupNamedColorList(ContextID, List);
-            if (cmsNamedColorCount(ContextID, OutputColorant) <= 3)
+            List = cmsReadTag(hOutput, cmsSigColorantTableTag);
+            OutputColorant = cmsDupNamedColorList(List);
+            if (cmsNamedColorCount(OutputColorant) <= 3)
                 SetRange(255, FALSE);
             else
                 SetRange(1, FALSE);  // Inks are already divided by 100 in the formatter
         }
-        else OutputColorant = ComponentNames(ContextID, OutputColorSpace, FALSE);
+        else OutputColorant = ComponentNames(OutputColorSpace, FALSE);
 
 
         if (cProofing != NULL) {
@@ -512,36 +512,36 @@ cmsBool OpenTransforms(cmsContext ContextID)
     if (Verbose > 2) {
 
         printf("Profile:\n");
-        PrintProfileInformation(ContextID, hInput);
+        PrintProfileInformation(hInput);
 
         if (hOutput) {
 
             printf("Output profile:\n");
-            PrintProfileInformation(ContextID, hOutput);
+            PrintProfileInformation(hOutput);
         }
 
         if (hProof != NULL) {
             printf("Proofing profile:\n");
-            PrintProfileInformation(ContextID, hProof);
+            PrintProfileInformation(hProof);
         }
     }
 
 
     // Input is always in floating point
-    dwIn  = cmsFormatterForColorspaceOfProfile(ContextID, hInput, 0, TRUE);
+    dwIn  = cmsFormatterForColorspaceOfProfile(hInput, 0, TRUE);
 
     if (lIsDeviceLink) {
 
-        dwOut = cmsFormatterForPCSOfProfile(ContextID, hInput, lIsFloat ? 0 : 2, lIsFloat);
+        dwOut = cmsFormatterForPCSOfProfile(hInput, lIsFloat ? 0 : 2, lIsFloat);
     }
     else {
 
         // 16 bits or floating point (only on output)
-        dwOut = cmsFormatterForColorspaceOfProfile(ContextID, hOutput, lIsFloat ? 0 : 2, lIsFloat);
+        dwOut = cmsFormatterForColorspaceOfProfile(hOutput, lIsFloat ? 0 : 2, lIsFloat);
     }
 
     // For named color, there is a specialized formatter
-    if (cmsGetDeviceClass(ContextID, hInput) == cmsSigNamedColorClass) {
+    if (cmsGetDeviceClass(hInput) == cmsSigNamedColorClass) {
 
         dwIn = TYPE_NAMED_COLOR_INDEX;
         InputNamedColor = TRUE;
@@ -574,15 +574,15 @@ cmsBool OpenTransforms(cmsContext ContextID)
         for (i=0; i < cmsMAXCHANNELS; i++)
             Alarm[i] = 0xFFFF;
 
-        cmsSetAlarmCodes(ContextID, Alarm);
+        cmsSetAlarmCodes(Alarm);
         dwFlags |= cmsFLAGS_GAMUTCHECK;
     }
 
 
     // The main transform
-    hTrans = cmsCreateProofingTransform(ContextID, hInput,  dwIn, hOutput, dwOut, hProof, Intent, ProofingIntent, dwFlags);
+    hTrans = cmsCreateProofingTransform(hInput,  dwIn, hOutput, dwOut, hProof, Intent, ProofingIntent, dwFlags);
 
-    if (hProof) cmsCloseProfile(ContextID, hProof);
+    if (hProof) cmsCloseProfile(hProof);
 
     if (hTrans == NULL) return FALSE;
 
@@ -593,20 +593,20 @@ cmsBool OpenTransforms(cmsContext ContextID)
     if (hOutput && Verbose > 1) {
 
         cmsHPROFILE hXYZ = cmsCreateXYZProfile(ContextID);
-        cmsHPROFILE hLab = cmsCreateLab4Profile(ContextID, NULL);
+        cmsHPROFILE hLab = cmsCreateLab4Profile(NULL);
 
-        hTransXYZ = cmsCreateTransform(ContextID, hInput, dwIn, hXYZ,  lIsFloat ? TYPE_XYZ_DBL : TYPE_XYZ_16, Intent, cmsFLAGS_NOCACHE);
+        hTransXYZ = cmsCreateTransform(hInput, dwIn, hXYZ,  lIsFloat ? TYPE_XYZ_DBL : TYPE_XYZ_16, Intent, cmsFLAGS_NOCACHE);
         if (hTransXYZ == NULL) return FALSE;
 
-        hTransLab = cmsCreateTransform(ContextID, hInput, dwIn, hLab,  lIsFloat? TYPE_Lab_DBL : TYPE_Lab_16, Intent, cmsFLAGS_NOCACHE);
+        hTransLab = cmsCreateTransform(hInput, dwIn, hLab,  lIsFloat? TYPE_Lab_DBL : TYPE_Lab_16, Intent, cmsFLAGS_NOCACHE);
         if (hTransLab == NULL) return FALSE;
 
-        cmsCloseProfile(ContextID, hXYZ);
-        cmsCloseProfile(ContextID, hLab);
+        cmsCloseProfile(hXYZ);
+        cmsCloseProfile(hLab);
     }
 
-    if (hInput) cmsCloseProfile(ContextID, hInput);
-    if (hOutput) cmsCloseProfile(ContextID, hOutput);
+    if (hInput) cmsCloseProfile(hInput);
+    if (hOutput) cmsCloseProfile(hOutput);
 
     return TRUE;
 }
@@ -616,12 +616,12 @@ cmsBool OpenTransforms(cmsContext ContextID)
 static
 void CloseTransforms(cmsContext ContextID)
 {
-    if (InputColorant) cmsFreeNamedColorList(ContextID, InputColorant);
-    if (OutputColorant) cmsFreeNamedColorList(ContextID, OutputColorant);
+    if (InputColorant) cmsFreeNamedColorList(InputColorant);
+    if (OutputColorant) cmsFreeNamedColorList(OutputColorant);
 
-    if (hTrans) cmsDeleteTransform(ContextID, hTrans);
-    if (hTransLab) cmsDeleteTransform(ContextID, hTransLab);
-    if (hTransXYZ) cmsDeleteTransform(ContextID, hTransXYZ);
+    if (hTrans) cmsDeleteTransform(hTrans);
+    if (hTransLab) cmsDeleteTransform(hTransLab);
+    if (hTransXYZ) cmsDeleteTransform(hTransXYZ);
 
 }
 
@@ -629,7 +629,7 @@ void CloseTransforms(cmsContext ContextID)
 
 // Get input from user
 static
-void GetLine(cmsContext ContextID, char* Buffer, const char* frm, ...)
+void GetLine(char* Buffer, const char* frm, ...)
 {
     int res;
     va_list args;
@@ -659,18 +659,18 @@ void GetLine(cmsContext ContextID, char* Buffer, const char* frm, ...)
 
 // Print a value which is given in double floating point
 static
-void PrintFloatResults(cmsContext ContextID, cmsFloat64Number Value[])
+void PrintFloatResults(cmsFloat64Number Value[])
 {
     cmsUInt32Number i, n;
     char ChannelName[cmsMAX_PATH];
     cmsFloat64Number v;
 
-    n = cmsChannelsOfColorSpace(ContextID, OutputColorSpace);
+    n = cmsChannelsOfColorSpace(OutputColorSpace);
     for (i=0; i < n; i++) {
 
         if (OutputColorant != NULL) {
 
-            cmsNamedColorInfo(ContextID, OutputColorant, i, ChannelName, NULL, NULL, NULL, NULL);
+            cmsNamedColorInfo(OutputColorant, i, ChannelName, NULL, NULL, NULL, NULL);
         }
         else {
             OutputRange = 1;
@@ -711,15 +711,15 @@ cmsUInt16Number GetIndex(cmsContext ContextID)
     NamedColorList = cmsGetNamedColorList(hTrans);
     if (NamedColorList == NULL) return 0;
 
-    max = cmsNamedColorCount(ContextID, NamedColorList)-1;
+    max = cmsNamedColorCount(NamedColorList)-1;
 
-    GetLine(ContextID, Buffer, "Color index (0..%d)? ", max);
+    GetLine(Buffer, "Color index (0..%d)? ", max);
     index = atoi(Buffer);
 
     if (index > max)
         FatalError("Named color %d out of range!", index);
 
-    cmsNamedColorInfo(ContextID, NamedColorList, index, Name, Prefix, Suffix, NULL, NULL);
+    cmsNamedColorInfo(NamedColorList, index, Name, Prefix, Suffix, NULL, NULL);
 
     printf("\n%s %s %s\n", Prefix, Name, Suffix);
 
@@ -728,7 +728,7 @@ cmsUInt16Number GetIndex(cmsContext ContextID)
 
 // Read values from a text file or terminal
 static
-void TakeFloatValues(cmsContext ContextID, cmsFloat64Number Float[])
+void TakeFloatValues(cmsFloat64Number Float[])
 {
     cmsUInt32Number i, n;
     char ChannelName[cmsMAX_PATH];
@@ -745,18 +745,18 @@ void TakeFloatValues(cmsContext ContextID, cmsFloat64Number Float[])
         return;
     }
 
-    n = cmsChannelsOfColorSpace(ContextID, InputColorSpace);
+    n = cmsChannelsOfColorSpace(InputColorSpace);
     for (i=0; i < n; i++) {
 
         if (InputColorant) {
-            cmsNamedColorInfo(ContextID, InputColorant, i, ChannelName, NULL, NULL, NULL, NULL);
+            cmsNamedColorInfo(InputColorant, i, ChannelName, NULL, NULL, NULL, NULL);
         }
         else {
             InputRange = 1;
             sprintf(ChannelName, "Channel #%u", i+1);
         }
 
-        GetLine(ContextID, Buffer, "%s? ", ChannelName);
+        GetLine(Buffer, "%s? ", ChannelName);
 
         Float[i] = (cmsFloat64Number) atof(Buffer) / InputRange;
     }
@@ -766,15 +766,15 @@ void TakeFloatValues(cmsContext ContextID, cmsFloat64Number Float[])
 }
 
 static
-void PrintPCSFloat(cmsContext ContextID, cmsFloat64Number Input[])
+void PrintPCSFloat(cmsFloat64Number Input[])
 {
     if (Verbose > 1 && hTransXYZ && hTransLab) {
 
         cmsCIEXYZ XYZ = { 0, 0, 0 };
         cmsCIELab Lab = { 0, 0, 0 };
 
-        if (hTransXYZ) cmsDoTransform(ContextID, hTransXYZ, Input, &XYZ, 1);
-        if (hTransLab) cmsDoTransform(ContextID, hTransLab, Input, &Lab, 1);
+        if (hTransXYZ) cmsDoTransform(hTransXYZ, Input, &XYZ, 1);
+        if (hTransLab) cmsDoTransform(hTransLab, Input, &Lab, 1);
 
         printf("[PCS] Lab=(%.4f,%.4f,%.4f) XYZ=(%.4f,%.4f,%.4f)\n", Lab.L, Lab.a, Lab.b,
             XYZ.X * 100.0, XYZ.Y * 100.0, XYZ.Z * 100.0);
@@ -788,18 +788,18 @@ void PrintPCSFloat(cmsContext ContextID, cmsFloat64Number Input[])
 // -----------------------------------------------------------------------------------------------
 
 static
-void PrintEncodedResults(cmsContext ContextID, cmsUInt16Number Encoded[])
+void PrintEncodedResults(cmsUInt16Number Encoded[])
 {
     cmsUInt32Number i, n;
     char ChannelName[cmsMAX_PATH];
     cmsUInt32Number v;
 
-    n = cmsChannelsOfColorSpace(ContextID, OutputColorSpace);
+    n = cmsChannelsOfColorSpace(OutputColorSpace);
     for (i=0; i < n; i++) {
 
         if (OutputColorant != NULL) {
 
-            cmsNamedColorInfo(ContextID, OutputColorant, i, ChannelName, NULL, NULL, NULL, NULL);
+            cmsNamedColorInfo(OutputColorant, i, ChannelName, NULL, NULL, NULL, NULL);
         }
         else {
             sprintf(ChannelName, "Channel #%u", i + 1);
@@ -833,14 +833,14 @@ void PrintEncodedResults(cmsContext ContextID, cmsUInt16Number Encoded[])
 // Print XYZ/Lab values on verbose mode
 
 static
-void PrintPCSEncoded(cmsContext ContextID, cmsFloat64Number Input[])
+void PrintPCSEncoded(cmsFloat64Number Input[])
 {
     if (Verbose > 1 && hTransXYZ && hTransLab) {
 
         cmsUInt16Number XYZ[3], Lab[3];
 
-        if (hTransXYZ) cmsDoTransform(ContextID, hTransXYZ, Input, XYZ, 1);
-        if (hTransLab) cmsDoTransform(ContextID, hTransLab, Input, Lab, 1);
+        if (hTransXYZ) cmsDoTransform(hTransXYZ, Input, XYZ, 1);
+        if (hTransLab) cmsDoTransform(hTransLab, Input, Lab, 1);
 
         printf("[PCS] Lab=(0x%04X,0x%04X,0x%04X) XYZ=(0x%04X,0x%04X,0x%04X)\n", Lab[0], Lab[1], Lab[2],
             XYZ[0], XYZ[1], XYZ[2]);
@@ -856,9 +856,9 @@ void PrintPCSEncoded(cmsContext ContextID, cmsFloat64Number Input[])
 // Take a value from IT8 and scale it accordly to fill a cmsUInt16Number (0..FFFF)
 
 static
-cmsFloat64Number GetIT8Val(cmsContext ContextID, const char* Name, cmsFloat64Number Max)
+cmsFloat64Number GetIT8Val(const char* Name, cmsFloat64Number Max)
 {
-    const char* Val = cmsIT8GetData(ContextID, hIT8in, CGATSPatch, Name);
+    const char* Val = cmsIT8GetData(hIT8in, CGATSPatch, Name);
 
     if (Val == NULL)
         FatalError("Field '%s' not found", Name);
@@ -871,11 +871,11 @@ cmsFloat64Number GetIT8Val(cmsContext ContextID, const char* Name, cmsFloat64Num
 // Read input values from CGATS file.
 
 static
-void TakeCGATSValues(cmsContext ContextID, int nPatch, cmsFloat64Number Float[])
+void TakeCGATSValues(int nPatch, cmsFloat64Number Float[])
 {
 
     // At first take the name if SAMPLE_ID is present
-    if (cmsIT8GetPatchName(ContextID, hIT8in, nPatch, CGATSPatch) == NULL) {
+    if (cmsIT8GetPatchName(hIT8in, nPatch, CGATSPatch) == NULL) {
         FatalError("Sorry, I need 'SAMPLE_ID' on input CGATS to operate.");
     }
 
@@ -892,7 +892,7 @@ void TakeCGATSValues(cmsContext ContextID, int nPatch, cmsFloat64Number Float[])
         if (NamedColorList == NULL)
             FatalError("Malformed named color profile");
 
-        index = cmsNamedColorIndex(ContextID, NamedColorList, CGATSPatch);
+        index = cmsNamedColorIndex(NamedColorList, CGATSPatch);
         if (index < 0)
             FatalError("Named color '%s' not found in the profile", CGATSPatch);
 
@@ -907,39 +907,39 @@ void TakeCGATSValues(cmsContext ContextID, int nPatch, cmsFloat64Number Float[])
         // Encoding should follow CGATS specification.
 
     case cmsSigXYZData:
-        Float[0] = cmsIT8GetDataDbl(ContextID, hIT8in, CGATSPatch, "XYZ_X") / 100.0;
-        Float[1] = cmsIT8GetDataDbl(ContextID, hIT8in, CGATSPatch, "XYZ_Y") / 100.0;
-        Float[2] = cmsIT8GetDataDbl(ContextID, hIT8in, CGATSPatch, "XYZ_Z") / 100.0;
+        Float[0] = cmsIT8GetDataDbl(hIT8in, CGATSPatch, "XYZ_X") / 100.0;
+        Float[1] = cmsIT8GetDataDbl(hIT8in, CGATSPatch, "XYZ_Y") / 100.0;
+        Float[2] = cmsIT8GetDataDbl(hIT8in, CGATSPatch, "XYZ_Z") / 100.0;
         break;
 
     case cmsSigLabData:
-        Float[0] = cmsIT8GetDataDbl(ContextID, hIT8in, CGATSPatch, "LAB_L");
-        Float[1] = cmsIT8GetDataDbl(ContextID, hIT8in, CGATSPatch, "LAB_A");
-        Float[2] = cmsIT8GetDataDbl(ContextID, hIT8in, CGATSPatch, "LAB_B");
+        Float[0] = cmsIT8GetDataDbl(hIT8in, CGATSPatch, "LAB_L");
+        Float[1] = cmsIT8GetDataDbl(hIT8in, CGATSPatch, "LAB_A");
+        Float[2] = cmsIT8GetDataDbl(hIT8in, CGATSPatch, "LAB_B");
         break;
 
 
     case cmsSigRgbData:
-        Float[0] = GetIT8Val(ContextID, "RGB_R", 255.0);
-        Float[1] = GetIT8Val(ContextID, "RGB_G", 255.0);
-        Float[2] = GetIT8Val(ContextID, "RGB_B", 255.0);
+        Float[0] = GetIT8Val("RGB_R", 255.0);
+        Float[1] = GetIT8Val("RGB_G", 255.0);
+        Float[2] = GetIT8Val("RGB_B", 255.0);
         break;
 
     case cmsSigGrayData:
-        Float[0] = GetIT8Val(ContextID, "GRAY", 255.0);
+        Float[0] = GetIT8Val("GRAY", 255.0);
         break;
 
     case cmsSigCmykData:
-        Float[0] = GetIT8Val(ContextID, "CMYK_C", 1.0);
-        Float[1] = GetIT8Val(ContextID, "CMYK_M", 1.0);
-        Float[2] = GetIT8Val(ContextID, "CMYK_Y", 1.0);
-        Float[3] = GetIT8Val(ContextID, "CMYK_K", 1.0);
+        Float[0] = GetIT8Val("CMYK_C", 1.0);
+        Float[1] = GetIT8Val("CMYK_M", 1.0);
+        Float[2] = GetIT8Val("CMYK_Y", 1.0);
+        Float[3] = GetIT8Val("CMYK_K", 1.0);
         break;
 
     case cmsSigCmyData:
-        Float[0] = GetIT8Val(ContextID, "CMY_C", 1.0);
-        Float[1] = GetIT8Val(ContextID, "CMY_M", 1.0);
-        Float[2] = GetIT8Val(ContextID, "CMY_Y", 1.0);
+        Float[0] = GetIT8Val("CMY_C", 1.0);
+        Float[1] = GetIT8Val("CMY_M", 1.0);
+        Float[2] = GetIT8Val("CMY_Y", 1.0);
         break;
 
     case cmsSig1colorData:
@@ -960,13 +960,13 @@ void TakeCGATSValues(cmsContext ContextID, int nPatch, cmsFloat64Number Float[])
         {
             cmsUInt32Number i, n;
 
-            n = cmsChannelsOfColorSpace(ContextID, InputColorSpace);
+            n = cmsChannelsOfColorSpace(InputColorSpace);
             for (i=0; i < n; i++) {
 
                 char Buffer[255];
 
                 sprintf(Buffer, "%uCLR_%u", n, i+1);
-                Float[i] = GetIT8Val(ContextID, Buffer, 100.0);
+                Float[i] = GetIT8Val(Buffer, 100.0);
             }
 
         }
@@ -976,13 +976,13 @@ void TakeCGATSValues(cmsContext ContextID, int nPatch, cmsFloat64Number Float[])
         {
             cmsUInt32Number i, n;
 
-            n = cmsChannelsOfColorSpace(ContextID, InputColorSpace);
+            n = cmsChannelsOfColorSpace(InputColorSpace);
             for (i=0; i < n; i++) {
 
                 char Buffer[255];
 
                 sprintf(Buffer, "CHAN_%u", i+1);
-                Float[i] = GetIT8Val(ContextID, Buffer, 1.0);
+                Float[i] = GetIT8Val(Buffer, 1.0);
             }
 
         }
@@ -991,12 +991,12 @@ void TakeCGATSValues(cmsContext ContextID, int nPatch, cmsFloat64Number Float[])
 }
 
 static
-void SetCGATSfld(cmsContext ContextID, const char* Col, cmsFloat64Number Val)
+void SetCGATSfld(const char* Col, cmsFloat64Number Val)
 {
     if (lQuantize)
         Val = floor(Val + 0.5);
 
-    if (!cmsIT8SetDataDbl(ContextID, hIT8out, CGATSPatch, Col, Val)) {
+    if (!cmsIT8SetDataDbl(hIT8out, CGATSPatch, Col, Val)) {
         FatalError("couldn't set '%s' on output cgats '%s'", Col, CGATSoutFilename);
     }
 }
@@ -1004,9 +1004,9 @@ void SetCGATSfld(cmsContext ContextID, const char* Col, cmsFloat64Number Val)
 
 
 static
-void PutCGATSValues(cmsContext ContextID, cmsFloat64Number Float[])
+void PutCGATSValues(cmsFloat64Number Float[])
 {
-    cmsIT8SetData(ContextID, hIT8out, CGATSPatch, "SAMPLE_ID", CGATSPatch);
+    cmsIT8SetData(hIT8out, CGATSPatch, "SAMPLE_ID", CGATSPatch);
     switch (OutputColorSpace) {
 
 
@@ -1014,40 +1014,40 @@ void PutCGATSValues(cmsContext ContextID, cmsFloat64Number Float[])
 
     case cmsSigXYZData:
 
-        SetCGATSfld(ContextID, "XYZ_X", Float[0] * 100.0);
-        SetCGATSfld(ContextID, "XYZ_Y", Float[1] * 100.0);
-        SetCGATSfld(ContextID, "XYZ_Z", Float[2] * 100.0);
+        SetCGATSfld("XYZ_X", Float[0] * 100.0);
+        SetCGATSfld("XYZ_Y", Float[1] * 100.0);
+        SetCGATSfld("XYZ_Z", Float[2] * 100.0);
         break;
 
     case cmsSigLabData:
 
-        SetCGATSfld(ContextID, "LAB_L", Float[0]);
-        SetCGATSfld(ContextID, "LAB_A", Float[1]);
-        SetCGATSfld(ContextID, "LAB_B", Float[2]);
+        SetCGATSfld("LAB_L", Float[0]);
+        SetCGATSfld("LAB_A", Float[1]);
+        SetCGATSfld("LAB_B", Float[2]);
         break;
 
 
     case cmsSigRgbData:
-        SetCGATSfld(ContextID, "RGB_R", Float[0] * 255.0);
-        SetCGATSfld(ContextID, "RGB_G", Float[1] * 255.0);
-        SetCGATSfld(ContextID, "RGB_B", Float[2] * 255.0);
+        SetCGATSfld("RGB_R", Float[0] * 255.0);
+        SetCGATSfld("RGB_G", Float[1] * 255.0);
+        SetCGATSfld("RGB_B", Float[2] * 255.0);
         break;
 
     case cmsSigGrayData:
-        SetCGATSfld(ContextID, "GRAY", Float[0] * 255.0);
+        SetCGATSfld("GRAY", Float[0] * 255.0);
         break;
 
     case cmsSigCmykData:
-        SetCGATSfld(ContextID, "CMYK_C", Float[0]);
-        SetCGATSfld(ContextID, "CMYK_M", Float[1]);
-        SetCGATSfld(ContextID, "CMYK_Y", Float[2]);
-        SetCGATSfld(ContextID, "CMYK_K", Float[3]);
+        SetCGATSfld("CMYK_C", Float[0]);
+        SetCGATSfld("CMYK_M", Float[1]);
+        SetCGATSfld("CMYK_Y", Float[2]);
+        SetCGATSfld("CMYK_K", Float[3]);
         break;
 
     case cmsSigCmyData:
-        SetCGATSfld(ContextID, "CMY_C", Float[0]);
-        SetCGATSfld(ContextID, "CMY_M", Float[1]);
-        SetCGATSfld(ContextID, "CMY_Y", Float[2]);
+        SetCGATSfld("CMY_C", Float[0]);
+        SetCGATSfld("CMY_M", Float[1]);
+        SetCGATSfld("CMY_Y", Float[2]);
         break;
 
     case cmsSig1colorData:
@@ -1069,14 +1069,14 @@ void PutCGATSValues(cmsContext ContextID, cmsFloat64Number Float[])
 
             cmsInt32Number i, n;
 
-            n = cmsChannelsOfColorSpace(ContextID, InputColorSpace);
+            n = cmsChannelsOfColorSpace(InputColorSpace);
             for (i=0; i < n; i++) {
 
                 char Buffer[255];
 
                 sprintf(Buffer, "%uCLR_%u", n, i+1);
 
-                SetCGATSfld(ContextID, Buffer, Float[i] * 100.0);
+                SetCGATSfld(Buffer, Float[i] * 100.0);
             }
         }
         break;
@@ -1086,14 +1086,14 @@ void PutCGATSValues(cmsContext ContextID, cmsFloat64Number Float[])
 
             cmsInt32Number i, n;
 
-            n = cmsChannelsOfColorSpace(ContextID, InputColorSpace);
+            n = cmsChannelsOfColorSpace(InputColorSpace);
             for (i=0; i < n; i++) {
 
                 char Buffer[255];
 
                 sprintf(Buffer, "CHAN_%u", i+1);
 
-                SetCGATSfld(ContextID, Buffer, Float[i]);
+                SetCGATSfld(Buffer, Float[i]);
             }
         }
     }
@@ -1105,14 +1105,14 @@ void PutCGATSValues(cmsContext ContextID, cmsFloat64Number Float[])
 static
 void SetOutputDataFormat(cmsContext ContextID)
 {
-    cmsIT8DefineDblFormat(ContextID, hIT8out, "%.4g");
-    cmsIT8SetPropertyStr(ContextID, hIT8out, "ORIGINATOR", "icctrans");
+    cmsIT8DefineDblFormat(hIT8out, "%.4g");
+    cmsIT8SetPropertyStr(hIT8out, "ORIGINATOR", "icctrans");
 
     if (IncludePart != NULL)
-        cmsIT8SetPropertyStr(ContextID, hIT8out, ".INCLUDE", IncludePart);
+        cmsIT8SetPropertyStr(hIT8out, ".INCLUDE", IncludePart);
 
-    cmsIT8SetComment(ContextID, hIT8out, "Data follows");
-    cmsIT8SetPropertyDbl(ContextID, hIT8out, "NUMBER_OF_SETS", nMaxPatches);
+    cmsIT8SetComment(hIT8out, "Data follows");
+    cmsIT8SetPropertyDbl(hIT8out, "NUMBER_OF_SETS", nMaxPatches);
 
 
     switch (OutputColorSpace) {
@@ -1121,51 +1121,51 @@ void SetOutputDataFormat(cmsContext ContextID)
         // Encoding should follow CGATS specification.
 
     case cmsSigXYZData:
-        cmsIT8SetPropertyDbl(ContextID, hIT8out, "NUMBER_OF_FIELDS", 4);
-        cmsIT8SetDataFormat(ContextID, hIT8out, 0, "SAMPLE_ID");
-        cmsIT8SetDataFormat(ContextID, hIT8out, 1, "XYZ_X");
-        cmsIT8SetDataFormat(ContextID, hIT8out, 2, "XYZ_Y");
-        cmsIT8SetDataFormat(ContextID, hIT8out, 3, "XYZ_Z");
+        cmsIT8SetPropertyDbl(hIT8out, "NUMBER_OF_FIELDS", 4);
+        cmsIT8SetDataFormat(hIT8out, 0, "SAMPLE_ID");
+        cmsIT8SetDataFormat(hIT8out, 1, "XYZ_X");
+        cmsIT8SetDataFormat(hIT8out, 2, "XYZ_Y");
+        cmsIT8SetDataFormat(hIT8out, 3, "XYZ_Z");
         break;
 
     case cmsSigLabData:
-        cmsIT8SetPropertyDbl(ContextID, hIT8out, "NUMBER_OF_FIELDS", 4);
-        cmsIT8SetDataFormat(ContextID, hIT8out, 0, "SAMPLE_ID");
-        cmsIT8SetDataFormat(ContextID, hIT8out, 1, "LAB_L");
-        cmsIT8SetDataFormat(ContextID, hIT8out, 2, "LAB_A");
-        cmsIT8SetDataFormat(ContextID, hIT8out, 3, "LAB_B");
+        cmsIT8SetPropertyDbl(hIT8out, "NUMBER_OF_FIELDS", 4);
+        cmsIT8SetDataFormat(hIT8out, 0, "SAMPLE_ID");
+        cmsIT8SetDataFormat(hIT8out, 1, "LAB_L");
+        cmsIT8SetDataFormat(hIT8out, 2, "LAB_A");
+        cmsIT8SetDataFormat(hIT8out, 3, "LAB_B");
         break;
 
 
     case cmsSigRgbData:
-        cmsIT8SetPropertyDbl(ContextID, hIT8out, "NUMBER_OF_FIELDS", 4);
-        cmsIT8SetDataFormat(ContextID, hIT8out, 0, "SAMPLE_ID");
-        cmsIT8SetDataFormat(ContextID, hIT8out, 1, "RGB_R");
-        cmsIT8SetDataFormat(ContextID, hIT8out, 2, "RGB_G");
-        cmsIT8SetDataFormat(ContextID, hIT8out, 3, "RGB_B");
+        cmsIT8SetPropertyDbl(hIT8out, "NUMBER_OF_FIELDS", 4);
+        cmsIT8SetDataFormat(hIT8out, 0, "SAMPLE_ID");
+        cmsIT8SetDataFormat(hIT8out, 1, "RGB_R");
+        cmsIT8SetDataFormat(hIT8out, 2, "RGB_G");
+        cmsIT8SetDataFormat(hIT8out, 3, "RGB_B");
         break;
 
     case cmsSigGrayData:
-        cmsIT8SetPropertyDbl(ContextID, hIT8out, "NUMBER_OF_FIELDS", 2);
-        cmsIT8SetDataFormat(ContextID, hIT8out, 0, "SAMPLE_ID");
-        cmsIT8SetDataFormat(ContextID, hIT8out, 1, "GRAY");
+        cmsIT8SetPropertyDbl(hIT8out, "NUMBER_OF_FIELDS", 2);
+        cmsIT8SetDataFormat(hIT8out, 0, "SAMPLE_ID");
+        cmsIT8SetDataFormat(hIT8out, 1, "GRAY");
         break;
 
     case cmsSigCmykData:
-        cmsIT8SetPropertyDbl(ContextID, hIT8out, "NUMBER_OF_FIELDS", 5);
-        cmsIT8SetDataFormat(ContextID, hIT8out, 0, "SAMPLE_ID");
-        cmsIT8SetDataFormat(ContextID, hIT8out, 1, "CMYK_C");
-        cmsIT8SetDataFormat(ContextID, hIT8out, 2, "CMYK_M");
-        cmsIT8SetDataFormat(ContextID, hIT8out, 3, "CMYK_Y");
-        cmsIT8SetDataFormat(ContextID, hIT8out, 4, "CMYK_K");
+        cmsIT8SetPropertyDbl(hIT8out, "NUMBER_OF_FIELDS", 5);
+        cmsIT8SetDataFormat(hIT8out, 0, "SAMPLE_ID");
+        cmsIT8SetDataFormat(hIT8out, 1, "CMYK_C");
+        cmsIT8SetDataFormat(hIT8out, 2, "CMYK_M");
+        cmsIT8SetDataFormat(hIT8out, 3, "CMYK_Y");
+        cmsIT8SetDataFormat(hIT8out, 4, "CMYK_K");
         break;
 
     case cmsSigCmyData:
-        cmsIT8SetPropertyDbl(ContextID, hIT8out, "NUMBER_OF_FIELDS", 4);
-        cmsIT8SetDataFormat(ContextID, hIT8out, 0, "SAMPLE_ID");
-        cmsIT8SetDataFormat(ContextID, hIT8out, 1, "CMY_C");
-        cmsIT8SetDataFormat(ContextID, hIT8out, 2, "CMY_M");
-        cmsIT8SetDataFormat(ContextID, hIT8out, 3, "CMY_Y");
+        cmsIT8SetPropertyDbl(hIT8out, "NUMBER_OF_FIELDS", 4);
+        cmsIT8SetDataFormat(hIT8out, 0, "SAMPLE_ID");
+        cmsIT8SetDataFormat(hIT8out, 1, "CMY_C");
+        cmsIT8SetDataFormat(hIT8out, 2, "CMY_M");
+        cmsIT8SetDataFormat(hIT8out, 3, "CMY_Y");
         break;
 
     case cmsSig1colorData:
@@ -1187,13 +1187,13 @@ void SetOutputDataFormat(cmsContext ContextID)
             int i, n;
             char Buffer[255];
 
-            n = cmsChannelsOfColorSpace(ContextID, OutputColorSpace);
-            cmsIT8SetPropertyDbl(ContextID, hIT8out, "NUMBER_OF_FIELDS", n+1);
-            cmsIT8SetDataFormat(ContextID, hIT8out, 0, "SAMPLE_ID");
+            n = cmsChannelsOfColorSpace(OutputColorSpace);
+            cmsIT8SetPropertyDbl(hIT8out, "NUMBER_OF_FIELDS", n+1);
+            cmsIT8SetDataFormat(hIT8out, 0, "SAMPLE_ID");
 
             for (i=1; i <= n; i++) {
                 sprintf(Buffer, "%dCLR_%d", n, i);
-                cmsIT8SetDataFormat(ContextID, hIT8out, i, Buffer);
+                cmsIT8SetDataFormat(hIT8out, i, Buffer);
             }
         }
         break;
@@ -1203,13 +1203,13 @@ void SetOutputDataFormat(cmsContext ContextID)
         int i, n;
         char Buffer[255];
 
-        n = cmsChannelsOfColorSpace(ContextID, OutputColorSpace);
-        cmsIT8SetPropertyDbl(ContextID, hIT8out, "NUMBER_OF_FIELDS", n+1);
-        cmsIT8SetDataFormat(ContextID, hIT8out, 0, "SAMPLE_ID");
+        n = cmsChannelsOfColorSpace(OutputColorSpace);
+        cmsIT8SetPropertyDbl(hIT8out, "NUMBER_OF_FIELDS", n+1);
+        cmsIT8SetDataFormat(hIT8out, 0, "SAMPLE_ID");
 
         for (i=1; i <= n; i++) {
             sprintf(Buffer, "CHAN_%d", i);
-            cmsIT8SetDataFormat(ContextID, hIT8out, i, Buffer);
+            cmsIT8SetDataFormat(hIT8out, i, Buffer);
         }
     }
     }
@@ -1218,7 +1218,7 @@ void SetOutputDataFormat(cmsContext ContextID)
 // Open CGATS if specified
 
 static
-void OpenCGATSFiles(cmsContext ContextID, int argc, char *argv[])
+void OpenCGATSFiles(int argc, char *argv[])
 {
     int nParams = argc - xoptind;
 
@@ -1229,7 +1229,7 @@ void OpenCGATSFiles(cmsContext ContextID, int argc, char *argv[])
         if (hIT8in == NULL)
             FatalError("'%s' is not recognized as a CGATS file", argv[xoptind]);
 
-        nMaxPatches = (int) cmsIT8GetPropertyDbl(ContextID, hIT8in, "NUMBER_OF_SETS");
+        nMaxPatches = (int) cmsIT8GetPropertyDbl(hIT8in, "NUMBER_OF_SETS");
     }
 
     if (nParams == 2) {
@@ -1258,7 +1258,7 @@ int main(int argc, char *argv[])
     fprintf(stderr, "Copyright (c) 1998-2023 Marti Maria Saguer. See COPYING file for details.\n");
     fflush(stderr);
 
-    InitUtils(ContextID, "transicc");
+    InitUtils("transicc");
 
     Verbose = 1;
 
@@ -1268,13 +1268,13 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    HandleSwitches(ContextID, argc, argv);
+    HandleSwitches(argc, argv);
 
     // Open profiles, create transforms
     if (!OpenTransforms(ContextID)) return 1;
 
     // Open CGATS input if specified
-    OpenCGATSFiles(ContextID, argc, argv);
+    OpenCGATSFiles(argc, argv);
 
     // Main loop: read all values and convert them
     for(;;) {
@@ -1282,32 +1282,32 @@ int main(int argc, char *argv[])
         if (hIT8in != NULL) {
 
             if (nPatch >= nMaxPatches) break;
-            TakeCGATSValues(ContextID, nPatch++, InputFloat);
+            TakeCGATSValues(nPatch++, InputFloat);
 
         } else {
 
             if (feof(stdin)) break;
-            TakeFloatValues(ContextID, InputFloat);
+            TakeFloatValues(InputFloat);
 
         }
 
         if (lIsFloat)
-            cmsDoTransform(ContextID, hTrans, InputFloat, OutputFloat, 1);
+            cmsDoTransform(hTrans, InputFloat, OutputFloat, 1);
         else
-            cmsDoTransform(ContextID, hTrans, InputFloat, Output, 1);
+            cmsDoTransform(hTrans, InputFloat, Output, 1);
 
 
         if (hIT8out != NULL) {
 
-            PutCGATSValues(ContextID, OutputFloat);
+            PutCGATSValues(OutputFloat);
         }
         else {
 
             if (lIsFloat) {
-                PrintFloatResults(ContextID, OutputFloat); PrintPCSFloat(ContextID, InputFloat);
+                PrintFloatResults(OutputFloat); PrintPCSFloat(InputFloat);
             }
             else {
-                PrintEncodedResults(ContextID, Output);   PrintPCSEncoded(ContextID, InputFloat);
+                PrintEncodedResults(Output);   PrintPCSEncoded(InputFloat);
             }
 
         }
@@ -1318,11 +1318,11 @@ int main(int argc, char *argv[])
     CloseTransforms(ContextID);
 
     if (hIT8in)
-        cmsIT8Free(ContextID, hIT8in);
+        cmsIT8Free(hIT8in);
 
     if (hIT8out) {
-        cmsIT8SaveToFile(ContextID, hIT8out, CGATSoutFilename);
-        cmsIT8Free(ContextID, hIT8out);
+        cmsIT8SaveToFile(hIT8out, CGATSoutFilename);
+        cmsIT8Free(hIT8out);
     }
 
     // All is ok

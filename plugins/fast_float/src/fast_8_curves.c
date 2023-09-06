@@ -60,8 +60,8 @@ static void FastEvaluateRGBCurves8(cmsContext ContextID,
 
        Curves8Data* Data = (Curves8Data*)_cmsGetTransformUserData(CMMcargo);
 
-       _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
-       _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
+       _cmsComputeComponentIncrements(cmsGetTransformInputFormat((cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
+       _cmsComputeComponentIncrements(cmsGetTransformOutputFormat((cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
 
        if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
            nalpha = 0;
@@ -138,8 +138,8 @@ static void FastRGBIdentity8(cmsContext ContextID,
 
        cmsUInt32Number nalpha, strideIn, strideOut;
 
-       _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
-       _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
+       _cmsComputeComponentIncrements(cmsGetTransformInputFormat((cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
+       _cmsComputeComponentIncrements(cmsGetTransformOutputFormat((cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
 
        if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
            nalpha = 0;
@@ -215,8 +215,8 @@ static void FastEvaluateGrayCurves8(cmsContext ContextID,
 
        Curves8Data* Data = (Curves8Data*)_cmsGetTransformUserData(CMMcargo);
 
-       _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
-       _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
+       _cmsComputeComponentIncrements(cmsGetTransformInputFormat((cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
+       _cmsComputeComponentIncrements(cmsGetTransformOutputFormat((cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
 
        if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
            nalpha = 0;
@@ -279,8 +279,8 @@ static void FastGrayIdentity8(cmsContext ContextID,
 
        cmsUInt32Number nalpha, strideIn, strideOut;
 
-       _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
-       _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
+       _cmsComputeComponentIncrements(cmsGetTransformInputFormat((cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
+       _cmsComputeComponentIncrements(cmsGetTransformOutputFormat((cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
 
        if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
            nalpha = 0;
@@ -340,12 +340,12 @@ cmsBool AllCurvesAreLinear(Curves8Data* data)
 
 
 static
-Curves8Data* ComputeCompositeCurves(cmsContext ContextID, cmsUInt32Number nChan,  cmsPipeline* Src)
+Curves8Data* ComputeCompositeCurves(cmsUInt32Number nChan,  cmsPipeline* Src)
 {
     cmsUInt32Number i, j;
     cmsFloat32Number InFloat[3], OutFloat[3];
 
-    Curves8Data* Data = (Curves8Data*) _cmsMallocZero(ContextID, sizeof(Curves8Data));
+    Curves8Data* Data = (Curves8Data*) _cmsMallocZero(sizeof(Curves8Data));
     if (Data == NULL) return NULL;
 
     // Create target curves
@@ -354,7 +354,7 @@ Curves8Data* ComputeCompositeCurves(cmsContext ContextID, cmsUInt32Number nChan,
         for (j=0; j <nChan; j++)
             InFloat[j] = (cmsFloat32Number) ((cmsFloat64Number) i / 255.0);
 
-        cmsPipelineEvalFloat(ContextID, InFloat, OutFloat, Src);
+        cmsPipelineEvalFloat(InFloat, OutFloat, Src);
 
         for (j=0; j < nChan; j++)
             Data -> Curves[j][i] = FROM_16_TO_8(_cmsSaturateWord(OutFloat[j] * 65535.0));
@@ -396,14 +396,14 @@ cmsBool Optimize8ByJoiningCurves(cmsContext ContextID,
     if (nChans != 1 && nChans != 3) return FALSE;
 
     //  Only curves in this LUT?
-    for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, Src);
+    for (mpe = cmsPipelineGetPtrToFirstStage(Src);
         mpe != NULL;
-        mpe = cmsStageNext(ContextID, mpe)) {
+        mpe = cmsStageNext(mpe)) {
 
-            if (cmsStageType(ContextID, mpe) != cmsSigCurveSetElemType) return FALSE;
+            if (cmsStageType(mpe) != cmsSigCurveSetElemType) return FALSE;
     }
 
-    Data = ComputeCompositeCurves(ContextID, nChans, Src);
+    Data = ComputeCompositeCurves(nChans, Src);
 
     *dwFlags |= cmsFLAGS_NOCACHE;
     *dwFlags &= ~cmsFLAGS_CAN_CHANGE_FORMATTER;

@@ -290,7 +290,7 @@ cmsUInt32Number GetInputPixelType(TIFF *Bank)
 
 
 static
-cmsUInt32Number OpenEmbedded(cmsContext ContextID, TIFF* tiff, cmsHPROFILE* PtrProfile, cmsHTRANSFORM* PtrXform)
+cmsUInt32Number OpenEmbedded(TIFF* tiff, cmsHPROFILE* PtrProfile, cmsHTRANSFORM* PtrXform)
 {
 
     cmsUInt32Number EmbedLen, dwFormat = 0;
@@ -301,7 +301,7 @@ cmsUInt32Number OpenEmbedded(cmsContext ContextID, TIFF* tiff, cmsHPROFILE* PtrP
 
     if (TIFFGetField(tiff, TIFFTAG_ICCPROFILE, &EmbedLen, &EmbedBuffer)) {
 
-              *PtrProfile = cmsOpenProfileFromMem(ContextID, EmbedBuffer, EmbedLen);
+              *PtrProfile = cmsOpenProfileFromMem(EmbedBuffer, EmbedLen);
 
               if (Verbose) {
 
@@ -311,7 +311,7 @@ cmsUInt32Number OpenEmbedded(cmsContext ContextID, TIFF* tiff, cmsHPROFILE* PtrP
               }
 
               dwFormat  = GetInputPixelType(tiff);
-              *PtrXform = cmsCreateTransform(ContextID, *PtrProfile, dwFormat,
+              *PtrXform = cmsCreateTransform(*PtrProfile, dwFormat,
                                           hLab, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
 
       }
@@ -328,7 +328,7 @@ size_t PixelSize(cmsUInt32Number dwFormat)
 
 
 static
-int CmpImages(cmsContext ContextID, TIFF* tiff1, TIFF* tiff2, TIFF* diff)
+int CmpImages(TIFF* tiff1, TIFF* tiff2, TIFF* diff)
 {
     cmsUInt8Number* buf1, *buf2, *buf3=NULL;
     int row, cols, imagewidth = 0, imagelength = 0;
@@ -347,8 +347,8 @@ int CmpImages(cmsContext ContextID, TIFF* tiff1, TIFF* tiff2, TIFF* diff)
       TIFFGetField(tiff1, TIFFTAG_IMAGELENGTH, &imagelength);
       TIFFGetField(tiff1, TIFFTAG_SAMPLESPERPIXEL, &Channels);
 
-      dwFormat1 = OpenEmbedded(ContextID, tiff1, &hProfile1, &xform1);
-      dwFormat2 = OpenEmbedded(ContextID, tiff2, &hProfile2, &xform2);
+      dwFormat1 = OpenEmbedded(tiff1, &hProfile1, &xform1);
+      dwFormat2 = OpenEmbedded(tiff2, &hProfile2, &xform2);
 
 
 
@@ -665,13 +665,13 @@ int main(int argc, char* argv[])
       EqualShortTag(Tiff1, Tiff2, TIFFTAG_SAMPLESPERPIXEL, "Samples per pixel");
 
 
-      hLab = cmsCreateLab4Profile(ContextID, NULL);
+      hLab = cmsCreateLab4Profile(NULL);
 
       ClearStatistics(&EuclideanStat);
       for (i=0; i < 4; i++)
             ClearStatistics(&ColorantStat[i]);
 
-      if (!CmpImages(ContextID, Tiff1, Tiff2, TiffDiff))
+      if (!CmpImages(Tiff1, Tiff2, TiffDiff))
                 FatalError("Error comparing images");
 
       if (CGATSout) {

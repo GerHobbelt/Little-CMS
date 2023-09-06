@@ -144,19 +144,19 @@ void HandleSwitches(int argc, char *argv[])
 static
 void GenerateCSA(cmsContext ContextID)
 {
-	cmsHPROFILE hProfile = OpenStockProfile(ContextID, cInProf);
+	cmsHPROFILE hProfile = OpenStockProfile(cInProf);
 	size_t n;
 	char* Buffer;
 
 	if (hProfile == NULL) return;
 
-	n = cmsGetPostScriptCSA(ContextID, hProfile, Intent, 0, NULL, 0);
+	n = cmsGetPostScriptCSA(hProfile, Intent, 0, NULL, 0);
 	if (n == 0) return;
 
     Buffer = (char*) malloc(n + 1);
     if (Buffer != NULL) {
 
-        cmsGetPostScriptCSA(ContextID, hProfile, Intent, 0, Buffer, (cmsUInt32Number) n);
+        cmsGetPostScriptCSA(hProfile, Intent, 0, Buffer, (cmsUInt32Number) n);
         Buffer[n] = 0;
 
         fprintf(OutFile, "%s", Buffer);
@@ -164,14 +164,14 @@ void GenerateCSA(cmsContext ContextID)
         free(Buffer);
     }
 
-	cmsCloseProfile(ContextID, hProfile);
+	cmsCloseProfile(hProfile);
 }
 
 
 static
 void GenerateCRD(cmsContext ContextID)
 {
-	cmsHPROFILE hProfile = OpenStockProfile(ContextID, cOutProf);
+	cmsHPROFILE hProfile = OpenStockProfile(cOutProf);
 	size_t n;
 	char* Buffer;
     cmsUInt32Number dwFlags = 0;
@@ -193,17 +193,17 @@ void GenerateCRD(cmsContext ContextID)
 		default: FatalError("ERROR: Unknown precalculation mode '%d'", PrecalcMode);
 	 }
 
-	n = cmsGetPostScriptCRD(ContextID, hProfile, Intent, dwFlags, NULL, 0);
+	n = cmsGetPostScriptCRD(hProfile, Intent, dwFlags, NULL, 0);
 	if (n == 0) return;
 
 	Buffer = (char*) malloc(n + 1);
 	if (Buffer == NULL) return;
-        cmsGetPostScriptCRD(ContextID, hProfile, Intent, dwFlags, Buffer, (cmsUInt32Number) n);
+        cmsGetPostScriptCRD(hProfile, Intent, dwFlags, Buffer, (cmsUInt32Number) n);
 	Buffer[n] = 0;
 
 	fprintf(OutFile, "%s", Buffer);
 	free(Buffer);
-	cmsCloseProfile(ContextID, hProfile);
+	cmsCloseProfile(hProfile);
 }
 
 

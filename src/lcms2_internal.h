@@ -420,43 +420,43 @@ cmsINLINE int _cmsLeaveCriticalSectionPrimitive(_cmsMutex *m)
 // Plug-In registration ---------------------------------------------------------------
 
 // Specialized function for plug-in memory management. No pairing free() since whole pool is freed at once.
-void* _cmsPluginMalloc(cmsContext ContextID, cmsUInt32Number size);
+void* _cmsPluginMalloc(cmsUInt32Number size);
 
 // Memory management
-cmsBool   _cmsRegisterMemHandlerPlugin(cmsContext ContextID, cmsPluginBase* Plugin);
+cmsBool   _cmsRegisterMemHandlerPlugin(cmsPluginBase* Plugin);
 
 // Interpolation
-cmsBool  _cmsRegisterInterpPlugin(cmsContext ContextID, cmsPluginBase* Plugin);
+cmsBool  _cmsRegisterInterpPlugin(cmsPluginBase* Plugin);
 
 // Parametric curves
-cmsBool  _cmsRegisterParametricCurvesPlugin(cmsContext ContextID, cmsPluginBase* Plugin);
+cmsBool  _cmsRegisterParametricCurvesPlugin(cmsPluginBase* Plugin);
 
 // Formatters management
-cmsBool  _cmsRegisterFormattersPlugin(cmsContext ContextID, cmsPluginBase* Plugin);
+cmsBool  _cmsRegisterFormattersPlugin(cmsPluginBase* Plugin);
 
 // Tag type management
-cmsBool  _cmsRegisterTagTypePlugin(cmsContext ContextID, cmsPluginBase* Plugin);
+cmsBool  _cmsRegisterTagTypePlugin(cmsPluginBase* Plugin);
 
 // Tag management
-cmsBool  _cmsRegisterTagPlugin(cmsContext ContextID, cmsPluginBase* Plugin);
+cmsBool  _cmsRegisterTagPlugin(cmsPluginBase* Plugin);
 
 // Intent management
-cmsBool  _cmsRegisterRenderingIntentPlugin(cmsContext ContextID, cmsPluginBase* Plugin);
+cmsBool  _cmsRegisterRenderingIntentPlugin(cmsPluginBase* Plugin);
 
 // Multi Process elements
-cmsBool  _cmsRegisterMultiProcessElementPlugin(cmsContext ContextID, cmsPluginBase* Plugin);
+cmsBool  _cmsRegisterMultiProcessElementPlugin(cmsPluginBase* Plugin);
 
 // Optimization
-cmsBool  _cmsRegisterOptimizationPlugin(cmsContext ContextID, cmsPluginBase* Plugin);
+cmsBool  _cmsRegisterOptimizationPlugin(cmsPluginBase* Plugin);
 
 // Transform
-cmsBool  _cmsRegisterTransformPlugin(cmsContext ContextID, cmsPluginBase* Plugin);
+cmsBool  _cmsRegisterTransformPlugin(cmsPluginBase* Plugin);
 
 // Mutex
-cmsBool _cmsRegisterMutexPlugin(cmsContext ContextID, cmsPluginBase* Plugin);
+cmsBool _cmsRegisterMutexPlugin(cmsPluginBase* Plugin);
 
 // Paralellization
-cmsBool _cmsRegisterParallelizationPlugin(cmsContext ContextID, cmsPluginBase* Plugin);
+cmsBool _cmsRegisterParallelizationPlugin(cmsPluginBase* Plugin);
 
 // ---------------------------------------------------------------------------------------------------------
 
@@ -480,7 +480,7 @@ typedef struct {
 } _cmsSubAllocator;
 
 
-_cmsSubAllocator* _cmsCreateSubAlloc(cmsContext ContextID, cmsUInt32Number Initial);
+_cmsSubAllocator* _cmsCreateSubAlloc(cmsUInt32Number Initial);
 void              _cmsSubAllocDestroy(_cmsSubAllocator* s);
 void*             _cmsSubAlloc(_cmsSubAllocator* s, cmsUInt32Number size);
 void*             _cmsSubAllocDup(_cmsSubAllocator* s, const void *ptr, cmsUInt32Number size);
@@ -859,14 +859,14 @@ typedef struct _cms_iccprofile_struct {
 } _cmsICCPROFILE;
 
 // IO helpers for profiles
-cmsBool              _cmsReadHeader(cmsContext ContextID, _cmsICCPROFILE* Icc);
-cmsBool              _cmsWriteHeader(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsUInt32Number UsedSpace);
-int                  _cmsSearchTag(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsTagSignature sig, cmsBool lFollowLinks);
+cmsBool              _cmsReadHeader(_cmsICCPROFILE* Icc);
+cmsBool              _cmsWriteHeader(_cmsICCPROFILE* Icc, cmsUInt32Number UsedSpace);
+int                  _cmsSearchTag(_cmsICCPROFILE* Icc, cmsTagSignature sig, cmsBool lFollowLinks);
 
 // Tag types
-cmsTagTypeHandler*   _cmsGetTagTypeHandler(cmsContext ContextID, cmsTagTypeSignature sig);
-cmsTagTypeSignature  _cmsGetTagTrueType(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSignature sig);
-cmsTagDescriptor*    _cmsGetTagDescriptor(cmsContext ContextID, cmsTagSignature sig);
+cmsTagTypeHandler*   _cmsGetTagTypeHandler(cmsTagTypeSignature sig);
+cmsTagTypeSignature  _cmsGetTagTrueType(cmsHPROFILE hProfile, cmsTagSignature sig);
+cmsTagDescriptor*    _cmsGetTagDescriptor(cmsTagSignature sig);
 
 // Error logging ---------------------------------------------------------------------------------------------------------
 
@@ -874,10 +874,10 @@ void                 _cmsTagSignature2String(char String[5], cmsTagSignature sig
 
 // Interpolation ---------------------------------------------------------------------------------------------------------
 
-CMSCHECKPOINT cmsInterpParams* CMSEXPORT _cmsComputeInterpParams(cmsContext ContextID, cmsUInt32Number nSamples, cmsUInt32Number InputChan, cmsUInt32Number OutputChan, const void* Table, cmsUInt32Number dwFlags);
-cmsInterpParams*                         _cmsComputeInterpParamsEx(cmsContext ContextID, const cmsUInt32Number nSamples[], cmsUInt32Number InputChan, cmsUInt32Number OutputChan, const void* Table, cmsUInt32Number dwFlags);
-CMSCHECKPOINT void             CMSEXPORT _cmsFreeInterpParams(cmsContext ContextID, cmsInterpParams* p);
-cmsBool                                  _cmsSetInterpolationRoutine(cmsContext ContextID, cmsInterpParams* p);
+CMSCHECKPOINT cmsInterpParams* CMSEXPORT _cmsComputeInterpParams(cmsUInt32Number nSamples, cmsUInt32Number InputChan, cmsUInt32Number OutputChan, const void* Table, cmsUInt32Number dwFlags);
+cmsInterpParams*                         _cmsComputeInterpParamsEx(const cmsUInt32Number nSamples[], cmsUInt32Number InputChan, cmsUInt32Number OutputChan, const void* Table, cmsUInt32Number dwFlags);
+CMSCHECKPOINT void             CMSEXPORT _cmsFreeInterpParams(cmsInterpParams* p);
+cmsBool                                  _cmsSetInterpolationRoutine(cmsInterpParams* p);
 
 // Curves ----------------------------------------------------------------------------------------------------------------
 
@@ -934,22 +934,22 @@ cmsStage*                          _cmsStageAllocLabPrelin(cmsContext ContextID)
 CMSCHECKPOINT cmsStage*  CMSEXPORT _cmsStageAllocLabV2ToV4(cmsContext ContextID);
 cmsStage*                          _cmsStageAllocLabV2ToV4curves(cmsContext ContextID);
 CMSCHECKPOINT cmsStage*  CMSEXPORT _cmsStageAllocLabV4ToV2(cmsContext ContextID);
-CMSCHECKPOINT cmsStage*  CMSEXPORT _cmsStageAllocNamedColor(cmsContext ContextID, cmsNAMEDCOLORLIST* NamedColorList, cmsBool UsePCS);
-CMSCHECKPOINT cmsStage*  CMSEXPORT _cmsStageAllocIdentityCurves(cmsContext ContextID, cmsUInt32Number nChannels);
-CMSCHECKPOINT cmsStage*  CMSEXPORT _cmsStageAllocIdentityCLut(cmsContext ContextID, cmsUInt32Number nChan);
+CMSCHECKPOINT cmsStage*  CMSEXPORT _cmsStageAllocNamedColor(cmsNAMEDCOLORLIST* NamedColorList, cmsBool UsePCS);
+CMSCHECKPOINT cmsStage*  CMSEXPORT _cmsStageAllocIdentityCurves(cmsUInt32Number nChannels);
+CMSCHECKPOINT cmsStage*  CMSEXPORT _cmsStageAllocIdentityCLut(cmsUInt32Number nChan);
 cmsStage*                          _cmsStageNormalizeFromLabFloat(cmsContext ContextID);
 cmsStage*                          _cmsStageNormalizeFromXyzFloat(cmsContext ContextID);
 cmsStage*                          _cmsStageNormalizeToLabFloat(cmsContext ContextID);
 cmsStage*                          _cmsStageNormalizeToXyzFloat(cmsContext ContextID);
-cmsStage*                          _cmsStageClipNegatives(cmsContext ContextID, cmsUInt32Number nChannels);
+cmsStage*                          _cmsStageClipNegatives(cmsUInt32Number nChannels);
 
 
 // For curve set only
 cmsToneCurve**  _cmsStageGetPtrToCurveSet(const cmsStage* mpe);
 
 // Curve evaluation with slope limit
-cmsStage*          _cmsStageAllocToneCurvesWithSlopeLimit(cmsContext ContextID, cmsUInt32Number nChannels, cmsToneCurve* const Curves[], int SlopeLimit);
-cmsFloat32Number   _cmsEvalToneCurveFloatWithSlopeLimit(cmsContext ContextID, const cmsToneCurve* Curve, cmsFloat32Number v, int SlopeLimit);
+cmsStage*          _cmsStageAllocToneCurvesWithSlopeLimit(cmsUInt32Number nChannels, cmsToneCurve* const Curves[], int SlopeLimit);
+cmsFloat32Number   _cmsEvalToneCurveFloatWithSlopeLimit(const cmsToneCurve* Curve, cmsFloat32Number v, int SlopeLimit);
 
 struct _cmsPipeline_struct {
 
@@ -972,13 +972,13 @@ struct _cmsPipeline_struct {
 // Read tags using low-level function, provide necessary glue code to adapt versions, etc. All those return a brand new copy
 // of the LUTS, since ownership of original is up to the profile. The user should free allocated resources.
 
-CMSCHECKPOINT cmsPipeline* CMSEXPORT _cmsReadInputLUT(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number Intent, int SlopeLimit);
-CMSCHECKPOINT cmsPipeline* CMSEXPORT _cmsReadOutputLUT(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number Intent, int SlopeLimit);
-CMSCHECKPOINT cmsPipeline* CMSEXPORT _cmsReadDevicelinkLUT(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number Intent);
+CMSCHECKPOINT cmsPipeline* CMSEXPORT _cmsReadInputLUT(cmsHPROFILE hProfile, cmsUInt32Number Intent, int SlopeLimit);
+CMSCHECKPOINT cmsPipeline* CMSEXPORT _cmsReadOutputLUT(cmsHPROFILE hProfile, cmsUInt32Number Intent, int SlopeLimit);
+CMSCHECKPOINT cmsPipeline* CMSEXPORT _cmsReadDevicelinkLUT(cmsHPROFILE hProfile, cmsUInt32Number Intent);
 
 // Special values
-cmsBool           _cmsReadMediaWhitePoint(cmsContext ContextID, cmsCIEXYZ* Dest, cmsHPROFILE hProfile);
-cmsBool           _cmsReadCHAD(cmsContext ContextID, cmsMAT3* Dest, cmsHPROFILE hProfile);
+cmsBool           _cmsReadMediaWhitePoint(cmsCIEXYZ* Dest, cmsHPROFILE hProfile);
+cmsBool           _cmsReadCHAD(cmsMAT3* Dest, cmsHPROFILE hProfile);
 
 // Profile linker --------------------------------------------------------------------------------------------------
 
@@ -995,16 +995,16 @@ cmsPipeline* _cmsLinkProfiles(cmsContext         ContextID,
 
 // Sequence --------------------------------------------------------------------------------------------------------
 
-cmsSEQ* _cmsReadProfileSequence(cmsContext ContextID, cmsHPROFILE hProfile);
-cmsBool _cmsWriteProfileSequence(cmsContext ContextID, cmsHPROFILE hProfile, const cmsSEQ* seq);
-cmsSEQ* _cmsCompileProfileSequence(cmsContext ContextID, cmsUInt32Number nProfiles, cmsHPROFILE hProfiles[]);
+cmsSEQ* _cmsReadProfileSequence(cmsHPROFILE hProfile);
+cmsBool _cmsWriteProfileSequence(cmsHPROFILE hProfile, const cmsSEQ* seq);
+cmsSEQ* _cmsCompileProfileSequence(cmsUInt32Number nProfiles, cmsHPROFILE hProfiles[]);
 
 
 // LUT optimization ------------------------------------------------------------------------------------------------
 
 CMSCHECKPOINT cmsUInt16Number  CMSEXPORT _cmsQuantizeVal(cmsFloat64Number i, cmsUInt32Number MaxSamples);
 
-CMSAPI cmsUInt32Number  CMSEXPORT _cmsReasonableGridpointsByColorspace(cmsContext ContextID, cmsColorSpaceSignature Colorspace, cmsUInt32Number dwFlags);
+CMSAPI cmsUInt32Number  CMSEXPORT _cmsReasonableGridpointsByColorspace(cmsColorSpaceSignature Colorspace, cmsUInt32Number dwFlags);
 
 cmsBool          _cmsEndPointsBySpace(cmsColorSpaceSignature Space,
                                       cmsUInt16Number **White,
@@ -1135,7 +1135,7 @@ typedef struct _cmstransform_struct {
 
 // Copies extra channels from input to output if the original flags in the transform structure
 // instructs to do so. This function is called on all standard transform functions.
-void _cmsHandleExtraChannels(cmsContext ContextID, _cmsTRANSFORM* p, const void* in,
+void _cmsHandleExtraChannels(_cmsTRANSFORM* p, const void* in,
                              void* out,
                              cmsUInt32Number PixelsPerLine,
                              cmsUInt32Number LineCount,
@@ -1163,9 +1163,9 @@ cmsToneCurve* _cmsBuildKToneCurve(cmsContext       ContextID,
                             const cmsFloat64Number AdaptationStates[],
                             cmsUInt32Number        dwFlags);
 
-cmsBool   _cmsAdaptationMatrix(cmsContext ContextID, cmsMAT3* r, const cmsMAT3* ConeMatrix, const cmsCIEXYZ* FromIll, const cmsCIEXYZ* ToIll);
+cmsBool   _cmsAdaptationMatrix(cmsMAT3* r, const cmsMAT3* ConeMatrix, const cmsCIEXYZ* FromIll, const cmsCIEXYZ* ToIll);
 
-cmsBool   _cmsBuildRGB2XYZtransferMatrix(cmsContext ContextID, cmsMAT3* r, const cmsCIExyY* WhitePoint, const cmsCIExyYTRIPLE* Primaries);
+cmsBool   _cmsBuildRGB2XYZtransferMatrix(cmsMAT3* r, const cmsCIExyY* WhitePoint, const cmsCIExyYTRIPLE* Primaries);
 
 void _cmsFindFormatter(_cmsTRANSFORM* p, cmsUInt32Number InputFormat, cmsUInt32Number OutputFormat, cmsUInt32Number flags);
 

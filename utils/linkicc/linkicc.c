@@ -47,7 +47,7 @@ static cmsFloat64Number Version    = 4.3;
 
 // The manual
 static
-int Help(cmsContext ContextID, int level)
+int Help(int level)
 {
     UTILS_UNUSED_PARAMETER(level);
 
@@ -104,7 +104,7 @@ int Help(cmsContext ContextID, int level)
 
 // The toggles stuff
 static
-void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
+void HandleSwitches(int argc, char *argv[])
 {
     int s;
 
@@ -115,7 +115,7 @@ void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
     case '-':
         if (strcmp(xoptarg, "help") == 0)
         {
-            Help(ContextID, 0);
+            Help(0);
         }
         else
         {
@@ -153,7 +153,7 @@ void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
 
     case 'h':
     case 'H':
-        Help(ContextID, atoi(xoptarg));
+        Help(atoi(xoptarg));
         return;
 
     case 'k':
@@ -231,30 +231,30 @@ void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
 
 // Set the copyright and description
 static
-cmsBool SetTextTags(cmsContext ContextID, cmsHPROFILE hProfile)
+cmsBool SetTextTags(cmsHPROFILE hProfile)
 {
     cmsMLU *DescriptionMLU, *CopyrightMLU;
     cmsBool  rc = FALSE;
 
-    DescriptionMLU  = cmsMLUalloc(ContextID, 1);
-    CopyrightMLU    = cmsMLUalloc(ContextID, 1);
+    DescriptionMLU  = cmsMLUalloc(1);
+    CopyrightMLU    = cmsMLUalloc(1);
 
     if (DescriptionMLU == NULL || CopyrightMLU == NULL) goto Error;
 
-    if (!cmsMLUsetASCII(ContextID, DescriptionMLU,  "en", "US", Description)) goto Error;
-    if (!cmsMLUsetASCII(ContextID, CopyrightMLU,    "en", "US", Copyright)) goto Error;
+    if (!cmsMLUsetASCII(DescriptionMLU,  "en", "US", Description)) goto Error;
+    if (!cmsMLUsetASCII(CopyrightMLU,    "en", "US", Copyright)) goto Error;
 
-    if (!cmsWriteTag(ContextID, hProfile, cmsSigProfileDescriptionTag,  DescriptionMLU)) goto Error;
-    if (!cmsWriteTag(ContextID, hProfile, cmsSigCopyrightTag,           CopyrightMLU)) goto Error;
+    if (!cmsWriteTag(hProfile, cmsSigProfileDescriptionTag,  DescriptionMLU)) goto Error;
+    if (!cmsWriteTag(hProfile, cmsSigCopyrightTag,           CopyrightMLU)) goto Error;
 
     rc = TRUE;
 
 Error:
 
     if (DescriptionMLU)
-        cmsMLUfree(ContextID, DescriptionMLU);
+        cmsMLUfree(DescriptionMLU);
     if (CopyrightMLU)
-        cmsMLUfree(ContextID, CopyrightMLU);
+        cmsMLUfree(CopyrightMLU);
     return rc;
 }
 
@@ -275,16 +275,16 @@ int main(int argc, char *argv[])
     fflush(stderr);
 
     // Initialize
-    InitUtils(ContextID, "linkicc");
+    InitUtils("linkicc");
     rc = 0;
 
     // Get the options
-    HandleSwitches(ContextID, argc, argv);
+    HandleSwitches(argc, argv);
 
     // How many profiles to link?
     nargs = (argc - xoptind);
     if (nargs < 1)
-        return Help(ContextID, 0);
+        return Help(0);
 
     if (nargs > 255) {
         FatalError("Holy profile! what are you trying to do with so many profiles!?");
@@ -295,18 +295,18 @@ int main(int argc, char *argv[])
     memset(Profiles, 0, sizeof(Profiles));
     for (i=0; i < nargs; i++) {
 
-        Profiles[i] = OpenStockProfile(ContextID, argv[i + xoptind]);
+        Profiles[i] = OpenStockProfile(argv[i + xoptind]);
         if (Profiles[i] == NULL) goto Cleanup;
 
         if (Verbose >= 1) {
-            PrintProfileInformation(ContextID, Profiles[i]);
+            PrintProfileInformation(Profiles[i]);
         }
     }
 
     // Ink limiting
     if (InkLimit != 400.0) {
-        cmsColorSpaceSignature EndingColorSpace = cmsGetColorSpace(ContextID, Profiles[nargs-1]);
-        Profiles[nargs++] = cmsCreateInkLimitingDeviceLink(ContextID, EndingColorSpace, InkLimit);
+        cmsColorSpaceSignature EndingColorSpace = cmsGetColorSpace(Profiles[nargs-1]);
+        Profiles[nargs++] = cmsCreateInkLimitingDeviceLink(EndingColorSpace, InkLimit);
     }
 
     // Set the flags
@@ -338,26 +338,26 @@ int main(int argc, char *argv[])
 
     if (lUse8bits) dwFlags |= cmsFLAGS_8BITS_DEVICELINK;
 
-     cmsSetAdaptationState(ContextID, ObserverAdaptationState);
+     cmsSetAdaptationState(ObserverAdaptationState);
 
     // Create the color transform. Specify 0 for the format is safe as the transform
     // is intended to be used only for the devicelink.
-    hTransform = cmsCreateMultiprofileTransform(ContextID, Profiles, nargs, 0, 0, Intent, dwFlags|cmsFLAGS_NOOPTIMIZE);
+    hTransform = cmsCreateMultiprofileTransform(Profiles, nargs, 0, 0, Intent, dwFlags|cmsFLAGS_NOOPTIMIZE);
     if (hTransform == NULL) {
         FatalError("Transform creation failed");
         goto Cleanup;
     }
 
-    hProfile =  cmsTransform2DeviceLink(ContextID, hTransform, Version, dwFlags);
+    hProfile =  cmsTransform2DeviceLink(hTransform, Version, dwFlags);
     if (hProfile == NULL) {
         FatalError("Devicelink creation failed");
         goto Cleanup;
     }
 
-    SetTextTags(ContextID, hProfile);
-    cmsSetHeaderRenderingIntent(ContextID, hProfile, Intent);
+    SetTextTags(hProfile);
+    cmsSetHeaderRenderingIntent(hProfile, Intent);
 
-    if (cmsSaveProfileToFile(ContextID, hProfile, cOutProf)) {
+    if (cmsSaveProfileToFile(hProfile, cOutProf)) {
 
         if (Verbose > 0)
             fprintf(stderr, "Ok");
@@ -365,15 +365,15 @@ int main(int argc, char *argv[])
     else
         FatalError("Error saving file!");
 
-    cmsCloseProfile(ContextID, hProfile);
+    cmsCloseProfile(hProfile);
 
 
 Cleanup:
 
-    if (hTransform != NULL) cmsDeleteTransform(ContextID, hTransform);
+    if (hTransform != NULL) cmsDeleteTransform(hTransform);
     for (i=0; i < nargs; i++) {
 
-        if (Profiles[i] != NULL) cmsCloseProfile(ContextID, Profiles[i]);
+        if (Profiles[i] != NULL) cmsCloseProfile(Profiles[i]);
     }
 
     return rc;

@@ -31,7 +31,7 @@
 const cmsCIEXYZ* CMSEXPORT cmsD50_XYZ(cmsContext ContextID)
 {
     static cmsCIEXYZ D50XYZ = {cmsD50X, cmsD50Y, cmsD50Z};
-    cmsUNUSED_PARAMETER(ContextID);
+    
 
     return &D50XYZ;
 }
@@ -40,18 +40,18 @@ const cmsCIExyY* CMSEXPORT cmsD50_xyY(cmsContext ContextID)
 {
     static cmsCIExyY D50xyY;
 
-    cmsXYZ2xyY(ContextID, &D50xyY, cmsD50_XYZ(ContextID));
+    cmsXYZ2xyY(&D50xyY, cmsD50_XYZ(ContextID));
 
     return &D50xyY;
 }
 
 // Obtains WhitePoint from Temperature
-cmsBool  CMSEXPORT cmsWhitePointFromTemp(cmsContext ContextID, cmsCIExyY* WhitePoint, cmsFloat64Number TempK)
+cmsBool  CMSEXPORT cmsWhitePointFromTemp(cmsCIExyY* WhitePoint, cmsFloat64Number TempK)
 {
     cmsFloat64Number x, y;
     cmsFloat64Number T, T2, T3;
     // cmsFloat64Number M1, M2;
-    cmsUNUSED_PARAMETER(ContextID);
+    
 
     _cmsAssert(WhitePoint != NULL);
 
@@ -142,13 +142,13 @@ static const ISOTEMPERATURE isotempdata[] = {
 
 
 // Robertson's method
-cmsBool  CMSEXPORT cmsTempFromWhitePoint(cmsContext ContextID, cmsFloat64Number* TempK, const cmsCIExyY* WhitePoint)
+cmsBool  CMSEXPORT cmsTempFromWhitePoint(cmsFloat64Number* TempK, const cmsCIExyY* WhitePoint)
 {
     cmsUInt32Number j;
     cmsFloat64Number us,vs;
     cmsFloat64Number uj,vj,tj,di,dj,mi,mj;
     cmsFloat64Number xs, ys;
-    cmsUNUSED_PARAMETER(ContextID);
+    
 
     _cmsAssert(WhitePoint != NULL);
     _cmsAssert(TempK != NULL);
@@ -191,7 +191,7 @@ cmsBool  CMSEXPORT cmsTempFromWhitePoint(cmsContext ContextID, cmsFloat64Number*
 // Compute chromatic adaptation matrix using Chad as cone matrix
 
 static
-cmsBool ComputeChromaticAdaptation(cmsContext ContextID, cmsMAT3* Conversion,
+cmsBool ComputeChromaticAdaptation(cmsMAT3* Conversion,
                                 const cmsCIEXYZ* SourceWhitePoint,
                                 const cmsCIEXYZ* DestWhitePoint,
                                 const cmsMAT3* Chad)
@@ -205,38 +205,38 @@ cmsBool ComputeChromaticAdaptation(cmsContext ContextID, cmsMAT3* Conversion,
 
 
     Tmp = *Chad;
-    if (!_cmsMAT3inverse(ContextID, &Tmp, &Chad_Inv)) return FALSE;
+    if (!_cmsMAT3inverse(&Tmp, &Chad_Inv)) return FALSE;
 
-    _cmsVEC3init(ContextID, &ConeSourceXYZ, SourceWhitePoint -> X,
+    _cmsVEC3init(&ConeSourceXYZ, SourceWhitePoint -> X,
                              SourceWhitePoint -> Y,
                              SourceWhitePoint -> Z);
 
-    _cmsVEC3init(ContextID, &ConeDestXYZ,   DestWhitePoint -> X,
+    _cmsVEC3init(&ConeDestXYZ,   DestWhitePoint -> X,
                              DestWhitePoint -> Y,
                              DestWhitePoint -> Z);
 
-    _cmsMAT3eval(ContextID, &ConeSourceRGB, Chad, &ConeSourceXYZ);
-    _cmsMAT3eval(ContextID, &ConeDestRGB,   Chad, &ConeDestXYZ);
+    _cmsMAT3eval(&ConeSourceRGB, Chad, &ConeSourceXYZ);
+    _cmsMAT3eval(&ConeDestRGB,   Chad, &ConeDestXYZ);
 
     if ((fabs(ConeSourceRGB.n[0]) < MATRIX_DET_TOLERANCE) ||
         (fabs(ConeSourceRGB.n[1]) < MATRIX_DET_TOLERANCE) ||
         (fabs(ConeSourceRGB.n[2]) < MATRIX_DET_TOLERANCE)) return FALSE;
 
     // Build matrix
-    _cmsVEC3init(ContextID, &Cone.v[0], ConeDestRGB.n[0]/ConeSourceRGB.n[0],    0.0,  0.0);
-    _cmsVEC3init(ContextID, &Cone.v[1], 0.0,   ConeDestRGB.n[1]/ConeSourceRGB.n[1],   0.0);
-    _cmsVEC3init(ContextID, &Cone.v[2], 0.0,   0.0,   ConeDestRGB.n[2]/ConeSourceRGB.n[2]);
+    _cmsVEC3init(&Cone.v[0], ConeDestRGB.n[0]/ConeSourceRGB.n[0],    0.0,  0.0);
+    _cmsVEC3init(&Cone.v[1], 0.0,   ConeDestRGB.n[1]/ConeSourceRGB.n[1],   0.0);
+    _cmsVEC3init(&Cone.v[2], 0.0,   0.0,   ConeDestRGB.n[2]/ConeSourceRGB.n[2]);
 
     // Normalize
-    _cmsMAT3per(ContextID, &Tmp, &Cone, Chad);
-    _cmsMAT3per(ContextID, Conversion, &Chad_Inv, &Tmp);
+    _cmsMAT3per(&Tmp, &Cone, Chad);
+    _cmsMAT3per(Conversion, &Chad_Inv, &Tmp);
 
     return TRUE;
 }
 
 // Returns the final chrmatic adaptation from illuminant FromIll to Illuminant ToIll
 // The cone matrix can be specified in ConeMatrix. If NULL, Bradford is assumed
-cmsBool  _cmsAdaptationMatrix(cmsContext ContextID, cmsMAT3* r, const cmsMAT3* ConeMatrix, const cmsCIEXYZ* FromIll, const cmsCIEXYZ* ToIll)
+cmsBool  _cmsAdaptationMatrix(cmsMAT3* r, const cmsMAT3* ConeMatrix, const cmsCIEXYZ* FromIll, const cmsCIEXYZ* ToIll)
 {
     cmsMAT3 LamRigg   = {{ // Bradford matrix
         {{  0.8951,  0.2664, -0.1614 }},
@@ -247,23 +247,23 @@ cmsBool  _cmsAdaptationMatrix(cmsContext ContextID, cmsMAT3* r, const cmsMAT3* C
     if (ConeMatrix == NULL)
         ConeMatrix = &LamRigg;
 
-    return ComputeChromaticAdaptation(ContextID, r, FromIll, ToIll, ConeMatrix);
+    return ComputeChromaticAdaptation(r, FromIll, ToIll, ConeMatrix);
 }
 
 // Same as anterior, but assuming D50 destination. White point is given in xyY
 static
-cmsBool _cmsAdaptMatrixToD50(cmsContext ContextID, cmsMAT3* r, const cmsCIExyY* SourceWhitePt)
+cmsBool _cmsAdaptMatrixToD50(cmsMAT3* r, const cmsCIExyY* SourceWhitePt)
 {
     cmsCIEXYZ Dn;
     cmsMAT3 Bradford;
     cmsMAT3 Tmp;
 
-    cmsxyY2XYZ(ContextID, &Dn, SourceWhitePt);
+    cmsxyY2XYZ(&Dn, SourceWhitePt);
 
-    if (!_cmsAdaptationMatrix(ContextID, &Bradford, NULL, &Dn, cmsD50_XYZ(ContextID))) return FALSE;
+    if (!_cmsAdaptationMatrix(&Bradford, NULL, &Dn, cmsD50_XYZ(ContextID))) return FALSE;
 
     Tmp = *r;
-    _cmsMAT3per(ContextID, r, &Bradford, &Tmp);
+    _cmsMAT3per(r, &Bradford, &Tmp);
 
     return TRUE;
 }
@@ -281,7 +281,7 @@ cmsBool _cmsAdaptMatrixToD50(cmsContext ContextID, cmsMAT3* r, const cmsCIExyY* 
 //              obtaining the coefficients of the transformation
 //            - Then, I apply these coefficients to the original matrix
 //
-cmsBool _cmsBuildRGB2XYZtransferMatrix(cmsContext ContextID, cmsMAT3* r, const cmsCIExyY* WhitePt, const cmsCIExyYTRIPLE* Primrs)
+cmsBool _cmsBuildRGB2XYZtransferMatrix(cmsMAT3* r, const cmsCIExyY* WhitePt, const cmsCIExyYTRIPLE* Primrs)
 {
     cmsVEC3 WhitePoint, Coef;
     cmsMAT3 Result, Primaries;
@@ -300,35 +300,35 @@ cmsBool _cmsBuildRGB2XYZtransferMatrix(cmsContext ContextID, cmsMAT3* r, const c
     yb = Primrs -> Blue.y;
 
     // Build Primaries matrix
-    _cmsVEC3init(ContextID, &Primaries.v[0], xr,        xg,         xb);
-    _cmsVEC3init(ContextID, &Primaries.v[1], yr,        yg,         yb);
-    _cmsVEC3init(ContextID, &Primaries.v[2], (1-xr-yr), (1-xg-yg),  (1-xb-yb));
+    _cmsVEC3init(&Primaries.v[0], xr,        xg,         xb);
+    _cmsVEC3init(&Primaries.v[1], yr,        yg,         yb);
+    _cmsVEC3init(&Primaries.v[2], (1-xr-yr), (1-xg-yg),  (1-xb-yb));
 
 
     // Result = Primaries ^ (-1) inverse matrix
-    if (!_cmsMAT3inverse(ContextID, &Primaries, &Result))
+    if (!_cmsMAT3inverse(&Primaries, &Result))
         return FALSE;
 
 
-    _cmsVEC3init(ContextID, &WhitePoint, xn/yn, 1.0, (1.0-xn-yn)/yn);
+    _cmsVEC3init(&WhitePoint, xn/yn, 1.0, (1.0-xn-yn)/yn);
 
     // Across inverse primaries ...
-    _cmsMAT3eval(ContextID, &Coef, &Result, &WhitePoint);
+    _cmsMAT3eval(&Coef, &Result, &WhitePoint);
 
     // Give us the Coefs, then I build transformation matrix
-    _cmsVEC3init(ContextID, &r -> v[0], Coef.n[VX]*xr,          Coef.n[VY]*xg,          Coef.n[VZ]*xb);
-    _cmsVEC3init(ContextID, &r -> v[1], Coef.n[VX]*yr,          Coef.n[VY]*yg,          Coef.n[VZ]*yb);
-    _cmsVEC3init(ContextID, &r -> v[2], Coef.n[VX]*(1.0-xr-yr), Coef.n[VY]*(1.0-xg-yg), Coef.n[VZ]*(1.0-xb-yb));
+    _cmsVEC3init(&r -> v[0], Coef.n[VX]*xr,          Coef.n[VY]*xg,          Coef.n[VZ]*xb);
+    _cmsVEC3init(&r -> v[1], Coef.n[VX]*yr,          Coef.n[VY]*yg,          Coef.n[VZ]*yb);
+    _cmsVEC3init(&r -> v[2], Coef.n[VX]*(1.0-xr-yr), Coef.n[VY]*(1.0-xg-yg), Coef.n[VZ]*(1.0-xb-yb));
 
 
-    return _cmsAdaptMatrixToD50(ContextID, r, WhitePt);
+    return _cmsAdaptMatrixToD50(r, WhitePt);
 
 }
 
 
 // Adapts a color to a given illuminant. Original color is expected to have
 // a SourceWhitePt white point.
-cmsBool CMSEXPORT cmsAdaptToIlluminant(cmsContext ContextID, cmsCIEXYZ* Result,
+cmsBool CMSEXPORT cmsAdaptToIlluminant(cmsCIEXYZ* Result,
                                        const cmsCIEXYZ* SourceWhitePt,
                                        const cmsCIEXYZ* Illuminant,
                                        const cmsCIEXYZ* Value)
@@ -341,10 +341,10 @@ cmsBool CMSEXPORT cmsAdaptToIlluminant(cmsContext ContextID, cmsCIEXYZ* Result,
     _cmsAssert(Illuminant != NULL);
     _cmsAssert(Value != NULL);
 
-    if (!_cmsAdaptationMatrix(ContextID, &Bradford, NULL, SourceWhitePt, Illuminant)) return FALSE;
+    if (!_cmsAdaptationMatrix(&Bradford, NULL, SourceWhitePt, Illuminant)) return FALSE;
 
-    _cmsVEC3init(ContextID, &In, Value -> X, Value -> Y, Value -> Z);
-    _cmsMAT3eval(ContextID, &Out, &Bradford, &In);
+    _cmsVEC3init(&In, Value -> X, Value -> Y, Value -> Z);
+    _cmsMAT3eval(&Out, &Bradford, &In);
 
     Result -> X = Out.n[0];
     Result -> Y = Out.n[1];

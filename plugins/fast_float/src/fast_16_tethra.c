@@ -40,11 +40,11 @@ typedef struct {
 
 // Precomputes tables for 16-bit on input devicelink.
 static
-Performance16Data* Performance16alloc(cmsContext ContextID, const cmsInterpParams* p)
+Performance16Data* Performance16alloc(const cmsInterpParams* p)
 {
     Performance16Data* p16;
 
-    p16 = (Performance16Data*) _cmsMallocZero(ContextID, sizeof(Performance16Data));
+    p16 = (Performance16Data*) _cmsMallocZero(sizeof(Performance16Data));
     if (p16 == NULL) return NULL;
 
     p16 ->p = p;
@@ -53,9 +53,9 @@ Performance16Data* Performance16alloc(cmsContext ContextID, const cmsInterpParam
 }
 
 static
-void Performance16free(cmsContext ContextID, void* ptr)
+void Performance16free(void* ptr)
 {
-    _cmsFree(ContextID, ptr);
+    _cmsFree(ptr);
 }
 
 /**
@@ -112,8 +112,8 @@ void PerformanceEval16(cmsContext ContextID,
 
        cmsUInt32Number nalpha, strideIn, strideOut;
 
-       cmsUInt32Number dwInFormat = cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo);
-       cmsUInt32Number dwOutFormat = cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo);
+       cmsUInt32Number dwInFormat = cmsGetTransformInputFormat((cmsHTRANSFORM)CMMcargo);
+       cmsUInt32Number dwOutFormat = cmsGetTransformOutputFormat((cmsHTRANSFORM)CMMcargo);
        _cmsComputeComponentIncrements(dwInFormat, Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
        _cmsComputeComponentIncrements(dwOutFormat, Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
 
@@ -342,11 +342,11 @@ cmsBool Optimize16BitRGBTransform(cmsContext ContextID,
 
 
     // If this is a matrix-shaper, the default does already a good job
-    if (cmsPipelineCheckAndRetreiveStages(ContextID, *Lut, 4,
+    if (cmsPipelineCheckAndRetreiveStages(*Lut, 4,
         cmsSigCurveSetElemType, cmsSigMatrixElemType, cmsSigMatrixElemType, cmsSigCurveSetElemType,
         NULL, NULL, NULL, NULL)) return FALSE;
 
-    if (cmsPipelineCheckAndRetreiveStages(ContextID, *Lut, 2,
+    if (cmsPipelineCheckAndRetreiveStages(*Lut, 2,
         cmsSigCurveSetElemType, cmsSigCurveSetElemType,
         NULL, NULL)) return FALSE;
 
@@ -360,12 +360,12 @@ cmsBool Optimize16BitRGBTransform(cmsContext ContextID,
                                OutputFormat,
                                &newFlags)) return FALSE;
 
-    OptimizedCLUTmpe = cmsPipelineGetPtrToFirstStage(ContextID, *Lut);
+    OptimizedCLUTmpe = cmsPipelineGetPtrToFirstStage(*Lut);
 
     // Set the evaluator
-    data = (_cmsStageCLutData*)cmsStageData(ContextID, OptimizedCLUTmpe);
+    data = (_cmsStageCLutData*)cmsStageData(OptimizedCLUTmpe);
 
-    p16 = Performance16alloc(ContextID, data->Params);
+    p16 = Performance16alloc(data->Params);
     if (p16 == NULL) return FALSE;
 
     *TransformFn = PerformanceEval16;

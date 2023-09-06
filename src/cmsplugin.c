@@ -107,33 +107,33 @@ void CMSEXPORT  _cmsAdjustEndianess64(cmsUInt64Number* Result, cmsUInt64Number* 
 }
 
 // Auxiliary -- read 8, 16 and 32-bit numbers
-cmsBool CMSEXPORT  _cmsReadUInt8Number(cmsContext ContextID, cmsIOHANDLER* io, cmsUInt8Number* n)
+cmsBool CMSEXPORT  _cmsReadUInt8Number(cmsIOHANDLER* io, cmsUInt8Number* n)
 {
     cmsUInt8Number tmp;
 
     _cmsAssert(io != NULL);
 
-    if (io -> Read(ContextID, io, &tmp, sizeof(cmsUInt8Number), 1) != 1)
+    if (io -> Read(io, &tmp, sizeof(cmsUInt8Number), 1) != 1)
             return FALSE;
 
     if (n != NULL) *n = tmp;
     return TRUE;
 }
 
-cmsBool CMSEXPORT  _cmsReadUInt16Number(cmsContext ContextID, cmsIOHANDLER* io, cmsUInt16Number* n)
+cmsBool CMSEXPORT  _cmsReadUInt16Number(cmsIOHANDLER* io, cmsUInt16Number* n)
 {
     cmsUInt16Number tmp;
 
     _cmsAssert(io != NULL);
 
-    if (io -> Read(ContextID, io, &tmp, sizeof(cmsUInt16Number), 1) != 1)
+    if (io -> Read(io, &tmp, sizeof(cmsUInt16Number), 1) != 1)
             return FALSE;
 
     if (n != NULL) *n = _cmsAdjustEndianess16(tmp);
     return TRUE;
 }
 
-cmsBool CMSEXPORT  _cmsReadUInt16Array(cmsContext ContextID, cmsIOHANDLER* io, cmsUInt32Number n, cmsUInt16Number* Array)
+cmsBool CMSEXPORT  _cmsReadUInt16Array(cmsIOHANDLER* io, cmsUInt32Number n, cmsUInt16Number* Array)
 {
     cmsUInt32Number i;
 
@@ -142,30 +142,30 @@ cmsBool CMSEXPORT  _cmsReadUInt16Array(cmsContext ContextID, cmsIOHANDLER* io, c
     for (i=0; i < n; i++) {
 
         if (Array != NULL) {
-            if (!_cmsReadUInt16Number(ContextID, io, Array + i)) return FALSE;
+            if (!_cmsReadUInt16Number(io, Array + i)) return FALSE;
         }
         else {
-            if (!_cmsReadUInt16Number(ContextID, io, NULL)) return FALSE;
+            if (!_cmsReadUInt16Number(io, NULL)) return FALSE;
         }
 
     }
     return TRUE;
 }
 
-cmsBool CMSEXPORT  _cmsReadUInt32Number(cmsContext ContextID, cmsIOHANDLER* io, cmsUInt32Number* n)
+cmsBool CMSEXPORT  _cmsReadUInt32Number(cmsIOHANDLER* io, cmsUInt32Number* n)
 {
     cmsUInt32Number tmp;
 
     _cmsAssert(io != NULL);
 
-    if (io -> Read(ContextID, io, &tmp, sizeof(cmsUInt32Number), 1) != 1)
+    if (io -> Read(io, &tmp, sizeof(cmsUInt32Number), 1) != 1)
             return FALSE;
 
     if (n != NULL) *n = _cmsAdjustEndianess32(tmp);
     return TRUE;
 }
 
-cmsBool CMSEXPORT  _cmsReadFloat32Number(cmsContext ContextID, cmsIOHANDLER* io, cmsFloat32Number* n)
+cmsBool CMSEXPORT  _cmsReadFloat32Number(cmsIOHANDLER* io, cmsFloat32Number* n)
 {
     union typeConverter {
         cmsUInt32Number integer;
@@ -174,7 +174,7 @@ cmsBool CMSEXPORT  _cmsReadFloat32Number(cmsContext ContextID, cmsIOHANDLER* io,
 
     _cmsAssert(io != NULL);
 
-    if (io->Read(ContextID, io, &tmp.integer, sizeof(cmsUInt32Number), 1) != 1)
+    if (io->Read(io, &tmp.integer, sizeof(cmsUInt32Number), 1) != 1)
         return FALSE;
 
     if (n != NULL) {
@@ -202,13 +202,13 @@ cmsBool CMSEXPORT  _cmsReadFloat32Number(cmsContext ContextID, cmsIOHANDLER* io,
 }
 
 
-cmsBool CMSEXPORT   _cmsReadUInt64Number(cmsContext ContextID, cmsIOHANDLER* io, cmsUInt64Number* n)
+cmsBool CMSEXPORT   _cmsReadUInt64Number(cmsIOHANDLER* io, cmsUInt64Number* n)
 {
     cmsUInt64Number tmp;
 
     _cmsAssert(io != NULL);
 
-    if (io -> Read(ContextID, io, &tmp, sizeof(cmsUInt64Number), 1) != 1)
+    if (io -> Read(io, &tmp, sizeof(cmsUInt64Number), 1) != 1)
             return FALSE;
 
     if (n != NULL) {
@@ -220,13 +220,13 @@ cmsBool CMSEXPORT   _cmsReadUInt64Number(cmsContext ContextID, cmsIOHANDLER* io,
 }
 
 
-cmsBool CMSEXPORT  _cmsRead15Fixed16Number(cmsContext ContextID, cmsIOHANDLER* io, cmsFloat64Number* n)
+cmsBool CMSEXPORT  _cmsRead15Fixed16Number(cmsIOHANDLER* io, cmsFloat64Number* n)
 {
     cmsUInt32Number tmp;
 
     _cmsAssert(io != NULL);
 
-    if (io -> Read(ContextID, io, &tmp, sizeof(cmsUInt32Number), 1) != 1)
+    if (io -> Read(io, &tmp, sizeof(cmsUInt32Number), 1) != 1)
             return FALSE;
 
     if (n != NULL) {
@@ -237,13 +237,13 @@ cmsBool CMSEXPORT  _cmsRead15Fixed16Number(cmsContext ContextID, cmsIOHANDLER* i
 }
 
 
-cmsBool CMSEXPORT  _cmsReadXYZNumber(cmsContext ContextID, cmsIOHANDLER* io, cmsCIEXYZ* XYZ)
+cmsBool CMSEXPORT  _cmsReadXYZNumber(cmsIOHANDLER* io, cmsCIEXYZ* XYZ)
 {
     cmsEncodedXYZNumber xyz;
 
     _cmsAssert(io != NULL);
 
-    if (io ->Read(ContextID, io, &xyz, sizeof(cmsEncodedXYZNumber), 1) != 1) return FALSE;
+    if (io ->Read(io, &xyz, sizeof(cmsEncodedXYZNumber), 1) != 1) return FALSE;
 
     if (XYZ != NULL) {
 
@@ -254,30 +254,30 @@ cmsBool CMSEXPORT  _cmsReadXYZNumber(cmsContext ContextID, cmsIOHANDLER* io, cms
     return TRUE;
 }
 
-cmsBool CMSEXPORT  _cmsWriteUInt8Number(cmsContext ContextID, cmsIOHANDLER* io, cmsUInt8Number n)
+cmsBool CMSEXPORT  _cmsWriteUInt8Number(cmsIOHANDLER* io, cmsUInt8Number n)
 {
     _cmsAssert(io != NULL);
 
-    if (io -> Write(ContextID, io, sizeof(cmsUInt8Number), &n) != 1)
+    if (io -> Write(io, sizeof(cmsUInt8Number), &n) != 1)
             return FALSE;
 
     return TRUE;
 }
 
-cmsBool CMSEXPORT  _cmsWriteUInt16Number(cmsContext ContextID, cmsIOHANDLER* io, cmsUInt16Number n)
+cmsBool CMSEXPORT  _cmsWriteUInt16Number(cmsIOHANDLER* io, cmsUInt16Number n)
 {
     cmsUInt16Number tmp;
 
     _cmsAssert(io != NULL);
 
     tmp = _cmsAdjustEndianess16(n);
-    if (io -> Write(ContextID, io, sizeof(cmsUInt16Number), &tmp) != 1)
+    if (io -> Write(io, sizeof(cmsUInt16Number), &tmp) != 1)
             return FALSE;
 
     return TRUE;
 }
 
-cmsBool CMSEXPORT  _cmsWriteUInt16Array(cmsContext ContextID, cmsIOHANDLER* io, cmsUInt32Number n, const cmsUInt16Number* Array)
+cmsBool CMSEXPORT  _cmsWriteUInt16Array(cmsIOHANDLER* io, cmsUInt32Number n, const cmsUInt16Number* Array)
 {
     cmsUInt32Number i;
 
@@ -285,27 +285,27 @@ cmsBool CMSEXPORT  _cmsWriteUInt16Array(cmsContext ContextID, cmsIOHANDLER* io, 
     _cmsAssert(Array != NULL);
 
     for (i=0; i < n; i++) {
-        if (!_cmsWriteUInt16Number(ContextID, io, Array[i])) return FALSE;
+        if (!_cmsWriteUInt16Number(io, Array[i])) return FALSE;
     }
 
     return TRUE;
 }
 
-cmsBool CMSEXPORT  _cmsWriteUInt32Number(cmsContext ContextID, cmsIOHANDLER* io, cmsUInt32Number n)
+cmsBool CMSEXPORT  _cmsWriteUInt32Number(cmsIOHANDLER* io, cmsUInt32Number n)
 {
     cmsUInt32Number tmp;
 
     _cmsAssert(io != NULL);
 
     tmp = _cmsAdjustEndianess32(n);
-    if (io -> Write(ContextID, io, sizeof(cmsUInt32Number), &tmp) != 1)
+    if (io -> Write(io, sizeof(cmsUInt32Number), &tmp) != 1)
             return FALSE;
 
     return TRUE;
 }
 
 
-cmsBool CMSEXPORT  _cmsWriteFloat32Number(cmsContext ContextID, cmsIOHANDLER* io, cmsFloat32Number n)
+cmsBool CMSEXPORT  _cmsWriteFloat32Number(cmsIOHANDLER* io, cmsFloat32Number n)
 {
     union typeConverter {
         cmsUInt32Number integer;
@@ -314,39 +314,39 @@ cmsBool CMSEXPORT  _cmsWriteFloat32Number(cmsContext ContextID, cmsIOHANDLER* io
 
     tmp.floating_point = n;
     tmp.integer = _cmsAdjustEndianess32(tmp.integer);
-    if (io -> Write(ContextID, io, sizeof(cmsUInt32Number), &tmp.integer) != 1)
+    if (io -> Write(io, sizeof(cmsUInt32Number), &tmp.integer) != 1)
             return FALSE;
 
     return TRUE;
 }
 
-cmsBool CMSEXPORT  _cmsWriteUInt64Number(cmsContext ContextID, cmsIOHANDLER* io, cmsUInt64Number* n)
+cmsBool CMSEXPORT  _cmsWriteUInt64Number(cmsIOHANDLER* io, cmsUInt64Number* n)
 {
     cmsUInt64Number tmp;
 
     _cmsAssert(io != NULL);
 
     _cmsAdjustEndianess64(&tmp, n);
-    if (io -> Write(ContextID, io, sizeof(cmsUInt64Number), &tmp) != 1)
+    if (io -> Write(io, sizeof(cmsUInt64Number), &tmp) != 1)
             return FALSE;
 
     return TRUE;
 }
 
-cmsBool CMSEXPORT  _cmsWrite15Fixed16Number(cmsContext ContextID, cmsIOHANDLER* io, cmsFloat64Number n)
+cmsBool CMSEXPORT  _cmsWrite15Fixed16Number(cmsIOHANDLER* io, cmsFloat64Number n)
 {
     cmsUInt32Number tmp;
 
     _cmsAssert(io != NULL);
 
     tmp = _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(n));
-    if (io -> Write(ContextID, io, sizeof(cmsUInt32Number), &tmp) != 1)
+    if (io -> Write(io, sizeof(cmsUInt32Number), &tmp) != 1)
             return FALSE;
 
     return TRUE;
 }
 
-cmsBool CMSEXPORT  _cmsWriteXYZNumber(cmsContext ContextID, cmsIOHANDLER* io, const cmsCIEXYZ* XYZ)
+cmsBool CMSEXPORT  _cmsWriteXYZNumber(cmsIOHANDLER* io, const cmsCIEXYZ* XYZ)
 {
     cmsEncodedXYZNumber xyz;
 
@@ -357,7 +357,7 @@ cmsBool CMSEXPORT  _cmsWriteXYZNumber(cmsContext ContextID, cmsIOHANDLER* io, co
     xyz.Y = (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(XYZ->Y));
     xyz.Z = (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(XYZ->Z));
 
-    return io -> Write(ContextID, io,  sizeof(cmsEncodedXYZNumber), &xyz);
+    return io -> Write(io,  sizeof(cmsEncodedXYZNumber), &xyz);
 }
 
 // from Fixed point 8.8 to double
@@ -386,9 +386,9 @@ cmsS15Fixed16Number CMSEXPORT _cmsDoubleTo15Fixed16(cmsFloat64Number v)
 
 // Date/Time functions
 
-void CMSEXPORT _cmsDecodeDateTimeNumber(cmsContext ContextID, const cmsDateTimeNumber *Source, struct tm *Dest)
+void CMSEXPORT _cmsDecodeDateTimeNumber(const cmsDateTimeNumber *Source, struct tm *Dest)
 {
-    cmsUNUSED_PARAMETER(ContextID);
+    
 
     _cmsAssert(Dest != NULL);
     _cmsAssert(Source != NULL);
@@ -404,9 +404,9 @@ void CMSEXPORT _cmsDecodeDateTimeNumber(cmsContext ContextID, const cmsDateTimeN
     Dest->tm_isdst = 0;
 }
 
-void CMSEXPORT _cmsEncodeDateTimeNumber(cmsContext ContextID, cmsDateTimeNumber *Dest, const struct tm *Source)
+void CMSEXPORT _cmsEncodeDateTimeNumber(cmsDateTimeNumber *Dest, const struct tm *Source)
 {
-    cmsUNUSED_PARAMETER(ContextID);
+    
 
     _cmsAssert(Dest != NULL);
     _cmsAssert(Source != NULL);
@@ -420,20 +420,20 @@ void CMSEXPORT _cmsEncodeDateTimeNumber(cmsContext ContextID, cmsDateTimeNumber 
 }
 
 // Read base and return type base
-cmsTagTypeSignature CMSEXPORT _cmsReadTypeBase(cmsContext ContextID, cmsIOHANDLER* io)
+cmsTagTypeSignature CMSEXPORT _cmsReadTypeBase(cmsIOHANDLER* io)
 {
     _cmsTagBase Base;
 
     _cmsAssert(io != NULL);
 
-    if (io -> Read(ContextID, io, &Base, sizeof(_cmsTagBase), 1) != 1)
+    if (io -> Read(io, &Base, sizeof(_cmsTagBase), 1) != 1)
         return (cmsTagTypeSignature) 0;
 
     return (cmsTagTypeSignature) _cmsAdjustEndianess32(Base.sig);
 }
 
 // Setup base marker
-cmsBool  CMSEXPORT _cmsWriteTypeBase(cmsContext ContextID, cmsIOHANDLER* io, cmsTagTypeSignature sig)
+cmsBool  CMSEXPORT _cmsWriteTypeBase(cmsIOHANDLER* io, cmsTagTypeSignature sig)
 {
     _cmsTagBase  Base;
 
@@ -441,10 +441,10 @@ cmsBool  CMSEXPORT _cmsWriteTypeBase(cmsContext ContextID, cmsIOHANDLER* io, cms
 
     Base.sig = (cmsTagTypeSignature) _cmsAdjustEndianess32(sig);
     memset(&Base.reserved, 0, sizeof(Base.reserved));
-    return io -> Write(ContextID, io, sizeof(_cmsTagBase), &Base);
+    return io -> Write(io, sizeof(_cmsTagBase), &Base);
 }
 
-cmsBool CMSEXPORT _cmsReadAlignment(cmsContext ContextID, cmsIOHANDLER* io)
+cmsBool CMSEXPORT _cmsReadAlignment(cmsIOHANDLER* io)
 {
     cmsUInt8Number  Buffer[4];
     cmsUInt32Number NextAligned, At;
@@ -452,16 +452,16 @@ cmsBool CMSEXPORT _cmsReadAlignment(cmsContext ContextID, cmsIOHANDLER* io)
 
     _cmsAssert(io != NULL);
 
-    At = io -> Tell(ContextID, io);
+    At = io -> Tell(io);
     NextAligned = _cmsALIGNLONG(At);
     BytesToNextAlignedPos = NextAligned - At;
     if (BytesToNextAlignedPos == 0) return TRUE;
     if (BytesToNextAlignedPos > 4)  return FALSE;
 
-    return (io ->Read(ContextID, io, Buffer, BytesToNextAlignedPos, 1) == 1);
+    return (io ->Read(io, Buffer, BytesToNextAlignedPos, 1) == 1);
 }
 
-cmsBool CMSEXPORT _cmsWriteAlignment(cmsContext ContextID, cmsIOHANDLER* io)
+cmsBool CMSEXPORT _cmsWriteAlignment(cmsIOHANDLER* io)
 {
     cmsUInt8Number  Buffer[4];
     cmsUInt32Number NextAligned, At;
@@ -469,19 +469,19 @@ cmsBool CMSEXPORT _cmsWriteAlignment(cmsContext ContextID, cmsIOHANDLER* io)
 
     _cmsAssert(io != NULL);
 
-    At = io -> Tell(ContextID, io);
+    At = io -> Tell(io);
     NextAligned = _cmsALIGNLONG(At);
     BytesToNextAlignedPos = NextAligned - At;
     if (BytesToNextAlignedPos == 0) return TRUE;
     if (BytesToNextAlignedPos > 4)  return FALSE;
 
     memset(Buffer, 0, BytesToNextAlignedPos);
-    return io -> Write(ContextID, io, BytesToNextAlignedPos, Buffer);
+    return io -> Write(io, BytesToNextAlignedPos, Buffer);
 }
 
 
 // To deal with text streams. 2K at most
-cmsBool CMSEXPORT _cmsIOPrintf(cmsContext ContextID, cmsIOHANDLER* io, const char* frm, ...)
+cmsBool CMSEXPORT _cmsIOPrintf(cmsIOHANDLER* io, const char* frm, ...)
 {
     va_list args;
     int len;
@@ -507,7 +507,7 @@ cmsBool CMSEXPORT _cmsIOPrintf(cmsContext ContextID, cmsIOHANDLER* io, const cha
         if (*ptr == ',') *ptr = '.';
     }
 
-    rc = io ->Write(ContextID, io, (cmsUInt32Number) len, Buffer);
+    rc = io ->Write(io, (cmsUInt32Number) len, Buffer);
 
     va_end(args);
 
@@ -518,7 +518,7 @@ cmsBool CMSEXPORT _cmsIOPrintf(cmsContext ContextID, cmsIOHANDLER* io, const cha
 // Plugin memory management -------------------------------------------------------------------------------------------------
 
 // Specialized malloc for plug-ins, that is freed upon exit.
-void* _cmsPluginMalloc(cmsContext ContextID, cmsUInt32Number size)
+void* _cmsPluginMalloc(cmsUInt32Number size)
 {
     struct _cmsContext_struct* ctx = _cmsGetContext(ContextID);
 
@@ -530,7 +530,7 @@ void* _cmsPluginMalloc(cmsContext ContextID, cmsUInt32Number size)
             if (ctx->MemPool == NULL) return NULL;
         }
         else {
-            cmsSignalError(ContextID, cmsERROR_CORRUPTION_DETECTED, "NULL memory pool on context");
+            cmsSignalError(cmsERROR_CORRUPTION_DETECTED, "NULL memory pool on context");
             return NULL;
         }
     }
@@ -741,14 +741,14 @@ struct _cmsContext_struct* _cmsGetContext(cmsContext ContextID)
 
 // Internal: get the memory area associated with each context client
 // Returns the block assigned to the specific zone. Never return NULL.
-void* _cmsContextGetClientChunk(cmsContext ContextID, _cmsMemoryClient mc)
+void* _cmsContextGetClientChunk(_cmsMemoryClient mc)
 {
     struct _cmsContext_struct* ctx;
     void *ptr;
 
     if ((int) mc < 0 || mc >= MemoryClientMax) {
 
-           cmsSignalError(ContextID, cmsERROR_INTERNAL, "Bad context client -- possible corruption");
+           cmsSignalError(cmsERROR_INTERNAL, "Bad context client -- possible corruption");
 
            // This is catastrophic. Should never reach here
            _cmsAssert(0);
@@ -776,18 +776,18 @@ void* _cmsContextGetClientChunk(cmsContext ContextID, _cmsMemoryClient mc)
 // identify which plug-in to unregister.
 void CMSEXPORT cmsUnregisterPlugins(cmsContext ContextID)
 {    
-    _cmsRegisterMemHandlerPlugin(ContextID, NULL);
-    _cmsRegisterInterpPlugin(ContextID, NULL);
-    _cmsRegisterTagTypePlugin(ContextID, NULL);
-    _cmsRegisterTagPlugin(ContextID, NULL);
-    _cmsRegisterFormattersPlugin(ContextID, NULL);
-    _cmsRegisterRenderingIntentPlugin(ContextID, NULL);
-    _cmsRegisterParametricCurvesPlugin(ContextID, NULL);
-    _cmsRegisterMultiProcessElementPlugin(ContextID, NULL);
-    _cmsRegisterOptimizationPlugin(ContextID, NULL);
-    _cmsRegisterTransformPlugin(ContextID, NULL);
-    _cmsRegisterMutexPlugin(ContextID, NULL);
-    _cmsRegisterParallelizationPlugin(ContextID, NULL);
+    _cmsRegisterMemHandlerPlugin(NULL);
+    _cmsRegisterInterpPlugin(NULL);
+    _cmsRegisterTagTypePlugin(NULL);
+    _cmsRegisterTagPlugin(NULL);
+    _cmsRegisterFormattersPlugin(NULL);
+    _cmsRegisterRenderingIntentPlugin(NULL);
+    _cmsRegisterParametricCurvesPlugin(NULL);
+    _cmsRegisterMultiProcessElementPlugin(NULL);
+    _cmsRegisterOptimizationPlugin(NULL);
+    _cmsRegisterTransformPlugin(NULL);
+    _cmsRegisterMutexPlugin(NULL);
+    _cmsRegisterParallelizationPlugin(NULL);
 
 }
 
@@ -887,7 +887,7 @@ cmsContext CMSEXPORT cmsCreateContext(void* Plugin, void* UserData)
 // Duplicates a context with all associated plug-ins.
 // Caller may specify an optional pointer to user-defined
 // data that will be forwarded to plug-ins and logger.
-cmsContext CMSEXPORT cmsDupContext(cmsContext ContextID, void* NewUserData)
+cmsContext CMSEXPORT cmsDupContext(void* NewUserData)
 {
     int i;
     struct _cmsContext_struct* ctx;
@@ -896,7 +896,7 @@ cmsContext CMSEXPORT cmsDupContext(cmsContext ContextID, void* NewUserData)
     void* userData = (NewUserData != NULL) ? NewUserData : src -> chunks[UserPtr];
 
 
-    ctx = (struct _cmsContext_struct*) _cmsMalloc(ContextID, sizeof(struct _cmsContext_struct));
+    ctx = (struct _cmsContext_struct*) _cmsMalloc(sizeof(struct _cmsContext_struct));
     if (ctx == NULL)
         return NULL;     // Something very wrong happened
 
@@ -1013,7 +1013,7 @@ void CMSEXPORT cmsDeleteContext(cmsContext ContextID)
 // Returns the user data associated to the given ContextID, or NULL if no user data was attached on context creation
 void* CMSEXPORT cmsGetContextUserData(cmsContext ContextID)
 {
-    return _cmsContextGetClientChunk(ContextID, UserPtr);
+    return _cmsContextGetClientChunk(UserPtr);
 }
 
 

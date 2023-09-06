@@ -32,11 +32,11 @@ typedef struct {
 
 // Precomputes tables on input devicelink.
 static
-FloatCMYKData* FloatCMYKAlloc(cmsContext ContextID, const cmsInterpParams* p)
+FloatCMYKData* FloatCMYKAlloc(const cmsInterpParams* p)
 {
     FloatCMYKData* fd;
 
-    fd = (FloatCMYKData*) _cmsMallocZero(ContextID, sizeof(FloatCMYKData));
+    fd = (FloatCMYKData*) _cmsMallocZero(sizeof(FloatCMYKData));
     if (fd == NULL) return NULL;
 
     fd ->p = p;
@@ -45,10 +45,10 @@ FloatCMYKData* FloatCMYKAlloc(cmsContext ContextID, const cmsInterpParams* p)
 
 
 static
-int XFormSampler(cmsContext ContextID, CMSREGISTER const cmsFloat32Number In[], CMSREGISTER cmsFloat32Number Out[], CMSREGISTER void* Cargo)
+int XFormSampler(CMSREGISTER const cmsFloat32Number In[], CMSREGISTER cmsFloat32Number Out[], CMSREGISTER void* Cargo)
 {
     // Evaluate in 16 bits
-    cmsPipelineEvalFloat(ContextID, In, Out, (cmsPipeline*) Cargo);
+    cmsPipelineEvalFloat(In, Out, (cmsPipeline*) Cargo);
 
     // Always succeed
     return TRUE;
@@ -107,8 +107,8 @@ void FloatCMYKCLUTEval(cmsContext ContextID,
     cmsUInt32Number DestStartingOrder[cmsMAXCHANNELS];
     cmsUInt32Number DestIncrements[cmsMAXCHANNELS];
 
-    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
-    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
+    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat((cmsHTRANSFORM) CMMcargo);
+    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat((cmsHTRANSFORM) CMMcargo);
 
     cmsUInt32Number nchans, nalpha;
     cmsUInt32Number strideIn, strideOut;
@@ -351,27 +351,27 @@ cmsBool OptimizeCLUTCMYKTransform(cmsContext ContextID,
     nGridPoints = _cmsReasonableGridpointsByColorspace(cmsSigRgbData, *dwFlags);
 
     // Create the result LUT
-    OptimizedLUT = cmsPipelineAlloc(ContextID, 4, cmsPipelineOutputChannels(ContextID, OriginalLut));
+    OptimizedLUT = cmsPipelineAlloc(4, cmsPipelineOutputChannels(OriginalLut));
     if (OptimizedLUT == NULL) goto Error;
 
 
     // Allocate the CLUT for result
-    OptimizedCLUTmpe = cmsStageAllocCLutFloat(ContextID, nGridPoints, 4, cmsPipelineOutputChannels(ContextID, OriginalLut), NULL);
+    OptimizedCLUTmpe = cmsStageAllocCLutFloat(nGridPoints, 4, cmsPipelineOutputChannels(OriginalLut), NULL);
 
     // Add the CLUT to the destination LUT
-    cmsPipelineInsertStage(ContextID, OptimizedLUT, cmsAT_BEGIN, OptimizedCLUTmpe);
+    cmsPipelineInsertStage(OptimizedLUT, cmsAT_BEGIN, OptimizedCLUTmpe);
 
     // Resample the LUT
-    if (!cmsStageSampleCLutFloat(ContextID, OptimizedCLUTmpe, XFormSampler, (void*)OriginalLut, 0)) goto Error;
+    if (!cmsStageSampleCLutFloat(OptimizedCLUTmpe, XFormSampler, (void*)OriginalLut, 0)) goto Error;
 
     // Set the evaluator, copy parameters
-    data = (_cmsStageCLutData*) cmsStageData(ContextID, OptimizedCLUTmpe);
+    data = (_cmsStageCLutData*) cmsStageData(OptimizedCLUTmpe);
 
-    pcmyk = FloatCMYKAlloc(ContextID, data ->Params);
+    pcmyk = FloatCMYKAlloc(data ->Params);
     if (pcmyk == NULL) return FALSE;
 
     // And return the obtained LUT
-    cmsPipelineFree(ContextID, OriginalLut);
+    cmsPipelineFree(OriginalLut);
 
     *Lut = OptimizedLUT;
     *TransformFn = FloatCMYKCLUTEval;
@@ -382,7 +382,7 @@ cmsBool OptimizeCLUTCMYKTransform(cmsContext ContextID,
 
 Error:
 
-    if (OptimizedLUT != NULL) cmsPipelineFree(ContextID, OptimizedLUT);
+    if (OptimizedLUT != NULL) cmsPipelineFree(OptimizedLUT);
 
     return FALSE;
 }

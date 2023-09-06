@@ -46,7 +46,7 @@ void FatalError(const char *frm, ...)
 
 // Show errors to the end user (unless quiet option)
 static
-void MyErrorLogHandler(cmsContext ContextID, cmsUInt32Number ErrorCode, const char *Text)
+void MyErrorLogHandler(cmsUInt32Number ErrorCode, const char *Text)
 {
     if (Verbose >= 0)
         fprintf(stderr, "[%s]: %s\n", ProgramName, Text);
@@ -56,36 +56,36 @@ void MyErrorLogHandler(cmsContext ContextID, cmsUInt32Number ErrorCode, const ch
 }
 
 
-void InitUtils(cmsContext ContextID, const char* PName)
+void InitUtils(const char* PName)
 {
       strncpy(ProgramName, PName, sizeof(ProgramName));
       ProgramName[sizeof(ProgramName)-1] = 0;
 
-      cmsSetLogErrorHandler(ContextID, MyErrorLogHandler);
+      cmsSetLogErrorHandler(MyErrorLogHandler);
 }
 
 
 // Virtual profiles are handled here.
-cmsHPROFILE OpenStockProfile(cmsContext ContextID, const char* File)
+cmsHPROFILE OpenStockProfile(const char* File)
 {
        if (!File)
             return cmsCreate_sRGBProfile(ContextID);
 
        if (cmsstrcasecmp(File, "*Lab2") == 0)
-                return cmsCreateLab2Profile(ContextID, NULL);
+                return cmsCreateLab2Profile(NULL);
 
        if (cmsstrcasecmp(File, "*Lab4") == 0)
-                return cmsCreateLab4Profile(ContextID, NULL);
+                return cmsCreateLab4Profile(NULL);
 
        if (cmsstrcasecmp(File, "*Lab") == 0)
-                return cmsCreateLab4Profile(ContextID, NULL);
+                return cmsCreateLab4Profile(NULL);
 
        if (cmsstrcasecmp(File, "*LabD65") == 0) {
 
            cmsCIExyY D65xyY;
 
-           cmsWhitePointFromTemp(ContextID,  &D65xyY, 6504);
-           return cmsCreateLab4Profile(ContextID, &D65xyY);
+           cmsWhitePointFromTemp( &D65xyY, 6504);
+           return cmsCreateLab4Profile(&D65xyY);
        }
 
        if (cmsstrcasecmp(File, "*XYZ") == 0)
@@ -93,17 +93,17 @@ cmsHPROFILE OpenStockProfile(cmsContext ContextID, const char* File)
 
        if (cmsstrcasecmp(File, "*Gray22") == 0) {
 
-           cmsToneCurve* Curve = cmsBuildGamma(ContextID, 2.2);
-           cmsHPROFILE hProfile = cmsCreateGrayProfile(ContextID, cmsD50_xyY(ContextID), Curve);
-           cmsFreeToneCurve(ContextID, Curve);
+           cmsToneCurve* Curve = cmsBuildGamma(2.2);
+           cmsHPROFILE hProfile = cmsCreateGrayProfile(cmsD50_xyY(ContextID), Curve);
+           cmsFreeToneCurve(Curve);
            return hProfile;
        }
 
         if (cmsstrcasecmp(File, "*Gray30") == 0) {
 
-           cmsToneCurve* Curve = cmsBuildGamma(ContextID, 3.0);
-           cmsHPROFILE hProfile = cmsCreateGrayProfile(ContextID, cmsD50_xyY(ContextID), Curve);
-           cmsFreeToneCurve(ContextID, Curve);
+           cmsToneCurve* Curve = cmsBuildGamma(3.0);
+           cmsHPROFILE hProfile = cmsCreateGrayProfile(cmsD50_xyY(ContextID), Curve);
+           cmsFreeToneCurve(Curve);
            return hProfile;
        }
 
@@ -121,13 +121,13 @@ cmsHPROFILE OpenStockProfile(cmsContext ContextID, const char* File)
             cmsHPROFILE hProfile;
 
             Gamma4[0] = Gamma4[1] = Gamma4[2] = Gamma4[3] = Gamma;
-            hProfile = cmsCreateLinearizationDeviceLink(ContextID, cmsSigCmykData, Gamma4);
-            cmsFreeToneCurve(ContextID, Gamma);
+            hProfile = cmsCreateLinearizationDeviceLink(cmsSigCmykData, Gamma4);
+            cmsFreeToneCurve(Gamma);
             return hProfile;
        }
 
 
-        return cmsOpenProfileFromFile(ContextID, File, "r");
+        return cmsOpenProfileFromFile(File, "r");
 }
 
 // Help on available built-ins
@@ -148,18 +148,18 @@ void PrintBuiltins(void)
 
 // Auxiliary for printing information on profile
 static
-void PrintInfo(cmsContext ContextID, cmsHPROFILE h, cmsInfoType Info)
+void PrintInfo(cmsHPROFILE h, cmsInfoType Info)
 {
     char* text;
     int len;
 
-    len = cmsGetProfileInfoASCII(ContextID, h, Info, "en", "US", NULL, 0);
+    len = cmsGetProfileInfoASCII(h, Info, "en", "US", NULL, 0);
     if (len == 0) return;
 
     text = (char*) malloc(len * sizeof(char));
     if (text == NULL) return;
 
-    cmsGetProfileInfoASCII(ContextID, h, Info, "en", "US", text, len);
+    cmsGetProfileInfoASCII(h, Info, "en", "US", text, len);
 
     if (strlen(text) > 0)
         printf("%s\n", text);
@@ -171,27 +171,27 @@ void PrintInfo(cmsContext ContextID, cmsHPROFILE h, cmsInfoType Info)
 
 // Displays the colorant table
 static
-void PrintColorantTable(cmsContext ContextID, cmsHPROFILE hInput, cmsTagSignature Sig, const char* Title)
+void PrintColorantTable(cmsHPROFILE hInput, cmsTagSignature Sig, const char* Title)
 {
     cmsNAMEDCOLORLIST* list;
     int i, n;
 
-    if (cmsIsTag(ContextID, hInput, Sig)) {
+    if (cmsIsTag(hInput, Sig)) {
 
         printf("%s:\n", Title);
 
-        list = (cmsNAMEDCOLORLIST*) cmsReadTag(ContextID, hInput, Sig);
+        list = (cmsNAMEDCOLORLIST*) cmsReadTag(hInput, Sig);
         if (list == NULL) {
             printf("(Unavailable)\n");
             return;
         }
 
-        n = cmsNamedColorCount(ContextID, list);
+        n = cmsNamedColorCount(list);
         for (i=0; i < n; i++) {
 
             char Name[cmsMAX_PATH];
 
-            cmsNamedColorInfo(ContextID, list, i, Name, NULL, NULL, NULL, NULL);
+            cmsNamedColorInfo(list, i, Name, NULL, NULL, NULL, NULL);
             printf("\t%s\n", Name);
         }
 
@@ -201,22 +201,22 @@ void PrintColorantTable(cmsContext ContextID, cmsHPROFILE hInput, cmsTagSignatur
 }
 
 
-void PrintProfileInformation(cmsContext ContextID, cmsHPROFILE hInput)
+void PrintProfileInformation(cmsHPROFILE hInput)
 {
     if (hInput == NULL) {
 			fprintf(stderr, "*Wrong or corrupted profile*\n");
             return;
     }
 
-    PrintInfo(ContextID, hInput, cmsInfoDescription);
-    PrintInfo(ContextID, hInput, cmsInfoManufacturer);
-    PrintInfo(ContextID, hInput, cmsInfoModel);
-    PrintInfo(ContextID, hInput, cmsInfoCopyright);
+    PrintInfo(hInput, cmsInfoDescription);
+    PrintInfo(hInput, cmsInfoManufacturer);
+    PrintInfo(hInput, cmsInfoModel);
+    PrintInfo(hInput, cmsInfoCopyright);
 
     if (Verbose > 2) {
 
-        PrintColorantTable(ContextID, hInput, cmsSigColorantTableTag,    "Input colorant table");
-        PrintColorantTable(ContextID, hInput, cmsSigColorantTableOutTag, "Input colorant out table");
+        PrintColorantTable(hInput, cmsSigColorantTableTag,    "Input colorant table");
+        PrintColorantTable(hInput, cmsSigColorantTableOutTag, "Input colorant out table");
     }
 
     printf("\n");
@@ -233,7 +233,7 @@ void PrintRenderingIntents(cmsContext ContextID)
 
     fprintf(stderr, "-t<n> rendering intent:\n\n");
 
-    n = cmsGetSupportedIntents(ContextID, 200, Codes, Descriptions);
+    n = cmsGetSupportedIntents(200, Codes, Descriptions);
 
     for (i=0; i < n; i++) {
         fprintf(stderr, "\t%u - %s\n", Codes[i], Descriptions[i]);

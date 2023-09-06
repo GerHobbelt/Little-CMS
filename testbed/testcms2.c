@@ -108,7 +108,7 @@ cmsContext DbgThread(void)
 
 // The allocate routine
 static
-void* DebugMalloc(cmsContext ContextID, cmsUInt32Number size)
+void* DebugMalloc(cmsUInt32Number size)
 {
     _cmsMemoryBlock* blk;
 
@@ -137,7 +137,7 @@ void* DebugMalloc(cmsContext ContextID, cmsUInt32Number size)
 
 // The free routine
 static
-void  DebugFree(cmsContext ContextID, void *Ptr)
+void  DebugFree(void *Ptr)
 {
     _cmsMemoryBlock* blk;
 
@@ -158,19 +158,19 @@ void  DebugFree(cmsContext ContextID, void *Ptr)
 
 // Reallocate, just a malloc, a copy and a free in this case.
 static
-void * DebugRealloc(cmsContext ContextID, void* Ptr, cmsUInt32Number NewSize)
+void * DebugRealloc(void* Ptr, cmsUInt32Number NewSize)
 {
     _cmsMemoryBlock* blk;
     void*  NewPtr;
     cmsUInt32Number max_sz;
 
-    NewPtr = DebugMalloc(ContextID, NewSize);
+    NewPtr = DebugMalloc(NewSize);
     if (Ptr == NULL) return NewPtr;
 
     blk = (_cmsMemoryBlock*) (((cmsUInt8Number*) Ptr) - SIZE_OF_MEM_HEADER);
     max_sz = blk -> KeepSize > NewSize ? NewSize : blk ->KeepSize;
     memmove(NewPtr, Ptr, max_sz);
-    DebugFree(ContextID, Ptr);
+    DebugFree(Ptr);
 
     return NewPtr;
 }
@@ -247,18 +247,18 @@ cmsContext WatchDogContext(void* usr)
 
 
 static
-void FatalErrorQuit(cmsContext ContextID, cmsUInt32Number ErrorCode, const char *Text)
+void FatalErrorQuit(cmsUInt32Number ErrorCode, const char *Text)
 {
     Die(Text);
 
-    cmsUNUSED_PARAMETER(ContextID);
+    
     cmsUNUSED_PARAMETER(ErrorCode);
 }
 
 
 void ResetFatalError(cmsContext ContextID)
 {
-    cmsSetLogErrorHandler(ContextID, FatalErrorQuit);
+    cmsSetLogErrorHandler(FatalErrorQuit);
 }
 
 
@@ -298,7 +298,7 @@ void SubTest(const char* frm, ...)
 
 // The check framework
 static
-void Check(cmsContext ContextID, const char* Title, TestFn Fn)
+void Check(const char* Title, TestFn Fn)
 {
     cmsContext ctx = DbgThread();
 
@@ -334,30 +334,30 @@ void Check(cmsContext ContextID, const char* Title, TestFn Fn)
 }
 
 // Dump a tone curve, for easy diagnostic
-void DumpToneCurve(cmsContext ContextID, cmsToneCurve* gamma, const char* FileName)
+void DumpToneCurve(cmsToneCurve* gamma, const char* FileName)
 {
     cmsHANDLE hIT8;
     cmsUInt32Number i;
 
     hIT8 = cmsIT8Alloc(ContextID);
 
-    cmsIT8SetPropertyDbl(ContextID, hIT8, "NUMBER_OF_FIELDS", 2);
-    cmsIT8SetPropertyDbl(ContextID, hIT8, "NUMBER_OF_SETS", gamma ->nEntries);
+    cmsIT8SetPropertyDbl(hIT8, "NUMBER_OF_FIELDS", 2);
+    cmsIT8SetPropertyDbl(hIT8, "NUMBER_OF_SETS", gamma ->nEntries);
 
-    cmsIT8SetDataFormat(ContextID, hIT8, 0, "SAMPLE_ID");
-    cmsIT8SetDataFormat(ContextID, hIT8, 1, "VALUE");
+    cmsIT8SetDataFormat(hIT8, 0, "SAMPLE_ID");
+    cmsIT8SetDataFormat(hIT8, 1, "VALUE");
 
     for (i=0; i < gamma ->nEntries; i++) {
         char Val[30];
 
         sprintf(Val, "%u", i);
-        cmsIT8SetDataRowCol(ContextID, hIT8, i, 0, Val);
+        cmsIT8SetDataRowCol(hIT8, i, 0, Val);
         sprintf(Val, "0x%x", gamma ->Table16[i]);
-        cmsIT8SetDataRowCol(ContextID, hIT8, i, 1, Val);
+        cmsIT8SetDataRowCol(hIT8, i, 1, Val);
     }
 
-    cmsIT8SaveToFile(ContextID, hIT8, FileName);
-    cmsIT8Free(ContextID, hIT8);
+    cmsIT8SaveToFile(hIT8, FileName);
+    cmsIT8Free(hIT8);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -471,13 +471,13 @@ cmsFloat64Number Clip(cmsFloat64Number v)
 }
 
 static
-cmsInt32Number ForwardSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], cmsUInt16Number Out[], void* Cargo)
+cmsInt32Number ForwardSampler(CMSREGISTER const cmsUInt16Number In[], cmsUInt16Number Out[], void* Cargo)
 {
     FakeCMYKParams* p = (FakeCMYKParams*) Cargo;
     cmsFloat64Number rgb[3], cmyk[4];
     cmsFloat64Number c, m, y, k;
 
-    cmsDoTransform(ContextID, p ->hLab2sRGB, In, rgb, 1);
+    cmsDoTransform(p ->hLab2sRGB, In, rgb, 1);
 
     c = 1 - rgb[0];
     m = 1 - rgb[1];
@@ -494,14 +494,14 @@ cmsInt32Number ForwardSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16N
     cmyk[2] = y;
     cmyk[3] = k;
 
-    cmsDoTransform(ContextID, p ->hIlimit, cmyk, Out, 1);
+    cmsDoTransform(p ->hIlimit, cmyk, Out, 1);
 
     return 1;
 }
 
 
 static
-cmsInt32Number ReverseSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], CMSREGISTER cmsUInt16Number Out[], CMSREGISTER void* Cargo)
+cmsInt32Number ReverseSampler(CMSREGISTER const cmsUInt16Number In[], CMSREGISTER cmsUInt16Number Out[], CMSREGISTER void* Cargo)
 {
     FakeCMYKParams* p = (FakeCMYKParams*) Cargo;
     cmsFloat64Number c, m, y, k, rgb[3];
@@ -529,14 +529,14 @@ cmsInt32Number ReverseSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16N
             rgb[2] = Clip((1 - y) * (1 - k));
         }
 
-    cmsDoTransform(ContextID, p ->sRGB2Lab, rgb, Out, 1);
+    cmsDoTransform(p ->sRGB2Lab, rgb, Out, 1);
     return 1;
 }
 
 
 
 static
-cmsHPROFILE CreateFakeCMYK(cmsContext ContextID, cmsFloat64Number InkLimit, cmsBool lUseAboveRGB)
+cmsHPROFILE CreateFakeCMYK(cmsFloat64Number InkLimit, cmsBool lUseAboveRGB)
 {
     cmsHPROFILE hICC;
     cmsPipeline* AToB0, *BToA0;
@@ -550,59 +550,59 @@ cmsHPROFILE CreateFakeCMYK(cmsContext ContextID, cmsFloat64Number InkLimit, cmsB
     else
        hsRGB  = cmsCreate_sRGBProfile(ContextID);
 
-    hLab   = cmsCreateLab4Profile(ContextID, NULL);
-    hLimit = cmsCreateInkLimitingDeviceLink(ContextID, cmsSigCmykData, InkLimit);
+    hLab   = cmsCreateLab4Profile(NULL);
+    hLimit = cmsCreateInkLimitingDeviceLink(cmsSigCmykData, InkLimit);
 
     cmykfrm = FLOAT_SH(1) | BYTES_SH(0)|CHANNELS_SH(4);
-    p.hLab2sRGB = cmsCreateTransform(ContextID, hLab,  TYPE_Lab_16,  hsRGB, TYPE_RGB_DBL, INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
-    p.sRGB2Lab  = cmsCreateTransform(ContextID, hsRGB, TYPE_RGB_DBL, hLab,  TYPE_Lab_16,  INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
-    p.hIlimit   = cmsCreateTransform(ContextID, hLimit, cmykfrm, NULL, TYPE_CMYK_16, INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
+    p.hLab2sRGB = cmsCreateTransform(hLab,  TYPE_Lab_16,  hsRGB, TYPE_RGB_DBL, INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
+    p.sRGB2Lab  = cmsCreateTransform(hsRGB, TYPE_RGB_DBL, hLab,  TYPE_Lab_16,  INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
+    p.hIlimit   = cmsCreateTransform(hLimit, cmykfrm, NULL, TYPE_CMYK_16, INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
 
-    cmsCloseProfile(ContextID, hLab); cmsCloseProfile(ContextID, hsRGB); cmsCloseProfile(ContextID, hLimit);
+    cmsCloseProfile(hLab); cmsCloseProfile(hsRGB); cmsCloseProfile(hLimit);
 
     hICC = cmsCreateProfilePlaceholder(ContextID);
     if (!hICC) return NULL;
 
-    cmsSetProfileVersion(ContextID, hICC, 4.3);
+    cmsSetProfileVersion(hICC, 4.3);
 
-    cmsSetDeviceClass(ContextID, hICC, cmsSigOutputClass);
-    cmsSetColorSpace(ContextID, hICC,  cmsSigCmykData);
-    cmsSetPCS(ContextID, hICC,         cmsSigLabData);
+    cmsSetDeviceClass(hICC, cmsSigOutputClass);
+    cmsSetColorSpace(hICC,  cmsSigCmykData);
+    cmsSetPCS(hICC,         cmsSigLabData);
 
-    BToA0 = cmsPipelineAlloc(ContextID, 3, 4);
+    BToA0 = cmsPipelineAlloc(3, 4);
     if (BToA0 == NULL) return 0;
-    CLUT = cmsStageAllocCLut16bit(ContextID, 17, 3, 4, NULL);
+    CLUT = cmsStageAllocCLut16bit(17, 3, 4, NULL);
     if (CLUT == NULL) return 0;
-    if (!cmsStageSampleCLut16bit(ContextID, CLUT, ForwardSampler, &p, 0)) return 0;
+    if (!cmsStageSampleCLut16bit(CLUT, ForwardSampler, &p, 0)) return 0;
 
-    cmsPipelineInsertStage(ContextID, BToA0, cmsAT_BEGIN, _cmsStageAllocIdentityCurves(ContextID, 3));
-    cmsPipelineInsertStage(ContextID, BToA0, cmsAT_END, CLUT);
-    cmsPipelineInsertStage(ContextID, BToA0, cmsAT_END, _cmsStageAllocIdentityCurves(ContextID, 4));
+    cmsPipelineInsertStage(BToA0, cmsAT_BEGIN, _cmsStageAllocIdentityCurves(3));
+    cmsPipelineInsertStage(BToA0, cmsAT_END, CLUT);
+    cmsPipelineInsertStage(BToA0, cmsAT_END, _cmsStageAllocIdentityCurves(4));
 
-    if (!cmsWriteTag(ContextID, hICC, cmsSigBToA0Tag, (void*) BToA0)) return 0;
-    cmsPipelineFree(ContextID, BToA0);
+    if (!cmsWriteTag(hICC, cmsSigBToA0Tag, (void*) BToA0)) return 0;
+    cmsPipelineFree(BToA0);
 
-    AToB0 = cmsPipelineAlloc(ContextID, 4, 3);
+    AToB0 = cmsPipelineAlloc(4, 3);
     if (AToB0 == NULL) return 0;
-    CLUT = cmsStageAllocCLut16bit(ContextID, 17, 4, 3, NULL);
+    CLUT = cmsStageAllocCLut16bit(17, 4, 3, NULL);
     if (CLUT == NULL) return 0;
-    if (!cmsStageSampleCLut16bit(ContextID, CLUT, ReverseSampler, &p, 0)) return 0;
+    if (!cmsStageSampleCLut16bit(CLUT, ReverseSampler, &p, 0)) return 0;
 
-    cmsPipelineInsertStage(ContextID, AToB0, cmsAT_BEGIN, _cmsStageAllocIdentityCurves(ContextID, 4));
-    cmsPipelineInsertStage(ContextID, AToB0, cmsAT_END, CLUT);
-    cmsPipelineInsertStage(ContextID, AToB0, cmsAT_END, _cmsStageAllocIdentityCurves(ContextID, 3));
+    cmsPipelineInsertStage(AToB0, cmsAT_BEGIN, _cmsStageAllocIdentityCurves(4));
+    cmsPipelineInsertStage(AToB0, cmsAT_END, CLUT);
+    cmsPipelineInsertStage(AToB0, cmsAT_END, _cmsStageAllocIdentityCurves(3));
 
-    if (!cmsWriteTag(ContextID, hICC, cmsSigAToB0Tag, (void*) AToB0)) return 0;
-    cmsPipelineFree(ContextID, AToB0);
+    if (!cmsWriteTag(hICC, cmsSigAToB0Tag, (void*) AToB0)) return 0;
+    cmsPipelineFree(AToB0);
 
-    cmsDeleteTransform(ContextID, p.hLab2sRGB);
-    cmsDeleteTransform(ContextID, p.sRGB2Lab);
-    cmsDeleteTransform(ContextID, p.hIlimit);
+    cmsDeleteTransform(p.hLab2sRGB);
+    cmsDeleteTransform(p.sRGB2Lab);
+    cmsDeleteTransform(p.hIlimit);
 
-    cmsLinkTag(ContextID, hICC, cmsSigAToB1Tag, cmsSigAToB0Tag);
-    cmsLinkTag(ContextID, hICC, cmsSigAToB2Tag, cmsSigAToB0Tag);
-    cmsLinkTag(ContextID, hICC, cmsSigBToA1Tag, cmsSigBToA0Tag);
-    cmsLinkTag(ContextID, hICC, cmsSigBToA2Tag, cmsSigBToA0Tag);
+    cmsLinkTag(hICC, cmsSigAToB1Tag, cmsSigAToB0Tag);
+    cmsLinkTag(hICC, cmsSigAToB2Tag, cmsSigAToB0Tag);
+    cmsLinkTag(hICC, cmsSigBToA1Tag, cmsSigBToA0Tag);
+    cmsLinkTag(hICC, cmsSigBToA2Tag, cmsSigBToA0Tag);
 
     return hICC;
 }
@@ -890,7 +890,7 @@ cmsBool  IsGoodWordPrec(const char *title, cmsUInt16Number in, cmsUInt16Number o
 // Fixed point ----------------------------------------------------------------------------------------------
 
 static
-cmsInt32Number TestSingleFixed15_16(cmsContext ContextID, cmsFloat64Number d)
+cmsInt32Number TestSingleFixed15_16(cmsFloat64Number d)
 {
     cmsS15Fixed16Number f = _cmsDoubleTo15Fixed16(d);
     cmsFloat64Number RoundTrip = _cms15Fixed16toDouble(f);
@@ -902,22 +902,22 @@ cmsInt32Number TestSingleFixed15_16(cmsContext ContextID, cmsFloat64Number d)
 static
 cmsInt32Number CheckFixedPoint15_16(cmsContext ContextID)
 {
-    if (!TestSingleFixed15_16(ContextID, 1.0)) return 0;
-    if (!TestSingleFixed15_16(ContextID, 2.0)) return 0;
-    if (!TestSingleFixed15_16(ContextID, 1.23456)) return 0;
-    if (!TestSingleFixed15_16(ContextID, 0.99999)) return 0;
-    if (!TestSingleFixed15_16(ContextID, 0.1234567890123456789099999)) return 0;
-    if (!TestSingleFixed15_16(ContextID, -1.0)) return 0;
-    if (!TestSingleFixed15_16(ContextID, -2.0)) return 0;
-    if (!TestSingleFixed15_16(ContextID, -1.23456)) return 0;
-    if (!TestSingleFixed15_16(ContextID, -1.1234567890123456789099999)) return 0;
-    if (!TestSingleFixed15_16(ContextID, +32767.1234567890123456789099999)) return 0;
-    if (!TestSingleFixed15_16(ContextID, -32767.1234567890123456789099999)) return 0;
+    if (!TestSingleFixed15_16(1.0)) return 0;
+    if (!TestSingleFixed15_16(2.0)) return 0;
+    if (!TestSingleFixed15_16(1.23456)) return 0;
+    if (!TestSingleFixed15_16(0.99999)) return 0;
+    if (!TestSingleFixed15_16(0.1234567890123456789099999)) return 0;
+    if (!TestSingleFixed15_16(-1.0)) return 0;
+    if (!TestSingleFixed15_16(-2.0)) return 0;
+    if (!TestSingleFixed15_16(-1.23456)) return 0;
+    if (!TestSingleFixed15_16(-1.1234567890123456789099999)) return 0;
+    if (!TestSingleFixed15_16(+32767.1234567890123456789099999)) return 0;
+    if (!TestSingleFixed15_16(-32767.1234567890123456789099999)) return 0;
     return 1;
 }
 
 static
-cmsInt32Number TestSingleFixed8_8(cmsContext ContextID, cmsFloat64Number d)
+cmsInt32Number TestSingleFixed8_8(cmsFloat64Number d)
 {
     cmsS15Fixed16Number f = _cmsDoubleTo8Fixed8(d);
     cmsFloat64Number RoundTrip = _cms8Fixed8toDouble((cmsUInt16Number) f);
@@ -929,12 +929,12 @@ cmsInt32Number TestSingleFixed8_8(cmsContext ContextID, cmsFloat64Number d)
 static
 cmsInt32Number CheckFixedPoint8_8(cmsContext ContextID)
 {
-    if (!TestSingleFixed8_8(ContextID, 1.0)) return 0;
-    if (!TestSingleFixed8_8(ContextID, 2.0)) return 0;
-    if (!TestSingleFixed8_8(ContextID, 1.23456)) return 0;
-    if (!TestSingleFixed8_8(ContextID, 0.99999)) return 0;
-    if (!TestSingleFixed8_8(ContextID, 0.1234567890123456789099999)) return 0;
-    if (!TestSingleFixed8_8(ContextID, +255.1234567890123456789099999)) return 0;
+    if (!TestSingleFixed8_8(1.0)) return 0;
+    if (!TestSingleFixed8_8(2.0)) return 0;
+    if (!TestSingleFixed8_8(1.23456)) return 0;
+    if (!TestSingleFixed8_8(0.99999)) return 0;
+    if (!TestSingleFixed8_8(0.1234567890123456789099999)) return 0;
+    if (!TestSingleFixed8_8(+255.1234567890123456789099999)) return 0;
 
     return 1;
 }
@@ -968,9 +968,9 @@ cmsInt32Number CheckD50Roundtrip(cmsContext ContextID)
         return 0;
     }
 
-    xe = _cmsDoubleTo15Fixed16(ContextID, cmsD50X_2);
-    ye = _cmsDoubleTo15Fixed16(ContextID, cmsD50Y_2);
-    ze = _cmsDoubleTo15Fixed16(ContextID, cmsD50Z_2);
+    xe = _cmsDoubleTo15Fixed16(cmsD50X_2);
+    ye = _cmsDoubleTo15Fixed16(cmsD50Y_2);
+    ze = _cmsDoubleTo15Fixed16(cmsD50Z_2);
 
     x =  _cms15Fixed16toDouble(xe);
     y =  _cms15Fixed16toDouble(ye);
@@ -1019,7 +1019,7 @@ void BuildTable(cmsInt32Number n, cmsUInt16Number Tab[], cmsBool  Descending)
 // max_err = max allowed error
 
 static
-cmsInt32Number Check1D(cmsContext ContextID, cmsInt32Number nNodesToCheck, cmsBool  Down, cmsInt32Number max_err)
+cmsInt32Number Check1D(cmsInt32Number nNodesToCheck, cmsBool  Down, cmsInt32Number max_err)
 {
     cmsUInt32Number i;
     cmsUInt16Number in, out;
@@ -1029,7 +1029,7 @@ cmsInt32Number Check1D(cmsContext ContextID, cmsInt32Number nNodesToCheck, cmsBo
     Tab = (cmsUInt16Number*) chknull(malloc(sizeof(cmsUInt16Number)* nNodesToCheck));
     if (Tab == NULL) return 0;
 
-    p = _cmsComputeInterpParams(ContextID, nNodesToCheck, 1, 1, Tab, CMS_LERP_FLAGS_16BITS);
+    p = _cmsComputeInterpParams(nNodesToCheck, 1, 1, Tab, CMS_LERP_FLAGS_16BITS);
     if (p == NULL) return 0;
 
     BuildTable(nNodesToCheck, Tab, Down);
@@ -1039,20 +1039,20 @@ cmsInt32Number Check1D(cmsContext ContextID, cmsInt32Number nNodesToCheck, cmsBo
         in = (cmsUInt16Number) i;
         out = 0;
 
-        p ->Interpolation.Lerp16(ContextID, &in, &out, p);
+        p ->Interpolation.Lerp16(&in, &out, p);
 
         if (Down) out = 0xffff - out;
 
         if (abs(out - in) > max_err) {
 
             Fail("(%dp): Must be %x, But is %x : ", nNodesToCheck, in, out);
-            _cmsFreeInterpParams(ContextID, p);
+            _cmsFreeInterpParams(p);
             free(Tab);
             return 0;
         }
     }
 
-    _cmsFreeInterpParams(ContextID, p);
+    _cmsFreeInterpParams(p);
     free(Tab);
     return 1;
 }
@@ -1061,59 +1061,59 @@ cmsInt32Number Check1D(cmsContext ContextID, cmsInt32Number nNodesToCheck, cmsBo
 static
 cmsInt32Number Check1DLERP2(cmsContext ContextID)
 {
-    return Check1D(ContextID, 2, FALSE, 0);
+    return Check1D(2, FALSE, 0);
 }
 
 
 static
 cmsInt32Number Check1DLERP3(cmsContext ContextID)
 {
-    return Check1D(ContextID, 3, FALSE, 1);
+    return Check1D(3, FALSE, 1);
 }
 
 
 static
 cmsInt32Number Check1DLERP4(cmsContext ContextID)
 {
-    return Check1D(ContextID, 4, FALSE, 0);
+    return Check1D(4, FALSE, 0);
 }
 
 static
 cmsInt32Number Check1DLERP6(cmsContext ContextID)
 {
-    return Check1D(ContextID, 6, FALSE, 0);
+    return Check1D(6, FALSE, 0);
 }
 
 static
 cmsInt32Number Check1DLERP18(cmsContext ContextID)
 {
-    return Check1D(ContextID, 18, FALSE, 0);
+    return Check1D(18, FALSE, 0);
 }
 
 
 static
 cmsInt32Number Check1DLERP2Down(cmsContext ContextID)
 {
-    return Check1D(ContextID, 2, TRUE, 0);
+    return Check1D(2, TRUE, 0);
 }
 
 
 static
 cmsInt32Number Check1DLERP3Down(cmsContext ContextID)
 {
-    return Check1D(ContextID, 3, TRUE, 1);
+    return Check1D(3, TRUE, 1);
 }
 
 static
 cmsInt32Number Check1DLERP6Down(cmsContext ContextID)
 {
-    return Check1D(ContextID, 6, TRUE, 0);
+    return Check1D(6, TRUE, 0);
 }
 
 static
 cmsInt32Number Check1DLERP18Down(cmsContext ContextID)
 {
-    return Check1D(ContextID, 18, TRUE, 0);
+    return Check1D(18, TRUE, 0);
 }
 
 static
@@ -1126,7 +1126,7 @@ cmsInt32Number ExhaustiveCheck1DLERP(cmsContext ContextID)
 
         if ((j % 10) == 0) printf("%u    \r", j);
 
-        if (!Check1D(ContextID, j, FALSE, 1)) return 0;
+        if (!Check1D(j, FALSE, 1)) return 0;
     }
 
     printf("\rResult is ");
@@ -1143,7 +1143,7 @@ cmsInt32Number ExhaustiveCheck1DLERPDown(cmsContext ContextID)
 
         if ((j % 10) == 0) printf("%u    \r", j);
 
-        if (!Check1D(ContextID, j, TRUE, 1)) return 0;
+        if (!Check1D(j, TRUE, 1)) return 0;
     }
 
 
@@ -1177,7 +1177,7 @@ cmsInt32Number Check3DinterpolationFloatTetrahedral(cmsContext ContextID)
 
     };
 
-    p = _cmsComputeInterpParams(ContextID, 2, 3, 3, FloatTable, CMS_LERP_FLAGS_FLOAT);
+    p = _cmsComputeInterpParams(2, 3, 3, FloatTable, CMS_LERP_FLAGS_FLOAT);
 
 
     MaxErr = 0.0;
@@ -1185,7 +1185,7 @@ cmsInt32Number Check3DinterpolationFloatTetrahedral(cmsContext ContextID)
 
        In[0] = In[1] = In[2] = (cmsFloat32Number) ( (cmsFloat32Number) i / 65535.0F);
 
-        p ->Interpolation.LerpFloat(ContextID, In, Out, p);
+        p ->Interpolation.LerpFloat(In, Out, p);
 
        if (!IsGoodFixed15_16("Channel 1", Out[0], In[0])) goto Error;
        if (!IsGoodFixed15_16("Channel 2", Out[1], (cmsFloat32Number) In[1] / 2.F)) goto Error;
@@ -1193,11 +1193,11 @@ cmsInt32Number Check3DinterpolationFloatTetrahedral(cmsContext ContextID)
      }
 
     if (MaxErr > 0) printf("|Err|<%lf ", MaxErr);
-    _cmsFreeInterpParams(ContextID, p);
+    _cmsFreeInterpParams(p);
     return 1;
 
 Error:
-    _cmsFreeInterpParams(ContextID, p);
+    _cmsFreeInterpParams(p);
     return 0;
 }
 
@@ -1223,14 +1223,14 @@ cmsInt32Number Check3DinterpolationFloatTrilinear(cmsContext ContextID)
 
     };
 
-    p = _cmsComputeInterpParams(ContextID, 2, 3, 3, FloatTable, CMS_LERP_FLAGS_FLOAT|CMS_LERP_FLAGS_TRILINEAR);
+    p = _cmsComputeInterpParams(2, 3, 3, FloatTable, CMS_LERP_FLAGS_FLOAT|CMS_LERP_FLAGS_TRILINEAR);
 
     MaxErr = 0.0;
      for (i=0; i < 0xffff; i++) {
 
        In[0] = In[1] = In[2] = (cmsFloat32Number) ( (cmsFloat32Number) i / 65535.0F);
 
-        p ->Interpolation.LerpFloat(ContextID, In, Out, p);
+        p ->Interpolation.LerpFloat(In, Out, p);
 
        if (!IsGoodFixed15_16("Channel 1", Out[0], In[0])) goto Error;
        if (!IsGoodFixed15_16("Channel 2", Out[1], (cmsFloat32Number) In[1] / 2.F)) goto Error;
@@ -1238,11 +1238,11 @@ cmsInt32Number Check3DinterpolationFloatTrilinear(cmsContext ContextID)
      }
 
     if (MaxErr > 0) printf("|Err|<%lf ", MaxErr);
-    _cmsFreeInterpParams(ContextID, p);
+    _cmsFreeInterpParams(p);
     return 1;
 
 Error:
-    _cmsFreeInterpParams(ContextID, p);
+    _cmsFreeInterpParams(p);
     return 0;
 
 }
@@ -1268,14 +1268,14 @@ cmsInt32Number Check3DinterpolationTetrahedral16(cmsContext ContextID)
         0xffff,    0xffff,   0xffff
     };
 
-    p = _cmsComputeInterpParams(ContextID, 2, 3, 3, Table, CMS_LERP_FLAGS_16BITS);
+    p = _cmsComputeInterpParams(2, 3, 3, Table, CMS_LERP_FLAGS_16BITS);
 
     MaxErr = 0.0;
      for (i=0; i < 0xffff; i++) {
 
        In[0] = In[1] = In[2] = (cmsUInt16Number) i;
 
-        p ->Interpolation.Lerp16(ContextID, In, Out, p);
+        p ->Interpolation.Lerp16(In, Out, p);
 
        if (!IsGoodWord("Channel 1", Out[0], In[0])) goto Error;
        if (!IsGoodWord("Channel 2", Out[1], In[1])) goto Error;
@@ -1283,11 +1283,11 @@ cmsInt32Number Check3DinterpolationTetrahedral16(cmsContext ContextID)
      }
 
     if (MaxErr > 0) printf("|Err|<%lf ", MaxErr);
-    _cmsFreeInterpParams(ContextID, p);
+    _cmsFreeInterpParams(p);
     return 1;
 
 Error:
-    _cmsFreeInterpParams(ContextID, p);
+    _cmsFreeInterpParams(p);
     return 0;
 }
 
@@ -1312,14 +1312,14 @@ cmsInt32Number Check3DinterpolationTrilinear16(cmsContext ContextID)
         0xffff,    0xffff,   0xffff
     };
 
-    p = _cmsComputeInterpParams(ContextID, 2, 3, 3, Table, CMS_LERP_FLAGS_TRILINEAR);
+    p = _cmsComputeInterpParams(2, 3, 3, Table, CMS_LERP_FLAGS_TRILINEAR);
 
     MaxErr = 0.0;
      for (i=0; i < 0xffff; i++) {
 
        In[0] = In[1] = In[2] = (cmsUInt16Number) i;
 
-        p ->Interpolation.Lerp16(ContextID, In, Out, p);
+        p ->Interpolation.Lerp16(In, Out, p);
 
        if (!IsGoodWord("Channel 1", Out[0], In[0])) goto Error;
        if (!IsGoodWord("Channel 2", Out[1], In[1])) goto Error;
@@ -1327,11 +1327,11 @@ cmsInt32Number Check3DinterpolationTrilinear16(cmsContext ContextID)
      }
 
     if (MaxErr > 0) printf("|Err|<%lf ", MaxErr);
-    _cmsFreeInterpParams(ContextID, p);
+    _cmsFreeInterpParams(p);
     return 1;
 
 Error:
-    _cmsFreeInterpParams(ContextID, p);
+    _cmsFreeInterpParams(p);
     return 0;
 }
 
@@ -1358,7 +1358,7 @@ cmsInt32Number ExaustiveCheck3DinterpolationFloatTetrahedral(cmsContext ContextI
 
     };
 
-    p = _cmsComputeInterpParams(ContextID, 2, 3, 3, FloatTable, CMS_LERP_FLAGS_FLOAT);
+    p = _cmsComputeInterpParams(2, 3, 3, FloatTable, CMS_LERP_FLAGS_FLOAT);
 
     MaxErr = 0.0;
     for (r=0; r < 0xff; r++)
@@ -1371,7 +1371,7 @@ cmsInt32Number ExaustiveCheck3DinterpolationFloatTetrahedral(cmsContext ContextI
             In[2] = (cmsFloat32Number) b / 255.0F;
 
 
-        p ->Interpolation.LerpFloat(ContextID, In, Out, p);
+        p ->Interpolation.LerpFloat(In, Out, p);
 
        if (!IsGoodFixed15_16("Channel 1", Out[0], In[0])) goto Error;
        if (!IsGoodFixed15_16("Channel 2", Out[1], (cmsFloat32Number) In[1] / 2.F)) goto Error;
@@ -1379,11 +1379,11 @@ cmsInt32Number ExaustiveCheck3DinterpolationFloatTetrahedral(cmsContext ContextI
      }
 
     if (MaxErr > 0) printf("|Err|<%lf ", MaxErr);
-    _cmsFreeInterpParams(ContextID, p);
+    _cmsFreeInterpParams(p);
     return 1;
 
 Error:
-    _cmsFreeInterpParams(ContextID, p);
+    _cmsFreeInterpParams(p);
     return 0;
 }
 
@@ -1409,7 +1409,7 @@ cmsInt32Number ExaustiveCheck3DinterpolationFloatTrilinear(cmsContext ContextID)
 
     };
 
-    p = _cmsComputeInterpParams(ContextID, 2, 3, 3, FloatTable, CMS_LERP_FLAGS_FLOAT|CMS_LERP_FLAGS_TRILINEAR);
+    p = _cmsComputeInterpParams(2, 3, 3, FloatTable, CMS_LERP_FLAGS_FLOAT|CMS_LERP_FLAGS_TRILINEAR);
 
     MaxErr = 0.0;
     for (r=0; r < 0xff; r++)
@@ -1422,7 +1422,7 @@ cmsInt32Number ExaustiveCheck3DinterpolationFloatTrilinear(cmsContext ContextID)
                 In[2] = (cmsFloat32Number) b / 255.0F;
 
 
-                p ->Interpolation.LerpFloat(ContextID, In, Out, p);
+                p ->Interpolation.LerpFloat(In, Out, p);
 
                 if (!IsGoodFixed15_16("Channel 1", Out[0], In[0])) goto Error;
                 if (!IsGoodFixed15_16("Channel 2", Out[1], (cmsFloat32Number) In[1] / 2.F)) goto Error;
@@ -1430,11 +1430,11 @@ cmsInt32Number ExaustiveCheck3DinterpolationFloatTrilinear(cmsContext ContextID)
             }
 
     if (MaxErr > 0) printf("|Err|<%lf ", MaxErr);
-    _cmsFreeInterpParams(ContextID, p);
+    _cmsFreeInterpParams(p);
     return 1;
 
 Error:
-    _cmsFreeInterpParams(ContextID, p);
+    _cmsFreeInterpParams(p);
     return 0;
 
 }
@@ -1460,7 +1460,7 @@ cmsInt32Number ExhaustiveCheck3DinterpolationTetrahedral16(cmsContext ContextID)
         0xffff,    0xffff,   0xffff
     };
 
-    p = _cmsComputeInterpParams(ContextID, 2, 3, 3, Table, CMS_LERP_FLAGS_16BITS);
+    p = _cmsComputeInterpParams(2, 3, 3, Table, CMS_LERP_FLAGS_16BITS);
 
     for (r=0; r < 0xff; r++)
         for (g=0; g < 0xff; g++)
@@ -1471,18 +1471,18 @@ cmsInt32Number ExhaustiveCheck3DinterpolationTetrahedral16(cmsContext ContextID)
             In[2] = (cmsUInt16Number) b ;
 
 
-        p ->Interpolation.Lerp16(ContextID, In, Out, p);
+        p ->Interpolation.Lerp16(In, Out, p);
 
        if (!IsGoodWord("Channel 1", Out[0], In[0])) goto Error;
        if (!IsGoodWord("Channel 2", Out[1], In[1])) goto Error;
        if (!IsGoodWord("Channel 3", Out[2], In[2])) goto Error;
      }
 
-    _cmsFreeInterpParams(ContextID, p);
+    _cmsFreeInterpParams(p);
     return 1;
 
 Error:
-    _cmsFreeInterpParams(ContextID, p);
+    _cmsFreeInterpParams(p);
     return 0;
 }
 
@@ -1507,7 +1507,7 @@ cmsInt32Number ExhaustiveCheck3DinterpolationTrilinear16(cmsContext ContextID)
         0xffff,    0xffff,   0xffff
     };
 
-    p = _cmsComputeInterpParams(ContextID, 2, 3, 3, Table, CMS_LERP_FLAGS_TRILINEAR);
+    p = _cmsComputeInterpParams(2, 3, 3, Table, CMS_LERP_FLAGS_TRILINEAR);
 
     for (r=0; r < 0xff; r++)
         for (g=0; g < 0xff; g++)
@@ -1518,7 +1518,7 @@ cmsInt32Number ExhaustiveCheck3DinterpolationTrilinear16(cmsContext ContextID)
             In[2] = (cmsUInt16Number)b ;
 
 
-        p ->Interpolation.Lerp16(ContextID, In, Out, p);
+        p ->Interpolation.Lerp16(In, Out, p);
 
        if (!IsGoodWord("Channel 1", Out[0], In[0])) goto Error;
        if (!IsGoodWord("Channel 2", Out[1], In[1])) goto Error;
@@ -1526,11 +1526,11 @@ cmsInt32Number ExhaustiveCheck3DinterpolationTrilinear16(cmsContext ContextID)
      }
 
 
-    _cmsFreeInterpParams(ContextID, p);
+    _cmsFreeInterpParams(p);
     return 1;
 
 Error:
-    _cmsFreeInterpParams(ContextID, p);
+    _cmsFreeInterpParams(p);
     return 0;
 }
 
@@ -1560,14 +1560,14 @@ cmsInt32Number CheckReverseInterpolation3x3(cmsContext ContextID)
 
 
 
-   Lut = cmsPipelineAlloc(ContextID, 3, 3);
+   Lut = cmsPipelineAlloc(3, 3);
 
-   clut = cmsStageAllocCLut16bit(ContextID, 2, 3, 3, Table);
-   cmsPipelineInsertStage(ContextID, Lut, cmsAT_BEGIN, clut);
+   clut = cmsStageAllocCLut16bit(2, 3, 3, Table);
+   cmsPipelineInsertStage(Lut, cmsAT_BEGIN, clut);
 
    Target[0] = 0; Target[1] = 0; Target[2] = 0;
    Hint[0] = 0; Hint[1] = 0; Hint[2] = 0;
-   cmsPipelineEvalReverseFloat(ContextID, Target, Result, NULL, Lut);
+   cmsPipelineEvalReverseFloat(Target, Result, NULL, Lut);
    if (Result[0] != 0 || Result[1] != 0 || Result[2] != 0){
 
        Fail("Reverse interpolation didn't find zero");
@@ -1581,7 +1581,7 @@ cmsInt32Number CheckReverseInterpolation3x3(cmsContext ContextID)
        cmsFloat32Number in = i / 100.0F;
 
        Target[0] = in; Target[1] = 0; Target[2] = 0;
-       cmsPipelineEvalReverseFloat(ContextID, Target, Result, Hint, Lut);
+       cmsPipelineEvalReverseFloat(Target, Result, Hint, Lut);
 
        err = fabsf(in - Result[0]);
        if (err > max) max = err;
@@ -1589,11 +1589,11 @@ cmsInt32Number CheckReverseInterpolation3x3(cmsContext ContextID)
        memcpy(Hint, Result, sizeof(Hint));
    }
 
-    cmsPipelineFree(ContextID, Lut);
+    cmsPipelineFree(Lut);
     return (max <= FLOAT_PRECISSION);
 
 Error:
-    cmsPipelineFree(ContextID, Lut);
+    cmsPipelineFree(Lut);
     return 0;
 }
 
@@ -1636,10 +1636,10 @@ cmsInt32Number CheckReverseInterpolation4x3(cmsContext ContextID)
     };
 
 
-   Lut = cmsPipelineAlloc(ContextID, 4, 3);
+   Lut = cmsPipelineAlloc(4, 3);
 
-   clut = cmsStageAllocCLut16bit(ContextID, 2, 4, 3, Table);
-   cmsPipelineInsertStage(ContextID, Lut, cmsAT_BEGIN, clut);
+   clut = cmsStageAllocCLut16bit(2, 4, 3, Table);
+   cmsPipelineInsertStage(Lut, cmsAT_BEGIN, clut);
 
    // Check if the LUT is behaving as expected
    SubTest("4->3 feasibility");
@@ -1650,7 +1650,7 @@ cmsInt32Number CheckReverseInterpolation4x3(cmsContext ContextID)
        Target[2] = 0;
        Target[3] = 12;
 
-       cmsPipelineEvalFloat(ContextID, Target, Result, Lut);
+       cmsPipelineEvalFloat(Target, Result, Lut);
 
        if (!IsGoodFixed15_16("0", Target[0], Result[0])) goto Error;
        if (!IsGoodFixed15_16("1", Target[1], Result[1])) goto Error;
@@ -1668,7 +1668,7 @@ cmsInt32Number CheckReverseInterpolation4x3(cmsContext ContextID)
    // This is our hint (which is a big lie in this case)
    Hint[0] = 0.1F; Hint[1] = 0.1F; Hint[2] = 0.1F;
 
-   cmsPipelineEvalReverseFloat(ContextID, Target, Result, Hint, Lut);
+   cmsPipelineEvalReverseFloat(Target, Result, Hint, Lut);
 
    if (Result[0] != 0 || Result[1] != 0 || Result[2] != 0 || Result[3] != 0){
 
@@ -1683,7 +1683,7 @@ cmsInt32Number CheckReverseInterpolation4x3(cmsContext ContextID)
        cmsFloat32Number in = i / 100.0F;
 
        Target[0] = in; Target[1] = 0; Target[2] = 0;
-       cmsPipelineEvalReverseFloat(ContextID, Target, Result, Hint, Lut);
+       cmsPipelineEvalReverseFloat(Target, Result, Hint, Lut);
 
        err = fabsf(in - Result[0]);
        if (err > max) max = err;
@@ -1691,11 +1691,11 @@ cmsInt32Number CheckReverseInterpolation4x3(cmsContext ContextID)
        memcpy(Hint, Result, sizeof(Hint));
    }
 
-    cmsPipelineFree(ContextID, Lut);
+    cmsPipelineFree(Lut);
     return (max <= FLOAT_PRECISSION);
 
 Error:
-    cmsPipelineFree(ContextID, Lut);
+    cmsPipelineFree(Lut);
     return 0;
 }
 
@@ -1830,17 +1830,17 @@ cmsInt32Number Sampler8D(cmsContext ContextID,
 }
 
 static
-cmsBool CheckOne3D(cmsContext ContextID, cmsPipeline* lut, cmsUInt16Number a1, cmsUInt16Number a2, cmsUInt16Number a3)
+cmsBool CheckOne3D(cmsPipeline* lut, cmsUInt16Number a1, cmsUInt16Number a2, cmsUInt16Number a3)
 {
     cmsUInt16Number In[3], Out1[3], Out2[3];
 
     In[0] = a1; In[1] = a2; In[2] = a3;
 
     // This is the interpolated value
-    cmsPipelineEval16(ContextID, In, Out1, lut);
+    cmsPipelineEval16(In, Out1, lut);
 
     // This is the real value
-    Sampler3D(ContextID, In, Out2, NULL);
+    Sampler3D(In, Out2, NULL);
 
     // Let's see the difference
 
@@ -1852,17 +1852,17 @@ cmsBool CheckOne3D(cmsContext ContextID, cmsPipeline* lut, cmsUInt16Number a1, c
 }
 
 static
-cmsBool CheckOne4D(cmsContext ContextID, cmsPipeline* lut, cmsUInt16Number a1, cmsUInt16Number a2, cmsUInt16Number a3, cmsUInt16Number a4)
+cmsBool CheckOne4D(cmsPipeline* lut, cmsUInt16Number a1, cmsUInt16Number a2, cmsUInt16Number a3, cmsUInt16Number a4)
 {
     cmsUInt16Number In[4], Out1[3], Out2[3];
 
     In[0] = a1; In[1] = a2; In[2] = a3; In[3] = a4;
 
     // This is the interpolated value
-    cmsPipelineEval16(ContextID, In, Out1, lut);
+    cmsPipelineEval16(In, Out1, lut);
 
     // This is the real value
-    Sampler4D(ContextID, In, Out2, NULL);
+    Sampler4D(In, Out2, NULL);
 
     // Let's see the difference
 
@@ -1874,7 +1874,7 @@ cmsBool CheckOne4D(cmsContext ContextID, cmsPipeline* lut, cmsUInt16Number a1, c
 }
 
 static
-cmsBool CheckOne5D(cmsContext ContextID, cmsPipeline* lut, cmsUInt16Number a1, cmsUInt16Number a2,
+cmsBool CheckOne5D(cmsPipeline* lut, cmsUInt16Number a1, cmsUInt16Number a2,
                                      cmsUInt16Number a3, cmsUInt16Number a4, cmsUInt16Number a5)
 {
     cmsUInt16Number In[5], Out1[3], Out2[3];
@@ -1882,10 +1882,10 @@ cmsBool CheckOne5D(cmsContext ContextID, cmsPipeline* lut, cmsUInt16Number a1, c
     In[0] = a1; In[1] = a2; In[2] = a3; In[3] = a4; In[4] = a5;
 
     // This is the interpolated value
-    cmsPipelineEval16(ContextID, In, Out1, lut);
+    cmsPipelineEval16(In, Out1, lut);
 
     // This is the real value
-    Sampler5D(ContextID, In, Out2, NULL);
+    Sampler5D(In, Out2, NULL);
 
     // Let's see the difference
 
@@ -1897,7 +1897,7 @@ cmsBool CheckOne5D(cmsContext ContextID, cmsPipeline* lut, cmsUInt16Number a1, c
 }
 
 static
-cmsBool CheckOne6D(cmsContext ContextID, cmsPipeline* lut, cmsUInt16Number a1, cmsUInt16Number a2,
+cmsBool CheckOne6D(cmsPipeline* lut, cmsUInt16Number a1, cmsUInt16Number a2,
                                      cmsUInt16Number a3, cmsUInt16Number a4,
                                      cmsUInt16Number a5, cmsUInt16Number a6)
 {
@@ -1906,10 +1906,10 @@ cmsBool CheckOne6D(cmsContext ContextID, cmsPipeline* lut, cmsUInt16Number a1, c
     In[0] = a1; In[1] = a2; In[2] = a3; In[3] = a4; In[4] = a5; In[5] = a6;
 
     // This is the interpolated value
-    cmsPipelineEval16(ContextID, In, Out1, lut);
+    cmsPipelineEval16(In, Out1, lut);
 
     // This is the real value
-    Sampler6D(ContextID, In, Out2, NULL);
+    Sampler6D(In, Out2, NULL);
 
     // Let's see the difference
 
@@ -1922,7 +1922,7 @@ cmsBool CheckOne6D(cmsContext ContextID, cmsPipeline* lut, cmsUInt16Number a1, c
 
 
 static
-cmsBool CheckOne7D(cmsContext ContextID, cmsPipeline* lut, cmsUInt16Number a1, cmsUInt16Number a2,
+cmsBool CheckOne7D(cmsPipeline* lut, cmsUInt16Number a1, cmsUInt16Number a2,
                                      cmsUInt16Number a3, cmsUInt16Number a4,
                                      cmsUInt16Number a5, cmsUInt16Number a6,
                                      cmsUInt16Number a7)
@@ -1932,10 +1932,10 @@ cmsBool CheckOne7D(cmsContext ContextID, cmsPipeline* lut, cmsUInt16Number a1, c
     In[0] = a1; In[1] = a2; In[2] = a3; In[3] = a4; In[4] = a5; In[5] = a6; In[6] = a7;
 
     // This is the interpolated value
-    cmsPipelineEval16(ContextID, In, Out1, lut);
+    cmsPipelineEval16(In, Out1, lut);
 
     // This is the real value
-    Sampler7D(ContextID, In, Out2, NULL);
+    Sampler7D(In, Out2, NULL);
 
     // Let's see the difference
 
@@ -1948,7 +1948,7 @@ cmsBool CheckOne7D(cmsContext ContextID, cmsPipeline* lut, cmsUInt16Number a1, c
 
 
 static
-cmsBool CheckOne8D(cmsContext ContextID, cmsPipeline* lut, cmsUInt16Number a1, cmsUInt16Number a2,
+cmsBool CheckOne8D(cmsPipeline* lut, cmsUInt16Number a1, cmsUInt16Number a2,
                                      cmsUInt16Number a3, cmsUInt16Number a4,
                                      cmsUInt16Number a5, cmsUInt16Number a6,
                                      cmsUInt16Number a7, cmsUInt16Number a8)
@@ -1958,10 +1958,10 @@ cmsBool CheckOne8D(cmsContext ContextID, cmsPipeline* lut, cmsUInt16Number a1, c
     In[0] = a1; In[1] = a2; In[2] = a3; In[3] = a4; In[4] = a5; In[5] = a6; In[6] = a7; In[7] = a8;
 
     // This is the interpolated value
-    cmsPipelineEval16(ContextID, In, Out1, lut);
+    cmsPipelineEval16(In, Out1, lut);
 
     // This is the real value
-    Sampler8D(ContextID, In, Out2, NULL);
+    Sampler8D(In, Out2, NULL);
 
     // Let's see the difference
 
@@ -1979,24 +1979,24 @@ cmsInt32Number Check3Dinterp(cmsContext ContextID)
     cmsPipeline* lut;
     cmsStage* mpe;
 
-    lut = cmsPipelineAlloc(ContextID, 3, 3);
-    mpe = cmsStageAllocCLut16bit(ContextID, 9, 3, 3, NULL);
-    cmsStageSampleCLut16bit(ContextID, mpe, Sampler3D, NULL, 0);
-    cmsPipelineInsertStage(ContextID, lut, cmsAT_BEGIN, mpe);
+    lut = cmsPipelineAlloc(3, 3);
+    mpe = cmsStageAllocCLut16bit(9, 3, 3, NULL);
+    cmsStageSampleCLut16bit(mpe, Sampler3D, NULL, 0);
+    cmsPipelineInsertStage(lut, cmsAT_BEGIN, mpe);
 
     // Check accuracy
 
-    if (!CheckOne3D(ContextID, lut, 0, 0, 0)) return 0;
-    if (!CheckOne3D(ContextID, lut, 0xffff, 0xffff, 0xffff)) return 0;
+    if (!CheckOne3D(lut, 0, 0, 0)) return 0;
+    if (!CheckOne3D(lut, 0xffff, 0xffff, 0xffff)) return 0;
 
-    if (!CheckOne3D(ContextID, lut, 0x8080, 0x8080, 0x8080)) return 0;
-    if (!CheckOne3D(ContextID, lut, 0x0000, 0xFE00, 0x80FF)) return 0;
-    if (!CheckOne3D(ContextID, lut, 0x1111, 0x2222, 0x3333)) return 0;
-    if (!CheckOne3D(ContextID, lut, 0x0000, 0x0012, 0x0013)) return 0;
-    if (!CheckOne3D(ContextID, lut, 0x3141, 0x1415, 0x1592)) return 0;
-    if (!CheckOne3D(ContextID, lut, 0xFF00, 0xFF01, 0xFF12)) return 0;
+    if (!CheckOne3D(lut, 0x8080, 0x8080, 0x8080)) return 0;
+    if (!CheckOne3D(lut, 0x0000, 0xFE00, 0x80FF)) return 0;
+    if (!CheckOne3D(lut, 0x1111, 0x2222, 0x3333)) return 0;
+    if (!CheckOne3D(lut, 0x0000, 0x0012, 0x0013)) return 0;
+    if (!CheckOne3D(lut, 0x3141, 0x1415, 0x1592)) return 0;
+    if (!CheckOne3D(lut, 0xFF00, 0xFF01, 0xFF12)) return 0;
 
-    cmsPipelineFree(ContextID, lut);
+    cmsPipelineFree(lut);
 
     return 1;
 }
@@ -2008,24 +2008,24 @@ cmsInt32Number Check3DinterpGranular(cmsContext ContextID)
     cmsStage* mpe;
     cmsUInt32Number Dimensions[] = { 7, 8, 9 };
 
-    lut = cmsPipelineAlloc(ContextID, 3, 3);
-    mpe = cmsStageAllocCLut16bitGranular(ContextID, Dimensions, 3, 3, NULL);
-    cmsStageSampleCLut16bit(ContextID, mpe, Sampler3D, NULL, 0);
-    cmsPipelineInsertStage(ContextID, lut, cmsAT_BEGIN, mpe);
+    lut = cmsPipelineAlloc(3, 3);
+    mpe = cmsStageAllocCLut16bitGranular(Dimensions, 3, 3, NULL);
+    cmsStageSampleCLut16bit(mpe, Sampler3D, NULL, 0);
+    cmsPipelineInsertStage(lut, cmsAT_BEGIN, mpe);
 
     // Check accuracy
 
-    if (!CheckOne3D(ContextID, lut, 0, 0, 0)) return 0;
-    if (!CheckOne3D(ContextID, lut, 0xffff, 0xffff, 0xffff)) return 0;
+    if (!CheckOne3D(lut, 0, 0, 0)) return 0;
+    if (!CheckOne3D(lut, 0xffff, 0xffff, 0xffff)) return 0;
 
-    if (!CheckOne3D(ContextID, lut, 0x8080, 0x8080, 0x8080)) return 0;
-    if (!CheckOne3D(ContextID, lut, 0x0000, 0xFE00, 0x80FF)) return 0;
-    if (!CheckOne3D(ContextID, lut, 0x1111, 0x2222, 0x3333)) return 0;
-    if (!CheckOne3D(ContextID, lut, 0x0000, 0x0012, 0x0013)) return 0;
-    if (!CheckOne3D(ContextID, lut, 0x3141, 0x1415, 0x1592)) return 0;
-    if (!CheckOne3D(ContextID, lut, 0xFF00, 0xFF01, 0xFF12)) return 0;
+    if (!CheckOne3D(lut, 0x8080, 0x8080, 0x8080)) return 0;
+    if (!CheckOne3D(lut, 0x0000, 0xFE00, 0x80FF)) return 0;
+    if (!CheckOne3D(lut, 0x1111, 0x2222, 0x3333)) return 0;
+    if (!CheckOne3D(lut, 0x0000, 0x0012, 0x0013)) return 0;
+    if (!CheckOne3D(lut, 0x3141, 0x1415, 0x1592)) return 0;
+    if (!CheckOne3D(lut, 0xFF00, 0xFF01, 0xFF12)) return 0;
 
-    cmsPipelineFree(ContextID, lut);
+    cmsPipelineFree(lut);
 
     return 1;
 }
@@ -2037,24 +2037,24 @@ cmsInt32Number Check4Dinterp(cmsContext ContextID)
     cmsPipeline* lut;
     cmsStage* mpe;
 
-    lut = cmsPipelineAlloc(ContextID, 4, 3);
-    mpe = cmsStageAllocCLut16bit(ContextID, 9, 4, 3, NULL);
-    cmsStageSampleCLut16bit(ContextID, mpe, Sampler4D, NULL, 0);
-    cmsPipelineInsertStage(ContextID, lut, cmsAT_BEGIN, mpe);
+    lut = cmsPipelineAlloc(4, 3);
+    mpe = cmsStageAllocCLut16bit(9, 4, 3, NULL);
+    cmsStageSampleCLut16bit(mpe, Sampler4D, NULL, 0);
+    cmsPipelineInsertStage(lut, cmsAT_BEGIN, mpe);
 
     // Check accuracy
 
-    if (!CheckOne4D(ContextID, lut, 0, 0, 0, 0)) return 0;
-    if (!CheckOne4D(ContextID, lut, 0xffff, 0xffff, 0xffff, 0xffff)) return 0;
+    if (!CheckOne4D(lut, 0, 0, 0, 0)) return 0;
+    if (!CheckOne4D(lut, 0xffff, 0xffff, 0xffff, 0xffff)) return 0;
 
-    if (!CheckOne4D(ContextID, lut, 0x8080, 0x8080, 0x8080, 0x8080)) return 0;
-    if (!CheckOne4D(ContextID, lut, 0x0000, 0xFE00, 0x80FF, 0x8888)) return 0;
-    if (!CheckOne4D(ContextID, lut, 0x1111, 0x2222, 0x3333, 0x4444)) return 0;
-    if (!CheckOne4D(ContextID, lut, 0x0000, 0x0012, 0x0013, 0x0014)) return 0;
-    if (!CheckOne4D(ContextID, lut, 0x3141, 0x1415, 0x1592, 0x9261)) return 0;
-    if (!CheckOne4D(ContextID, lut, 0xFF00, 0xFF01, 0xFF12, 0xFF13)) return 0;
+    if (!CheckOne4D(lut, 0x8080, 0x8080, 0x8080, 0x8080)) return 0;
+    if (!CheckOne4D(lut, 0x0000, 0xFE00, 0x80FF, 0x8888)) return 0;
+    if (!CheckOne4D(lut, 0x1111, 0x2222, 0x3333, 0x4444)) return 0;
+    if (!CheckOne4D(lut, 0x0000, 0x0012, 0x0013, 0x0014)) return 0;
+    if (!CheckOne4D(lut, 0x3141, 0x1415, 0x1592, 0x9261)) return 0;
+    if (!CheckOne4D(lut, 0xFF00, 0xFF01, 0xFF12, 0xFF13)) return 0;
 
-    cmsPipelineFree(ContextID, lut);
+    cmsPipelineFree(lut);
 
     return 1;
 }
@@ -2068,24 +2068,24 @@ cmsInt32Number Check4DinterpGranular(cmsContext ContextID)
     cmsStage* mpe;
     cmsUInt32Number Dimensions[] = { 9, 8, 7, 6 };
 
-    lut = cmsPipelineAlloc(ContextID, 4, 3);
-    mpe = cmsStageAllocCLut16bitGranular(ContextID, Dimensions, 4, 3, NULL);
-    cmsStageSampleCLut16bit(ContextID, mpe, Sampler4D, NULL, 0);
-    cmsPipelineInsertStage(ContextID, lut, cmsAT_BEGIN, mpe);
+    lut = cmsPipelineAlloc(4, 3);
+    mpe = cmsStageAllocCLut16bitGranular(Dimensions, 4, 3, NULL);
+    cmsStageSampleCLut16bit(mpe, Sampler4D, NULL, 0);
+    cmsPipelineInsertStage(lut, cmsAT_BEGIN, mpe);
 
     // Check accuracy
 
-    if (!CheckOne4D(ContextID, lut, 0, 0, 0, 0)) return 0;
-    if (!CheckOne4D(ContextID, lut, 0xffff, 0xffff, 0xffff, 0xffff)) return 0;
+    if (!CheckOne4D(lut, 0, 0, 0, 0)) return 0;
+    if (!CheckOne4D(lut, 0xffff, 0xffff, 0xffff, 0xffff)) return 0;
 
-    if (!CheckOne4D(ContextID, lut, 0x8080, 0x8080, 0x8080, 0x8080)) return 0;
-    if (!CheckOne4D(ContextID, lut, 0x0000, 0xFE00, 0x80FF, 0x8888)) return 0;
-    if (!CheckOne4D(ContextID, lut, 0x1111, 0x2222, 0x3333, 0x4444)) return 0;
-    if (!CheckOne4D(ContextID, lut, 0x0000, 0x0012, 0x0013, 0x0014)) return 0;
-    if (!CheckOne4D(ContextID, lut, 0x3141, 0x1415, 0x1592, 0x9261)) return 0;
-    if (!CheckOne4D(ContextID, lut, 0xFF00, 0xFF01, 0xFF12, 0xFF13)) return 0;
+    if (!CheckOne4D(lut, 0x8080, 0x8080, 0x8080, 0x8080)) return 0;
+    if (!CheckOne4D(lut, 0x0000, 0xFE00, 0x80FF, 0x8888)) return 0;
+    if (!CheckOne4D(lut, 0x1111, 0x2222, 0x3333, 0x4444)) return 0;
+    if (!CheckOne4D(lut, 0x0000, 0x0012, 0x0013, 0x0014)) return 0;
+    if (!CheckOne4D(lut, 0x3141, 0x1415, 0x1592, 0x9261)) return 0;
+    if (!CheckOne4D(lut, 0xFF00, 0xFF01, 0xFF12, 0xFF13)) return 0;
 
-    cmsPipelineFree(ContextID, lut);
+    cmsPipelineFree(lut);
 
     return 1;
 }
@@ -2098,24 +2098,24 @@ cmsInt32Number Check5DinterpGranular(cmsContext ContextID)
     cmsStage* mpe;
     cmsUInt32Number Dimensions[] = { 3, 2, 2, 2, 2 };
 
-    lut = cmsPipelineAlloc(ContextID, 5, 3);
-    mpe = cmsStageAllocCLut16bitGranular(ContextID, Dimensions, 5, 3, NULL);
-    cmsStageSampleCLut16bit(ContextID, mpe, Sampler5D, NULL, 0);
-    cmsPipelineInsertStage(ContextID, lut, cmsAT_BEGIN, mpe);
+    lut = cmsPipelineAlloc(5, 3);
+    mpe = cmsStageAllocCLut16bitGranular(Dimensions, 5, 3, NULL);
+    cmsStageSampleCLut16bit(mpe, Sampler5D, NULL, 0);
+    cmsPipelineInsertStage(lut, cmsAT_BEGIN, mpe);
 
     // Check accuracy
 
-    if (!CheckOne5D(ContextID, lut, 0, 0, 0, 0, 0)) return 0;
-    if (!CheckOne5D(ContextID, lut, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff)) return 0;
+    if (!CheckOne5D(lut, 0, 0, 0, 0, 0)) return 0;
+    if (!CheckOne5D(lut, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff)) return 0;
 
-    if (!CheckOne5D(ContextID, lut, 0x8080, 0x8080, 0x8080, 0x8080, 0x1234)) return 0;
-    if (!CheckOne5D(ContextID, lut, 0x0000, 0xFE00, 0x80FF, 0x8888, 0x8078)) return 0;
-    if (!CheckOne5D(ContextID, lut, 0x1111, 0x2222, 0x3333, 0x4444, 0x1455)) return 0;
-    if (!CheckOne5D(ContextID, lut, 0x0000, 0x0012, 0x0013, 0x0014, 0x2333)) return 0;
-    if (!CheckOne5D(ContextID, lut, 0x3141, 0x1415, 0x1592, 0x9261, 0x4567)) return 0;
-    if (!CheckOne5D(ContextID, lut, 0xFF00, 0xFF01, 0xFF12, 0xFF13, 0xF344)) return 0;
+    if (!CheckOne5D(lut, 0x8080, 0x8080, 0x8080, 0x8080, 0x1234)) return 0;
+    if (!CheckOne5D(lut, 0x0000, 0xFE00, 0x80FF, 0x8888, 0x8078)) return 0;
+    if (!CheckOne5D(lut, 0x1111, 0x2222, 0x3333, 0x4444, 0x1455)) return 0;
+    if (!CheckOne5D(lut, 0x0000, 0x0012, 0x0013, 0x0014, 0x2333)) return 0;
+    if (!CheckOne5D(lut, 0x3141, 0x1415, 0x1592, 0x9261, 0x4567)) return 0;
+    if (!CheckOne5D(lut, 0xFF00, 0xFF01, 0xFF12, 0xFF13, 0xF344)) return 0;
 
-    cmsPipelineFree(ContextID, lut);
+    cmsPipelineFree(lut);
 
     return 1;
 }
@@ -2127,24 +2127,24 @@ cmsInt32Number Check6DinterpGranular(cmsContext ContextID)
     cmsStage* mpe;
     cmsUInt32Number Dimensions[] = { 4, 3, 3, 2, 2, 2 };
 
-    lut = cmsPipelineAlloc(ContextID, 6, 3);
-    mpe = cmsStageAllocCLut16bitGranular(ContextID, Dimensions, 6, 3, NULL);
-    cmsStageSampleCLut16bit(ContextID, mpe, Sampler6D, NULL, 0);
-    cmsPipelineInsertStage(ContextID, lut, cmsAT_BEGIN, mpe);
+    lut = cmsPipelineAlloc(6, 3);
+    mpe = cmsStageAllocCLut16bitGranular(Dimensions, 6, 3, NULL);
+    cmsStageSampleCLut16bit(mpe, Sampler6D, NULL, 0);
+    cmsPipelineInsertStage(lut, cmsAT_BEGIN, mpe);
 
     // Check accuracy
 
-    if (!CheckOne6D(ContextID, lut, 0, 0, 0, 0, 0, 0)) return 0;
-    if (!CheckOne6D(ContextID, lut, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff)) return 0;
+    if (!CheckOne6D(lut, 0, 0, 0, 0, 0, 0)) return 0;
+    if (!CheckOne6D(lut, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff)) return 0;
 
-    if (!CheckOne6D(ContextID, lut, 0x8080, 0x8080, 0x8080, 0x8080, 0x1234, 0x1122)) return 0;
-    if (!CheckOne6D(ContextID, lut, 0x0000, 0xFE00, 0x80FF, 0x8888, 0x8078, 0x2233)) return 0;
-    if (!CheckOne6D(ContextID, lut, 0x1111, 0x2222, 0x3333, 0x4444, 0x1455, 0x3344)) return 0;
-    if (!CheckOne6D(ContextID, lut, 0x0000, 0x0012, 0x0013, 0x0014, 0x2333, 0x4455)) return 0;
-    if (!CheckOne6D(ContextID, lut, 0x3141, 0x1415, 0x1592, 0x9261, 0x4567, 0x5566)) return 0;
-    if (!CheckOne6D(ContextID, lut, 0xFF00, 0xFF01, 0xFF12, 0xFF13, 0xF344, 0x6677)) return 0;
+    if (!CheckOne6D(lut, 0x8080, 0x8080, 0x8080, 0x8080, 0x1234, 0x1122)) return 0;
+    if (!CheckOne6D(lut, 0x0000, 0xFE00, 0x80FF, 0x8888, 0x8078, 0x2233)) return 0;
+    if (!CheckOne6D(lut, 0x1111, 0x2222, 0x3333, 0x4444, 0x1455, 0x3344)) return 0;
+    if (!CheckOne6D(lut, 0x0000, 0x0012, 0x0013, 0x0014, 0x2333, 0x4455)) return 0;
+    if (!CheckOne6D(lut, 0x3141, 0x1415, 0x1592, 0x9261, 0x4567, 0x5566)) return 0;
+    if (!CheckOne6D(lut, 0xFF00, 0xFF01, 0xFF12, 0xFF13, 0xF344, 0x6677)) return 0;
 
-    cmsPipelineFree(ContextID, lut);
+    cmsPipelineFree(lut);
 
     return 1;
 }
@@ -2156,24 +2156,24 @@ cmsInt32Number Check7DinterpGranular(cmsContext ContextID)
     cmsStage* mpe;
     cmsUInt32Number Dimensions[] = { 4, 3, 3, 2, 2, 2, 2 };
 
-    lut = cmsPipelineAlloc(ContextID, 7, 3);
-    mpe = cmsStageAllocCLut16bitGranular(ContextID, Dimensions, 7, 3, NULL);
-    cmsStageSampleCLut16bit(ContextID, mpe, Sampler7D, NULL, 0);
-    cmsPipelineInsertStage(ContextID, lut, cmsAT_BEGIN, mpe);
+    lut = cmsPipelineAlloc(7, 3);
+    mpe = cmsStageAllocCLut16bitGranular(Dimensions, 7, 3, NULL);
+    cmsStageSampleCLut16bit(mpe, Sampler7D, NULL, 0);
+    cmsPipelineInsertStage(lut, cmsAT_BEGIN, mpe);
 
     // Check accuracy
 
-    if (!CheckOne7D(ContextID, lut, 0, 0, 0, 0, 0, 0, 0)) return 0;
-    if (!CheckOne7D(ContextID, lut, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff)) return 0;
+    if (!CheckOne7D(lut, 0, 0, 0, 0, 0, 0, 0)) return 0;
+    if (!CheckOne7D(lut, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff)) return 0;
 
-    if (!CheckOne7D(ContextID, lut, 0x8080, 0x8080, 0x8080, 0x8080, 0x1234, 0x1122, 0x0056)) return 0;
-    if (!CheckOne7D(ContextID, lut, 0x0000, 0xFE00, 0x80FF, 0x8888, 0x8078, 0x2233, 0x0088)) return 0;
-    if (!CheckOne7D(ContextID, lut, 0x1111, 0x2222, 0x3333, 0x4444, 0x1455, 0x3344, 0x1987)) return 0;
-    if (!CheckOne7D(ContextID, lut, 0x0000, 0x0012, 0x0013, 0x0014, 0x2333, 0x4455, 0x9988)) return 0;
-    if (!CheckOne7D(ContextID, lut, 0x3141, 0x1415, 0x1592, 0x9261, 0x4567, 0x5566, 0xfe56)) return 0;
-    if (!CheckOne7D(ContextID, lut, 0xFF00, 0xFF01, 0xFF12, 0xFF13, 0xF344, 0x6677, 0xbabe)) return 0;
+    if (!CheckOne7D(lut, 0x8080, 0x8080, 0x8080, 0x8080, 0x1234, 0x1122, 0x0056)) return 0;
+    if (!CheckOne7D(lut, 0x0000, 0xFE00, 0x80FF, 0x8888, 0x8078, 0x2233, 0x0088)) return 0;
+    if (!CheckOne7D(lut, 0x1111, 0x2222, 0x3333, 0x4444, 0x1455, 0x3344, 0x1987)) return 0;
+    if (!CheckOne7D(lut, 0x0000, 0x0012, 0x0013, 0x0014, 0x2333, 0x4455, 0x9988)) return 0;
+    if (!CheckOne7D(lut, 0x3141, 0x1415, 0x1592, 0x9261, 0x4567, 0x5566, 0xfe56)) return 0;
+    if (!CheckOne7D(lut, 0xFF00, 0xFF01, 0xFF12, 0xFF13, 0xF344, 0x6677, 0xbabe)) return 0;
 
-    cmsPipelineFree(ContextID, lut);
+    cmsPipelineFree(lut);
 
     return 1;
 }
@@ -2186,24 +2186,24 @@ cmsInt32Number Check8DinterpGranular(cmsContext ContextID)
     cmsStage* mpe;
     cmsUInt32Number Dimensions[] = { 4, 3, 3, 2, 2, 2, 2, 2 };
 
-    lut = cmsPipelineAlloc(ContextID, 8, 3);
-    mpe = cmsStageAllocCLut16bitGranular(ContextID, Dimensions, 8, 3, NULL);
-    cmsStageSampleCLut16bit(ContextID, mpe, Sampler8D, NULL, 0);
-    cmsPipelineInsertStage(ContextID, lut, cmsAT_BEGIN, mpe);
+    lut = cmsPipelineAlloc(8, 3);
+    mpe = cmsStageAllocCLut16bitGranular(Dimensions, 8, 3, NULL);
+    cmsStageSampleCLut16bit(mpe, Sampler8D, NULL, 0);
+    cmsPipelineInsertStage(lut, cmsAT_BEGIN, mpe);
 
     // Check accuracy
 
-    if (!CheckOne8D(ContextID, lut, 0, 0, 0, 0, 0, 0, 0, 0)) return 0;
-    if (!CheckOne8D(ContextID, lut, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff)) return 0;
+    if (!CheckOne8D(lut, 0, 0, 0, 0, 0, 0, 0, 0)) return 0;
+    if (!CheckOne8D(lut, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff)) return 0;
 
-    if (!CheckOne8D(ContextID, lut, 0x8080, 0x8080, 0x8080, 0x8080, 0x1234, 0x1122, 0x0056, 0x0011)) return 0;
-    if (!CheckOne8D(ContextID, lut, 0x0000, 0xFE00, 0x80FF, 0x8888, 0x8078, 0x2233, 0x0088, 0x2020)) return 0;
-    if (!CheckOne8D(ContextID, lut, 0x1111, 0x2222, 0x3333, 0x4444, 0x1455, 0x3344, 0x1987, 0x4532)) return 0;
-    if (!CheckOne8D(ContextID, lut, 0x0000, 0x0012, 0x0013, 0x0014, 0x2333, 0x4455, 0x9988, 0x1200)) return 0;
-    if (!CheckOne8D(ContextID, lut, 0x3141, 0x1415, 0x1592, 0x9261, 0x4567, 0x5566, 0xfe56, 0x6666)) return 0;
-    if (!CheckOne8D(ContextID, lut, 0xFF00, 0xFF01, 0xFF12, 0xFF13, 0xF344, 0x6677, 0xbabe, 0xface)) return 0;
+    if (!CheckOne8D(lut, 0x8080, 0x8080, 0x8080, 0x8080, 0x1234, 0x1122, 0x0056, 0x0011)) return 0;
+    if (!CheckOne8D(lut, 0x0000, 0xFE00, 0x80FF, 0x8888, 0x8078, 0x2233, 0x0088, 0x2020)) return 0;
+    if (!CheckOne8D(lut, 0x1111, 0x2222, 0x3333, 0x4444, 0x1455, 0x3344, 0x1987, 0x4532)) return 0;
+    if (!CheckOne8D(lut, 0x0000, 0x0012, 0x0013, 0x0014, 0x2333, 0x4455, 0x9988, 0x1200)) return 0;
+    if (!CheckOne8D(lut, 0x3141, 0x1415, 0x1592, 0x9261, 0x4567, 0x5566, 0xfe56, 0x6666)) return 0;
+    if (!CheckOne8D(lut, 0xFF00, 0xFF01, 0xFF12, 0xFF13, 0xF344, 0x6677, 0xbabe, 0xface)) return 0;
 
-    cmsPipelineFree(ContextID, lut);
+    cmsPipelineFree(lut);
 
     return 1;
 }
@@ -2229,10 +2229,10 @@ cmsInt32Number CheckLab2LCh(cmsContext ContextID)
                 Lab.a = a;
                 Lab.b = b;
 
-                cmsLab2LCh(ContextID, &LCh, &Lab);
-                cmsLCh2Lab(ContextID, &Lab2, &LCh);
+                cmsLab2LCh(&LCh, &Lab);
+                cmsLCh2Lab(&Lab2, &LCh);
 
-                dist = cmsDeltaE(ContextID, &Lab, &Lab2);
+                dist = cmsDeltaE(&Lab, &Lab2);
                 if (dist > Max) Max = dist;
             }
         }
@@ -2260,10 +2260,10 @@ cmsInt32Number CheckLab2XYZ(cmsContext ContextID)
                 Lab.a = a;
                 Lab.b = b;
 
-                cmsLab2XYZ(ContextID, NULL, &XYZ, &Lab);
-                cmsXYZ2Lab(ContextID, NULL, &Lab2, &XYZ);
+                cmsLab2XYZ(NULL, &XYZ, &Lab);
+                cmsXYZ2Lab(NULL, &Lab2, &XYZ);
 
-                dist = cmsDeltaE(ContextID, &Lab, &Lab2);
+                dist = cmsDeltaE(&Lab, &Lab2);
                 if (dist > Max) Max = dist;
 
             }
@@ -2293,12 +2293,12 @@ cmsInt32Number CheckLab2xyY(cmsContext ContextID)
                 Lab.a = a;
                 Lab.b = b;
 
-                cmsLab2XYZ(ContextID, NULL, &XYZ, &Lab);
-                cmsXYZ2xyY(ContextID, &xyY, &XYZ);
-                cmsxyY2XYZ(ContextID, &XYZ, &xyY);
-                cmsXYZ2Lab(ContextID, NULL, &Lab2, &XYZ);
+                cmsLab2XYZ(NULL, &XYZ, &Lab);
+                cmsXYZ2xyY(&xyY, &XYZ);
+                cmsxyY2XYZ(&XYZ, &xyY);
+                cmsXYZ2Lab(NULL, &Lab2, &XYZ);
 
-                dist = cmsDeltaE(ContextID, &Lab, &Lab2);
+                dist = cmsDeltaE(&Lab, &Lab2);
                 if (dist > Max) Max = dist;
 
             }
@@ -2322,8 +2322,8 @@ cmsInt32Number CheckLabV2encoding(cmsContext ContextID)
 
         Inw[0] = Inw[1] = Inw[2] = (cmsUInt16Number) j;
 
-        cmsLabEncoded2FloatV2(ContextID, &Lab, Inw);
-        cmsFloat2LabEncodedV2(ContextID, aw, &Lab);
+        cmsLabEncoded2FloatV2(&Lab, Inw);
+        cmsFloat2LabEncodedV2(aw, &Lab);
 
         for (i=0; i < 3; i++) {
 
@@ -2350,8 +2350,8 @@ cmsInt32Number CheckLabV4encoding(cmsContext ContextID)
 
         Inw[0] = Inw[1] = Inw[2] = (cmsUInt16Number) j;
 
-        cmsLabEncoded2Float(ContextID, &Lab, Inw);
-        cmsFloat2LabEncoded(ContextID, aw, &Lab);
+        cmsLabEncoded2Float(&Lab, Inw);
+        cmsFloat2LabEncoded(aw, &Lab);
 
         for (i=0; i < 3; i++) {
 
@@ -2377,8 +2377,8 @@ cmsInt32Number CheckTemp2CHRM(cmsContext ContextID)
 
     for (j=4000; j < 25000; j++) {
 
-        cmsWhitePointFromTemp(ContextID, &White, j);
-        if (!cmsTempFromWhitePoint(ContextID, &v, &White)) return 0;
+        cmsWhitePointFromTemp(&White, j);
+        if (!cmsTempFromWhitePoint(&v, &White)) return 0;
 
         d = fabs(v - j);
         if (d > Max) Max = d;
@@ -2393,9 +2393,9 @@ cmsInt32Number CheckTemp2CHRM(cmsContext ContextID)
 // Tone curves -----------------------------------------------------------------------------------------------------
 
 static
-cmsInt32Number CheckGammaEstimation(cmsContext ContextID, cmsToneCurve* c, cmsFloat64Number g)
+cmsInt32Number CheckGammaEstimation(cmsToneCurve* c, cmsFloat64Number g)
 {
-    cmsFloat64Number est = cmsEstimateGamma(ContextID, c, 0.001);
+    cmsFloat64Number est = cmsEstimateGamma(c, 0.001);
 
     SubTest("Gamma estimation");
     if (fabs(est - g) > 0.001) return 0;
@@ -2405,24 +2405,24 @@ cmsInt32Number CheckGammaEstimation(cmsContext ContextID, cmsToneCurve* c, cmsFl
 static
 cmsInt32Number CheckGammaCreation16(cmsContext ContextID)
 {
-    cmsToneCurve* LinGamma = cmsBuildGamma(ContextID, 1.0);
+    cmsToneCurve* LinGamma = cmsBuildGamma(1.0);
     cmsInt32Number i;
     cmsUInt16Number in, out;
 
     for (i=0; i < 0xffff; i++) {
 
         in = (cmsUInt16Number) i;
-        out = cmsEvalToneCurve16(ContextID, LinGamma, in);
+        out = cmsEvalToneCurve16(LinGamma, in);
         if (in != out) {
             Fail("(lin gamma): Must be %x, But is %x : ", in, out);
-            cmsFreeToneCurve(ContextID, LinGamma);
+            cmsFreeToneCurve(LinGamma);
             return 0;
         }
     }
 
-    if (!CheckGammaEstimation(ContextID, LinGamma, 1.0)) return 0;
+    if (!CheckGammaEstimation(LinGamma, 1.0)) return 0;
 
-    cmsFreeToneCurve(ContextID, LinGamma);
+    cmsFreeToneCurve(LinGamma);
     return 1;
 
 }
@@ -2430,32 +2430,32 @@ cmsInt32Number CheckGammaCreation16(cmsContext ContextID)
 static
 cmsInt32Number CheckGammaCreationFlt(cmsContext ContextID)
 {
-    cmsToneCurve* LinGamma = cmsBuildGamma(ContextID, 1.0);
+    cmsToneCurve* LinGamma = cmsBuildGamma(1.0);
     cmsInt32Number i;
     cmsFloat32Number in, out;
 
     for (i=0; i < 0xffff; i++) {
 
         in = (cmsFloat32Number) (i / 65535.0);
-        out = cmsEvalToneCurveFloat(ContextID, LinGamma, in);
+        out = cmsEvalToneCurveFloat(LinGamma, in);
         if (fabs(in - out) > (1/65535.0)) {
             Fail("(lin gamma): Must be %f, But is %f : ", in, out);
-            cmsFreeToneCurve(ContextID, LinGamma);
+            cmsFreeToneCurve(LinGamma);
             return 0;
         }
     }
 
-    if (!CheckGammaEstimation(ContextID, LinGamma, 1.0)) return 0;
-    cmsFreeToneCurve(ContextID, LinGamma);
+    if (!CheckGammaEstimation(LinGamma, 1.0)) return 0;
+    cmsFreeToneCurve(LinGamma);
     return 1;
 }
 
 // Curve curves using a single power function
 // Error is given in 0..ffff counts
 static
-cmsInt32Number CheckGammaFloat(cmsContext ContextID, cmsFloat64Number g)
+cmsInt32Number CheckGammaFloat(cmsFloat64Number g)
 {
-    cmsToneCurve* Curve = cmsBuildGamma(ContextID, g);
+    cmsToneCurve* Curve = cmsBuildGamma(g);
     cmsInt32Number i;
     cmsFloat32Number in, out;
     cmsFloat64Number val, Err;
@@ -2464,7 +2464,7 @@ cmsInt32Number CheckGammaFloat(cmsContext ContextID, cmsFloat64Number g)
     for (i=0; i < 0xffff; i++) {
 
         in = (cmsFloat32Number) (i / 65535.0);
-        out = cmsEvalToneCurveFloat(ContextID, Curve, in);
+        out = cmsEvalToneCurveFloat(Curve, in);
         val = pow((cmsFloat64Number) in, g);
 
         Err = fabs( val - out);
@@ -2473,31 +2473,31 @@ cmsInt32Number CheckGammaFloat(cmsContext ContextID, cmsFloat64Number g)
 
     if (MaxErr > 0) printf("|Err|<%lf ", MaxErr * 65535.0);
 
-    if (!CheckGammaEstimation(ContextID, Curve, g)) return 0;
+    if (!CheckGammaEstimation(Curve, g)) return 0;
 
-    cmsFreeToneCurve(ContextID, Curve);
+    cmsFreeToneCurve(Curve);
     return 1;
 }
 
 static cmsInt32Number CheckGamma18(cmsContext ContextID)
 {
-    return CheckGammaFloat(ContextID, 1.8);
+    return CheckGammaFloat(1.8);
 }
 
 static cmsInt32Number CheckGamma22(cmsContext ContextID)
 {
-    return CheckGammaFloat(ContextID, 2.2);
+    return CheckGammaFloat(2.2);
 }
 
 static cmsInt32Number CheckGamma30(cmsContext ContextID)
 {
-    return CheckGammaFloat(ContextID, 3.0);
+    return CheckGammaFloat(3.0);
 }
 
 
 // Check table-based gamma functions
 static
-cmsInt32Number CheckGammaFloatTable(cmsContext ContextID, cmsFloat64Number g)
+cmsInt32Number CheckGammaFloatTable(cmsFloat64Number g)
 {
     cmsFloat32Number Values[1025];
     cmsToneCurve* Curve;
@@ -2511,13 +2511,13 @@ cmsInt32Number CheckGammaFloatTable(cmsContext ContextID, cmsFloat64Number g)
         Values[i] = powf(in, (float) g);
     }
 
-    Curve = cmsBuildTabulatedToneCurveFloat(ContextID, 1025, Values);
+    Curve = cmsBuildTabulatedToneCurveFloat(1025, Values);
 
     MaxErr = 0.0;
     for (i=0; i <= 0xffff; i++) {
 
         in = (cmsFloat32Number) (i / 65535.0);
-        out = cmsEvalToneCurveFloat(ContextID, Curve, in);
+        out = cmsEvalToneCurveFloat(Curve, in);
         val = pow(in, g);
 
         Err = fabs(val - out);
@@ -2526,31 +2526,31 @@ cmsInt32Number CheckGammaFloatTable(cmsContext ContextID, cmsFloat64Number g)
 
     if (MaxErr > 0) printf("|Err|<%lf ", MaxErr * 65535.0);
 
-    if (!CheckGammaEstimation(ContextID, Curve, g)) return 0;
+    if (!CheckGammaEstimation(Curve, g)) return 0;
 
-    cmsFreeToneCurve(ContextID, Curve);
+    cmsFreeToneCurve(Curve);
     return 1;
 }
 
 
 static cmsInt32Number CheckGamma18Table(cmsContext ContextID)
 {
-    return CheckGammaFloatTable(ContextID, 1.8);
+    return CheckGammaFloatTable(1.8);
 }
 
 static cmsInt32Number CheckGamma22Table(cmsContext ContextID)
 {
-    return CheckGammaFloatTable(ContextID, 2.2);
+    return CheckGammaFloatTable(2.2);
 }
 
 static cmsInt32Number CheckGamma30Table(cmsContext ContextID)
 {
-    return CheckGammaFloatTable(ContextID, 3.0);
+    return CheckGammaFloatTable(3.0);
 }
 
 // Create a curve from a table (which is a pure gamma function) and check it against the pow function.
 static
-cmsInt32Number CheckGammaWordTable(cmsContext ContextID, cmsFloat64Number g)
+cmsInt32Number CheckGammaWordTable(cmsFloat64Number g)
 {
     cmsUInt16Number Values[1025];
     cmsToneCurve* Curve;
@@ -2564,13 +2564,13 @@ cmsInt32Number CheckGammaWordTable(cmsContext ContextID, cmsFloat64Number g)
         Values[i] = (cmsUInt16Number) floor(pow(in, g) * 65535.0 + 0.5);
     }
 
-    Curve = cmsBuildTabulatedToneCurve16(ContextID, 1025, Values);
+    Curve = cmsBuildTabulatedToneCurve16(1025, Values);
 
     MaxErr = 0.0;
     for (i=0; i <= 0xffff; i++) {
 
         in = (cmsFloat32Number) (i / 65535.0);
-        out = cmsEvalToneCurveFloat(ContextID, Curve, in);
+        out = cmsEvalToneCurveFloat(Curve, in);
         val = pow(in, g);
 
         Err = fabs(val - out);
@@ -2579,25 +2579,25 @@ cmsInt32Number CheckGammaWordTable(cmsContext ContextID, cmsFloat64Number g)
 
     if (MaxErr > 0) printf("|Err|<%lf ", MaxErr * 65535.0);
 
-    if (!CheckGammaEstimation(ContextID, Curve, g)) return 0;
+    if (!CheckGammaEstimation(Curve, g)) return 0;
 
-    cmsFreeToneCurve(ContextID, Curve);
+    cmsFreeToneCurve(Curve);
     return 1;
 }
 
 static cmsInt32Number CheckGamma18TableWord(cmsContext ContextID)
 {
-    return CheckGammaWordTable(ContextID, 1.8);
+    return CheckGammaWordTable(1.8);
 }
 
 static cmsInt32Number CheckGamma22TableWord(cmsContext ContextID)
 {
-    return CheckGammaWordTable(ContextID, 2.2);
+    return CheckGammaWordTable(2.2);
 }
 
 static cmsInt32Number CheckGamma30TableWord(cmsContext ContextID)
 {
-    return CheckGammaWordTable(ContextID, 3.0);
+    return CheckGammaWordTable(3.0);
 }
 
 
@@ -2609,15 +2609,15 @@ cmsInt32Number CheckJointCurves(cmsContext ContextID)
     cmsToneCurve *Forward, *Reverse, *Result;
     cmsBool  rc;
 
-    Forward = cmsBuildGamma(ContextID, 3.0);
-    Reverse = cmsBuildGamma(ContextID, 3.0);
+    Forward = cmsBuildGamma(3.0);
+    Reverse = cmsBuildGamma(3.0);
 
-    Result = cmsJoinToneCurve(ContextID, Forward, Reverse, 256);
+    Result = cmsJoinToneCurve(Forward, Reverse, 256);
 
-    cmsFreeToneCurve(ContextID, Forward); cmsFreeToneCurve(ContextID, Reverse);
+    cmsFreeToneCurve(Forward); cmsFreeToneCurve(Reverse);
 
-    rc = cmsIsToneCurveLinear(ContextID, Result);
-    cmsFreeToneCurve(ContextID, Result);
+    rc = cmsIsToneCurveLinear(Result);
+    cmsFreeToneCurve(Result);
 
     if (!rc)
         Fail("Joining same curve twice does not result in a linear ramp");
@@ -2629,10 +2629,10 @@ cmsInt32Number CheckJointCurves(cmsContext ContextID)
 #if 0
 // Create a gamma curve by cheating the table
 static
-cmsToneCurve* GammaTableLinear(cmsContext ContextID, cmsInt32Number nEntries, cmsBool Dir)
+cmsToneCurve* GammaTableLinear(cmsInt32Number nEntries, cmsBool Dir)
 {
     cmsInt32Number i;
-    cmsToneCurve* g = cmsBuildTabulatedToneCurve16(ContextID, nEntries, NULL);
+    cmsToneCurve* g = cmsBuildTabulatedToneCurve16(nEntries, NULL);
 
     for (i=0; i < nEntries; i++) {
 
@@ -2655,7 +2655,7 @@ cmsInt32Number CheckJointCurvesDescending(cmsContext ContextID)
     cmsToneCurve *Forward, *Reverse, *Result;
     cmsInt32Number i, rc;
 
-     Forward = cmsBuildGamma(ContextID, 2.2);
+     Forward = cmsBuildGamma(2.2);
 
     // Fake the curve to be table-based
 
@@ -2663,26 +2663,26 @@ cmsInt32Number CheckJointCurvesDescending(cmsContext ContextID)
         Forward ->Table16[i] = 0xffff - Forward->Table16[i];
     Forward ->Segments[0].Type = 0;
 
-    Reverse = cmsReverseToneCurve(ContextID, Forward);
+    Reverse = cmsReverseToneCurve(Forward);
 
-    Result = cmsJoinToneCurve(ContextID, Reverse, Reverse, 256);
+    Result = cmsJoinToneCurve(Reverse, Reverse, 256);
 
-    cmsFreeToneCurve(ContextID, Forward);
-    cmsFreeToneCurve(ContextID, Reverse);
+    cmsFreeToneCurve(Forward);
+    cmsFreeToneCurve(Reverse);
 
-    rc = cmsIsToneCurveLinear(ContextID, Result);
-    cmsFreeToneCurve(ContextID, Result);
+    rc = cmsIsToneCurveLinear(Result);
+    cmsFreeToneCurve(Result);
 
     return rc;
 }
 
 
 static
-cmsInt32Number CheckFToneCurvePoint(cmsContext ContextID, cmsToneCurve* c, cmsUInt16Number Point, cmsInt32Number Value)
+cmsInt32Number CheckFToneCurvePoint(cmsToneCurve* c, cmsUInt16Number Point, cmsInt32Number Value)
 {
     cmsInt32Number Result;
 
-    Result = cmsEvalToneCurve16(ContextID, c, Point);
+    Result = cmsEvalToneCurve16(c, Point);
 
     return (abs(Value - Result) < 2);
 }
@@ -2710,21 +2710,21 @@ cmsInt32Number CheckReverseDegenerated(cmsContext ContextID)
     Tab[14]= 0xffff;
     Tab[15]= 0xffff;
 
-    p = cmsBuildTabulatedToneCurve16(ContextID, 16, Tab);
-    g = cmsReverseToneCurve(ContextID, p);
+    p = cmsBuildTabulatedToneCurve16(16, Tab);
+    g = cmsReverseToneCurve(p);
 
     // Now let's check some points
-    if (!CheckFToneCurvePoint(ContextID, g, 0x5555, 0x5555)) return 0;
-    if (!CheckFToneCurvePoint(ContextID, g, 0x7777, 0x7777)) return 0;
+    if (!CheckFToneCurvePoint(g, 0x5555, 0x5555)) return 0;
+    if (!CheckFToneCurvePoint(g, 0x7777, 0x7777)) return 0;
 
     // First point for zero
-    if (!CheckFToneCurvePoint(ContextID, g, 0x0000, 0x4444)) return 0;
+    if (!CheckFToneCurvePoint(g, 0x0000, 0x4444)) return 0;
 
     // Last point
-    if (!CheckFToneCurvePoint(ContextID, g, 0xFFFF, 0xFFFF)) return 0;
+    if (!CheckFToneCurvePoint(g, 0xFFFF, 0xFFFF)) return 0;
 
-    cmsFreeToneCurve(ContextID, p);
-    cmsFreeToneCurve(ContextID, g);
+    cmsFreeToneCurve(p);
+    cmsFreeToneCurve(g);
 
     return 1;
 }
@@ -2742,14 +2742,14 @@ cmsToneCurve* Build_sRGBGamma(cmsContext ContextID)
     Parameters[3] = 1. / 12.92;
     Parameters[4] = 0.04045;    // d
 
-    return cmsBuildParametricToneCurve(ContextID, 4, Parameters);
+    return cmsBuildParametricToneCurve(4, Parameters);
 }
 
 
 
 // Join two gamma tables in floating point format. Result should be a straight line
 static
-cmsToneCurve* CombineGammaFloat(cmsContext ContextID, cmsToneCurve* g1, cmsToneCurve* g2)
+cmsToneCurve* CombineGammaFloat(cmsToneCurve* g1, cmsToneCurve* g2)
 {
     cmsUInt16Number Tab[256];
     cmsFloat32Number f;
@@ -2758,17 +2758,17 @@ cmsToneCurve* CombineGammaFloat(cmsContext ContextID, cmsToneCurve* g1, cmsToneC
     for (i=0; i < 256; i++) {
 
         f = (cmsFloat32Number) i / 255.0F;
-        f = cmsEvalToneCurveFloat(ContextID, g2, cmsEvalToneCurveFloat(ContextID, g1, f));
+        f = cmsEvalToneCurveFloat(g2, cmsEvalToneCurveFloat(g1, f));
 
         Tab[i] = (cmsUInt16Number) floor(f * 65535.0 + 0.5);
     }
 
-    return  cmsBuildTabulatedToneCurve16(ContextID, 256, Tab);
+    return  cmsBuildTabulatedToneCurve16(256, Tab);
 }
 
 // Same of anterior, but using quantized tables
 static
-cmsToneCurve* CombineGamma16(cmsContext ContextID, cmsToneCurve* g1, cmsToneCurve* g2)
+cmsToneCurve* CombineGamma16(cmsToneCurve* g1, cmsToneCurve* g2)
 {
     cmsUInt16Number Tab[256];
 
@@ -2779,10 +2779,10 @@ cmsToneCurve* CombineGamma16(cmsContext ContextID, cmsToneCurve* g1, cmsToneCurv
         cmsUInt16Number wValIn;
 
         wValIn = _cmsQuantizeVal(i, 256);
-        Tab[i] = cmsEvalToneCurve16(ContextID, g2, cmsEvalToneCurve16(ContextID, g1, wValIn));
+        Tab[i] = cmsEvalToneCurve16(g2, cmsEvalToneCurve16(g1, wValIn));
     }
 
-    return  cmsBuildTabulatedToneCurve16(ContextID, 256, Tab);
+    return  cmsBuildTabulatedToneCurve16(256, Tab);
 }
 
 static
@@ -2792,12 +2792,12 @@ cmsInt32Number CheckJointFloatCurves_sRGB(cmsContext ContextID)
     cmsBool  rc;
 
     Forward = Build_sRGBGamma(ContextID);
-    Reverse = cmsReverseToneCurve(ContextID, Forward);
-    Result = CombineGammaFloat(ContextID, Forward, Reverse);
-    cmsFreeToneCurve(ContextID, Forward); cmsFreeToneCurve(ContextID, Reverse);
+    Reverse = cmsReverseToneCurve(Forward);
+    Result = CombineGammaFloat(Forward, Reverse);
+    cmsFreeToneCurve(Forward); cmsFreeToneCurve(Reverse);
 
-    rc = cmsIsToneCurveLinear(ContextID, Result);
-    cmsFreeToneCurve(ContextID, Result);
+    rc = cmsIsToneCurveLinear(Result);
+    cmsFreeToneCurve(Result);
 
     return rc;
 }
@@ -2809,12 +2809,12 @@ cmsInt32Number CheckJoint16Curves_sRGB(cmsContext ContextID)
     cmsBool  rc;
 
     Forward = Build_sRGBGamma(ContextID);
-    Reverse = cmsReverseToneCurve(ContextID, Forward);
-    Result = CombineGamma16(ContextID, Forward, Reverse);
-    cmsFreeToneCurve(ContextID, Forward); cmsFreeToneCurve(ContextID, Reverse);
+    Reverse = cmsReverseToneCurve(Forward);
+    Result = CombineGamma16(Forward, Reverse);
+    cmsFreeToneCurve(Forward); cmsFreeToneCurve(Reverse);
 
-    rc = cmsIsToneCurveLinear(ContextID, Result);
-    cmsFreeToneCurve(ContextID, Result);
+    rc = cmsIsToneCurveLinear(Result);
+    cmsFreeToneCurve(Result);
 
     return rc;
 }
@@ -2828,15 +2828,15 @@ cmsInt32Number CheckJointCurvesSShaped(cmsContext ContextID)
     cmsToneCurve *Forward, *Reverse, *Result;
     cmsInt32Number rc;
 
-    Forward = cmsBuildParametricToneCurve(ContextID, 108, &p);
-    Reverse = cmsReverseToneCurve(ContextID, Forward);
-    Result = cmsJoinToneCurve(ContextID, Forward, Forward, 4096);
+    Forward = cmsBuildParametricToneCurve(108, &p);
+    Reverse = cmsReverseToneCurve(Forward);
+    Result = cmsJoinToneCurve(Forward, Forward, 4096);
 
-    cmsFreeToneCurve(ContextID, Forward);
-    cmsFreeToneCurve(ContextID, Reverse);
+    cmsFreeToneCurve(Forward);
+    cmsFreeToneCurve(Reverse);
 
-    rc = cmsIsToneCurveLinear(ContextID, Result);
-    cmsFreeToneCurve(ContextID, Result);
+    rc = cmsIsToneCurveLinear(Result);
+    cmsFreeToneCurve(Result);
     return rc;
 }
 
@@ -2980,15 +2980,15 @@ cmsFloat32Number sigmoidal(cmsFloat32Number x, const cmsFloat64Number Params[])
 
 
 static
-cmsBool CheckSingleParametric(cmsContext ContextID, const char* Name, dblfnptr fn, cmsInt32Number Type, const cmsFloat64Number Params[])
+cmsBool CheckSingleParametric(const char* Name, dblfnptr fn, cmsInt32Number Type, const cmsFloat64Number Params[])
 {
     cmsInt32Number i;
     cmsToneCurve* tc;
     cmsToneCurve* tc_1;
     char InverseText[256];
 
-    tc = cmsBuildParametricToneCurve(ContextID, Type, Params);
-    tc_1 = cmsBuildParametricToneCurve(ContextID, -Type, Params);
+    tc = cmsBuildParametricToneCurve(Type, Params);
+    tc_1 = cmsBuildParametricToneCurve(-Type, Params);
 
     for (i=0; i <= 1000; i++) {
 
@@ -2996,8 +2996,8 @@ cmsBool CheckSingleParametric(cmsContext ContextID, const char* Name, dblfnptr f
         cmsFloat32Number y_fn, y_param, x_param, y_param2;
 
         y_fn = fn(x, Params);
-        y_param = cmsEvalToneCurveFloat(ContextID, tc, x);
-        x_param = cmsEvalToneCurveFloat(ContextID, tc_1, y_param);
+        y_param = cmsEvalToneCurveFloat(tc, x);
+        x_param = cmsEvalToneCurveFloat(tc_1, y_param);
 
         y_param2 = fn(x_param, Params);
 
@@ -3009,13 +3009,13 @@ cmsBool CheckSingleParametric(cmsContext ContextID, const char* Name, dblfnptr f
             goto Error;
     }
 
-    cmsFreeToneCurve(ContextID, tc);
-    cmsFreeToneCurve(ContextID, tc_1);
+    cmsFreeToneCurve(tc);
+    cmsFreeToneCurve(tc_1);
     return TRUE;
 
 Error:
-    cmsFreeToneCurve(ContextID, tc);
-    cmsFreeToneCurve(ContextID, tc_1);
+    cmsFreeToneCurve(tc);
+    cmsFreeToneCurve(tc_1);
     return FALSE;
 }
 
@@ -3029,7 +3029,7 @@ cmsInt32Number CheckParametricToneCurves(cmsContext ContextID)
 
      Params[0] = 2.2;
 
-     if (!CheckSingleParametric(ContextID, "Gamma", Gamma, 1, Params)) return 0;
+     if (!CheckSingleParametric("Gamma", Gamma, 1, Params)) return 0;
 
      // 2) CIE 122-1966
      // Y = (aX + b)^Gamma  | X >= -b/a
@@ -3039,7 +3039,7 @@ cmsInt32Number CheckParametricToneCurves(cmsContext ContextID)
      Params[1] = 1.5;
      Params[2] = -0.5;
 
-     if (!CheckSingleParametric(ContextID, "CIE122-1966", CIE122, 2, Params)) return 0;
+     if (!CheckSingleParametric("CIE122-1966", CIE122, 2, Params)) return 0;
 
      // 3) IEC 61966-3
      // Y = (aX + b)^Gamma | X <= -b/a
@@ -3051,7 +3051,7 @@ cmsInt32Number CheckParametricToneCurves(cmsContext ContextID)
      Params[3] = 0.3;
 
 
-     if (!CheckSingleParametric(ContextID, "IEC 61966-3", IEC61966_3, 3, Params)) return 0;
+     if (!CheckSingleParametric("IEC 61966-3", IEC61966_3, 3, Params)) return 0;
 
      // 4) IEC 61966-2.1 (sRGB)
      // Y = (aX + b)^Gamma | X >= d
@@ -3063,7 +3063,7 @@ cmsInt32Number CheckParametricToneCurves(cmsContext ContextID)
      Params[3] = 1. / 12.92;
      Params[4] = 0.04045;
 
-     if (!CheckSingleParametric(ContextID, "IEC 61966-2.1", IEC61966_21, 4, Params)) return 0;
+     if (!CheckSingleParametric("IEC 61966-2.1", IEC61966_21, 4, Params)) return 0;
 
 
      // 5) Y = (aX + b)^Gamma + e | X >= d
@@ -3077,7 +3077,7 @@ cmsInt32Number CheckParametricToneCurves(cmsContext ContextID)
      Params[5] = 0.5;
      Params[6] = 0.2;
 
-     if (!CheckSingleParametric(ContextID, "param_5", param_5, 5, Params)) return 0;
+     if (!CheckSingleParametric("param_5", param_5, 5, Params)) return 0;
 
      // 6) Y = (aX + b) ^ Gamma + c
 
@@ -3086,7 +3086,7 @@ cmsInt32Number CheckParametricToneCurves(cmsContext ContextID)
      Params[2] = 0.2;
      Params[3] = 0.3;
 
-     if (!CheckSingleParametric(ContextID, "param_6", param_6, 6, Params)) return 0;
+     if (!CheckSingleParametric("param_6", param_6, 6, Params)) return 0;
 
      // 7) Y = a * log (b * X^Gamma + c) + d
 
@@ -3096,7 +3096,7 @@ cmsInt32Number CheckParametricToneCurves(cmsContext ContextID)
      Params[3] = 0.02;
      Params[4] = 0.1;
 
-     if (!CheckSingleParametric(ContextID, "param_7", param_7, 7, Params)) return 0;
+     if (!CheckSingleParametric("param_7", param_7, 7, Params)) return 0;
 
      // 8) Y = a * b ^ (c*X+d) + e
 
@@ -3106,12 +3106,12 @@ cmsInt32Number CheckParametricToneCurves(cmsContext ContextID)
      Params[3] = 0.1;
      Params[4] = 0.2;
 
-     if (!CheckSingleParametric(ContextID, "param_8", param_8, 8, Params)) return 0;
+     if (!CheckSingleParametric("param_8", param_8, 8, Params)) return 0;
 
      // 108: S-Shaped: (1 - (1-x)^1/g)^1/g
 
      Params[0] = 1.9;
-     if (!CheckSingleParametric(ContextID, "sigmoidal", sigmoidal, 108, Params)) return 0;
+     if (!CheckSingleParametric("sigmoidal", sigmoidal, 108, Params)) return 0;
 
      // All OK
 
@@ -3127,32 +3127,32 @@ cmsInt32Number CheckLUTcreation(cmsContext ContextID)
     cmsPipeline* lut2;
     cmsInt32Number n1, n2;
 
-    lut = cmsPipelineAlloc(ContextID, 1, 1);
-    n1 = cmsPipelineStageCount(ContextID, lut);
-    lut2 = cmsPipelineDup(ContextID, lut);
-    n2 = cmsPipelineStageCount(ContextID, lut2);
+    lut = cmsPipelineAlloc(1, 1);
+    n1 = cmsPipelineStageCount(lut);
+    lut2 = cmsPipelineDup(lut);
+    n2 = cmsPipelineStageCount(lut2);
 
-    cmsPipelineFree(ContextID, lut);
-    cmsPipelineFree(ContextID, lut2);
+    cmsPipelineFree(lut);
+    cmsPipelineFree(lut2);
 
     return (n1 == 0) && (n2 == 0);
 }
 
 // Create a MPE for a identity matrix
 static
-void AddIdentityMatrix(cmsContext ContextID, cmsPipeline* lut)
+void AddIdentityMatrix(cmsPipeline* lut)
 {
     const cmsFloat64Number Identity[] = { 1, 0, 0,
                           0, 1, 0,
                           0, 0, 1,
                           0, 0, 0 };
 
-    cmsPipelineInsertStage(ContextID, lut, cmsAT_END, cmsStageAllocMatrix(ContextID, 3, 3, Identity, NULL));
+    cmsPipelineInsertStage(lut, cmsAT_END, cmsStageAllocMatrix(3, 3, Identity, NULL));
 }
 
 // Create a MPE for identity cmsFloat32Number CLUT
 static
-void AddIdentityCLUTfloat(cmsContext ContextID, cmsPipeline* lut)
+void AddIdentityCLUTfloat(cmsPipeline* lut)
 {
     const cmsFloat32Number  Table[] = {
 
@@ -3169,12 +3169,12 @@ void AddIdentityCLUTfloat(cmsContext ContextID, cmsPipeline* lut)
         1.0,    1.0,    1.0
     };
 
-    cmsPipelineInsertStage(ContextID, lut, cmsAT_END, cmsStageAllocCLutFloat(ContextID, 2, 3, 3, Table));
+    cmsPipelineInsertStage(lut, cmsAT_END, cmsStageAllocCLutFloat(2, 3, 3, Table));
 }
 
 // Create a MPE for identity cmsFloat32Number CLUT
 static
-void AddIdentityCLUT16(cmsContext ContextID, cmsPipeline* lut)
+void AddIdentityCLUT16(cmsPipeline* lut)
 {
     const cmsUInt16Number Table[] = {
 
@@ -3192,30 +3192,30 @@ void AddIdentityCLUT16(cmsContext ContextID, cmsPipeline* lut)
     };
 
 
-    cmsPipelineInsertStage(ContextID, lut, cmsAT_END, cmsStageAllocCLut16bit(ContextID, 2, 3, 3, Table));
+    cmsPipelineInsertStage(lut, cmsAT_END, cmsStageAllocCLut16bit(2, 3, 3, Table));
 }
 
 
 // Create a 3 fn identity curves
 
 static
-void Add3GammaCurves(cmsContext ContextID, cmsPipeline* lut, cmsFloat64Number Curve)
+void Add3GammaCurves(cmsPipeline* lut, cmsFloat64Number Curve)
 {
-    cmsToneCurve* id = cmsBuildGamma(ContextID, Curve);
+    cmsToneCurve* id = cmsBuildGamma(Curve);
     cmsToneCurve* id3[3];
 
     id3[0] = id;
     id3[1] = id;
     id3[2] = id;
 
-    cmsPipelineInsertStage(ContextID, lut, cmsAT_END, cmsStageAllocToneCurves(ContextID, 3, id3));
+    cmsPipelineInsertStage(lut, cmsAT_END, cmsStageAllocToneCurves(3, id3));
 
-    cmsFreeToneCurve(ContextID, id);
+    cmsFreeToneCurve(id);
 }
 
 
 static
-cmsInt32Number CheckFloatLUT(cmsContext ContextID, cmsPipeline* lut)
+cmsInt32Number CheckFloatLUT(cmsPipeline* lut)
 {
     cmsInt32Number n1, i, j;
     cmsFloat32Number Inf[3], Outf[3];
@@ -3227,7 +3227,7 @@ cmsInt32Number CheckFloatLUT(cmsContext ContextID, cmsPipeline* lut)
         cmsInt32Number af[3];
 
         Inf[0] = Inf[1] = Inf[2] = (cmsFloat32Number) j / 65535.0F;
-        cmsPipelineEvalFloat(ContextID, Inf, Outf, lut);
+        cmsPipelineEvalFloat(Inf, Outf, lut);
 
         af[0] = (cmsInt32Number) floor(Outf[0]*65535.0 + 0.5);
         af[1] = (cmsInt32Number) floor(Outf[1]*65535.0 + 0.5);
@@ -3247,7 +3247,7 @@ cmsInt32Number CheckFloatLUT(cmsContext ContextID, cmsPipeline* lut)
 
 
 static
-cmsInt32Number Check16LUT(cmsContext ContextID, cmsPipeline* lut)
+cmsInt32Number Check16LUT(cmsPipeline* lut)
 {
     cmsInt32Number n2, i, j;
     cmsUInt16Number Inw[3], Outw[3];
@@ -3259,7 +3259,7 @@ cmsInt32Number Check16LUT(cmsContext ContextID, cmsPipeline* lut)
         cmsInt32Number aw[3];
 
         Inw[0] = Inw[1] = Inw[2] = (cmsUInt16Number) j;
-        cmsPipelineEval16(ContextID, Inw, Outw, lut);
+        cmsPipelineEval16(Inw, Outw, lut);
         aw[0] = Outw[0];
         aw[1] = Outw[1];
         aw[2] = Outw[2];
@@ -3279,25 +3279,25 @@ cmsInt32Number Check16LUT(cmsContext ContextID, cmsPipeline* lut)
 
 // Check any LUT that is linear
 static
-cmsInt32Number CheckStagesLUT(cmsContext ContextID, cmsPipeline* lut, cmsInt32Number ExpectedStages)
+cmsInt32Number CheckStagesLUT(cmsPipeline* lut, cmsInt32Number ExpectedStages)
 {
 
     cmsInt32Number nInpChans, nOutpChans, nStages;
 
-    nInpChans  = cmsPipelineInputChannels(ContextID, lut);
-    nOutpChans = cmsPipelineOutputChannels(ContextID, lut);
-    nStages    = cmsPipelineStageCount(ContextID, lut);
+    nInpChans  = cmsPipelineInputChannels(lut);
+    nOutpChans = cmsPipelineOutputChannels(lut);
+    nStages    = cmsPipelineStageCount(lut);
 
     return (nInpChans == 3) && (nOutpChans == 3) && (nStages == ExpectedStages);
 }
 
 
 static
-cmsInt32Number CheckFullLUT(cmsContext ContextID, cmsPipeline* lut, cmsInt32Number ExpectedStages)
+cmsInt32Number CheckFullLUT(cmsPipeline* lut, cmsInt32Number ExpectedStages)
 {
-    cmsInt32Number rc = CheckStagesLUT(ContextID, lut, ExpectedStages) && Check16LUT(ContextID, lut) && CheckFloatLUT(ContextID, lut);
+    cmsInt32Number rc = CheckStagesLUT(lut, ExpectedStages) && Check16LUT(lut) && CheckFloatLUT(lut);
 
-    cmsPipelineFree(ContextID, lut);
+    cmsPipelineFree(lut);
     return rc;
 }
 
@@ -3305,10 +3305,10 @@ cmsInt32Number CheckFullLUT(cmsContext ContextID, cmsPipeline* lut, cmsInt32Numb
 static
 cmsInt32Number Check1StageLUT(cmsContext ContextID)
 {
-    cmsPipeline* lut = cmsPipelineAlloc(ContextID, 3, 3);
+    cmsPipeline* lut = cmsPipelineAlloc(3, 3);
 
-    AddIdentityMatrix(ContextID, lut);
-    return CheckFullLUT(ContextID, lut, 1);
+    AddIdentityMatrix(lut);
+    return CheckFullLUT(lut, 1);
 }
 
 
@@ -3316,23 +3316,23 @@ cmsInt32Number Check1StageLUT(cmsContext ContextID)
 static
 cmsInt32Number Check2StageLUT(cmsContext ContextID)
 {
-    cmsPipeline* lut = cmsPipelineAlloc(ContextID, 3, 3);
+    cmsPipeline* lut = cmsPipelineAlloc(3, 3);
 
-    AddIdentityMatrix(ContextID, lut);
-    AddIdentityCLUTfloat(ContextID, lut);
+    AddIdentityMatrix(lut);
+    AddIdentityCLUTfloat(lut);
 
-    return CheckFullLUT(ContextID, lut, 2);
+    return CheckFullLUT(lut, 2);
 }
 
 static
 cmsInt32Number Check2Stage16LUT(cmsContext ContextID)
 {
-    cmsPipeline* lut = cmsPipelineAlloc(ContextID, 3, 3);
+    cmsPipeline* lut = cmsPipelineAlloc(3, 3);
 
-    AddIdentityMatrix(ContextID, lut);
-    AddIdentityCLUT16(ContextID, lut);
+    AddIdentityMatrix(lut);
+    AddIdentityCLUT16(lut);
 
-    return CheckFullLUT(ContextID, lut, 2);
+    return CheckFullLUT(lut, 2);
 }
 
 
@@ -3340,25 +3340,25 @@ cmsInt32Number Check2Stage16LUT(cmsContext ContextID)
 static
 cmsInt32Number Check3StageLUT(cmsContext ContextID)
 {
-    cmsPipeline* lut = cmsPipelineAlloc(ContextID, 3, 3);
+    cmsPipeline* lut = cmsPipelineAlloc(3, 3);
 
-    AddIdentityMatrix(ContextID, lut);
-    AddIdentityCLUTfloat(ContextID, lut);
-    Add3GammaCurves(ContextID, lut, 1.0);
+    AddIdentityMatrix(lut);
+    AddIdentityCLUTfloat(lut);
+    Add3GammaCurves(lut, 1.0);
 
-    return CheckFullLUT(ContextID, lut, 3);
+    return CheckFullLUT(lut, 3);
 }
 
 static
 cmsInt32Number Check3Stage16LUT(cmsContext ContextID)
 {
-    cmsPipeline* lut = cmsPipelineAlloc(ContextID, 3, 3);
+    cmsPipeline* lut = cmsPipelineAlloc(3, 3);
 
-    AddIdentityMatrix(ContextID, lut);
-    AddIdentityCLUT16(ContextID, lut);
-    Add3GammaCurves(ContextID, lut, 1.0);
+    AddIdentityMatrix(lut);
+    AddIdentityCLUT16(lut);
+    Add3GammaCurves(lut, 1.0);
 
-    return CheckFullLUT(ContextID, lut, 3);
+    return CheckFullLUT(lut, 3);
 }
 
 
@@ -3366,101 +3366,101 @@ cmsInt32Number Check3Stage16LUT(cmsContext ContextID)
 static
 cmsInt32Number Check4StageLUT(cmsContext ContextID)
 {
-    cmsPipeline* lut = cmsPipelineAlloc(ContextID, 3, 3);
+    cmsPipeline* lut = cmsPipelineAlloc(3, 3);
 
-    AddIdentityMatrix(ContextID, lut);
-    AddIdentityCLUTfloat(ContextID, lut);
-    Add3GammaCurves(ContextID, lut, 1.0);
-    AddIdentityMatrix(ContextID, lut);
+    AddIdentityMatrix(lut);
+    AddIdentityCLUTfloat(lut);
+    Add3GammaCurves(lut, 1.0);
+    AddIdentityMatrix(lut);
 
-    return CheckFullLUT(ContextID, lut, 4);
+    return CheckFullLUT(lut, 4);
 }
 
 static
 cmsInt32Number Check4Stage16LUT(cmsContext ContextID)
 {
-    cmsPipeline* lut = cmsPipelineAlloc(ContextID, 3, 3);
+    cmsPipeline* lut = cmsPipelineAlloc(3, 3);
 
-    AddIdentityMatrix(ContextID, lut);
-    AddIdentityCLUT16(ContextID, lut);
-    Add3GammaCurves(ContextID, lut, 1.0);
-    AddIdentityMatrix(ContextID, lut);
+    AddIdentityMatrix(lut);
+    AddIdentityCLUT16(lut);
+    Add3GammaCurves(lut, 1.0);
+    AddIdentityMatrix(lut);
 
-    return CheckFullLUT(ContextID, lut, 4);
+    return CheckFullLUT(lut, 4);
 }
 
 static
 cmsInt32Number Check5StageLUT(cmsContext ContextID)
 {
-    cmsPipeline* lut = cmsPipelineAlloc(ContextID, 3, 3);
+    cmsPipeline* lut = cmsPipelineAlloc(3, 3);
 
-    AddIdentityMatrix(ContextID, lut);
-    AddIdentityCLUTfloat(ContextID, lut);
-    Add3GammaCurves(ContextID, lut, 1.0);
-    AddIdentityMatrix(ContextID, lut);
-    Add3GammaCurves(ContextID, lut, 1.0);
+    AddIdentityMatrix(lut);
+    AddIdentityCLUTfloat(lut);
+    Add3GammaCurves(lut, 1.0);
+    AddIdentityMatrix(lut);
+    Add3GammaCurves(lut, 1.0);
 
-    return CheckFullLUT(ContextID, lut, 5);
+    return CheckFullLUT(lut, 5);
 }
 
 
 static
 cmsInt32Number Check5Stage16LUT(cmsContext ContextID)
 {
-    cmsPipeline* lut = cmsPipelineAlloc(ContextID, 3, 3);
+    cmsPipeline* lut = cmsPipelineAlloc(3, 3);
 
-    AddIdentityMatrix(ContextID, lut);
-    AddIdentityCLUT16(ContextID, lut);
-    Add3GammaCurves(ContextID, lut, 1.0);
-    AddIdentityMatrix(ContextID, lut);
-    Add3GammaCurves(ContextID, lut, 1.0);
+    AddIdentityMatrix(lut);
+    AddIdentityCLUT16(lut);
+    Add3GammaCurves(lut, 1.0);
+    AddIdentityMatrix(lut);
+    Add3GammaCurves(lut, 1.0);
 
-    return CheckFullLUT(ContextID, lut, 5);
+    return CheckFullLUT(lut, 5);
 }
 
 static
 cmsInt32Number Check6StageLUT(cmsContext ContextID)
 {
-    cmsPipeline* lut = cmsPipelineAlloc(ContextID, 3, 3);
+    cmsPipeline* lut = cmsPipelineAlloc(3, 3);
 
-    AddIdentityMatrix(ContextID, lut);
-    Add3GammaCurves(ContextID, lut, 1.0);
-    AddIdentityCLUTfloat(ContextID, lut);
-    Add3GammaCurves(ContextID, lut, 1.0);
-    AddIdentityMatrix(ContextID, lut);
-    Add3GammaCurves(ContextID, lut, 1.0);
+    AddIdentityMatrix(lut);
+    Add3GammaCurves(lut, 1.0);
+    AddIdentityCLUTfloat(lut);
+    Add3GammaCurves(lut, 1.0);
+    AddIdentityMatrix(lut);
+    Add3GammaCurves(lut, 1.0);
 
-    return CheckFullLUT(ContextID, lut, 6);
+    return CheckFullLUT(lut, 6);
 }
 
 static
 cmsInt32Number Check6Stage16LUT(cmsContext ContextID)
 {
-    cmsPipeline* lut = cmsPipelineAlloc(ContextID, 3, 3);
+    cmsPipeline* lut = cmsPipelineAlloc(3, 3);
 
-    AddIdentityMatrix(ContextID, lut);
-    Add3GammaCurves(ContextID, lut, 1.0);
-    AddIdentityCLUT16(ContextID, lut);
-    Add3GammaCurves(ContextID, lut, 1.0);
-    AddIdentityMatrix(ContextID, lut);
-    Add3GammaCurves(ContextID, lut, 1.0);
+    AddIdentityMatrix(lut);
+    Add3GammaCurves(lut, 1.0);
+    AddIdentityCLUT16(lut);
+    Add3GammaCurves(lut, 1.0);
+    AddIdentityMatrix(lut);
+    Add3GammaCurves(lut, 1.0);
 
-    return CheckFullLUT(ContextID, lut, 6);
+    return CheckFullLUT(lut, 6);
 }
 
 
 static
 cmsInt32Number CheckLab2LabLUT(cmsContext ContextID)
 {
-    cmsPipeline* lut = cmsPipelineAlloc(ContextID, 3, 3);
+    cmsPipeline* lut = cmsPipelineAlloc(3, 3);
     cmsInt32Number rc;
 
-    cmsPipelineInsertStage(ContextID, lut, cmsAT_END, _cmsStageAllocLab2XYZ(ContextID));
-    cmsPipelineInsertStage(ContextID, lut, cmsAT_END, _cmsStageAllocXYZ2Lab(ContextID));
+    cmsPipelineInsertStage(lut, cmsAT_END, _cmsStageAllocLab2XYZ(ContextID));
+    cmsPipelineInsertStage(lut, cmsAT_END, _cmsStageAllocXYZ2Lab(ContextID));
 
-    rc = CheckFloatLUT(ContextID, lut) && CheckStagesLUT(ContextID, lut, 2);
+    rc = CheckFloatLUT(lut) && CheckStagesLUT(lut, 2);
 
-    cmsPipelineFree(ContextID, lut);
+    cmsPipelineFree(lut);
 
     return rc;
 }
@@ -3469,15 +3469,15 @@ cmsInt32Number CheckLab2LabLUT(cmsContext ContextID)
 static
 cmsInt32Number CheckXYZ2XYZLUT(cmsContext ContextID)
 {
-    cmsPipeline* lut = cmsPipelineAlloc(ContextID, 3, 3);
+    cmsPipeline* lut = cmsPipelineAlloc(3, 3);
     cmsInt32Number rc;
 
-    cmsPipelineInsertStage(ContextID, lut, cmsAT_END, _cmsStageAllocXYZ2Lab(ContextID));
-    cmsPipelineInsertStage(ContextID, lut, cmsAT_END, _cmsStageAllocLab2XYZ(ContextID));
+    cmsPipelineInsertStage(lut, cmsAT_END, _cmsStageAllocXYZ2Lab(ContextID));
+    cmsPipelineInsertStage(lut, cmsAT_END, _cmsStageAllocLab2XYZ(ContextID));
 
-    rc = CheckFloatLUT(ContextID, lut) && CheckStagesLUT(ContextID, lut, 2);
+    rc = CheckFloatLUT(lut) && CheckStagesLUT(lut, 2);
 
-    cmsPipelineFree(ContextID, lut);
+    cmsPipelineFree(lut);
 
     return rc;
 }
@@ -3487,16 +3487,16 @@ cmsInt32Number CheckXYZ2XYZLUT(cmsContext ContextID)
 static
 cmsInt32Number CheckLab2LabMatLUT(cmsContext ContextID)
 {
-    cmsPipeline* lut = cmsPipelineAlloc(ContextID, 3, 3);
+    cmsPipeline* lut = cmsPipelineAlloc(3, 3);
     cmsInt32Number rc;
 
-    cmsPipelineInsertStage(ContextID, lut, cmsAT_END, _cmsStageAllocLab2XYZ(ContextID));
-    AddIdentityMatrix(ContextID, lut);
-    cmsPipelineInsertStage(ContextID, lut, cmsAT_END, _cmsStageAllocXYZ2Lab(ContextID));
+    cmsPipelineInsertStage(lut, cmsAT_END, _cmsStageAllocLab2XYZ(ContextID));
+    AddIdentityMatrix(lut);
+    cmsPipelineInsertStage(lut, cmsAT_END, _cmsStageAllocXYZ2Lab(ContextID));
 
-    rc = CheckFloatLUT(ContextID, lut) && CheckStagesLUT(ContextID, lut, 3);
+    rc = CheckFloatLUT(lut) && CheckStagesLUT(lut, 3);
 
-    cmsPipelineFree(ContextID, lut);
+    cmsPipelineFree(lut);
 
     return rc;
 }
@@ -3504,7 +3504,7 @@ cmsInt32Number CheckLab2LabMatLUT(cmsContext ContextID)
 static
 cmsInt32Number CheckNamedColorLUT(cmsContext ContextID)
 {
-    cmsPipeline* lut = cmsPipelineAlloc(ContextID, 3, 3);
+    cmsPipeline* lut = cmsPipelineAlloc(3, 3);
     cmsNAMEDCOLORLIST* nc;
     cmsInt32Number i,j, rc = 1, n2;
     cmsUInt16Number PCS[3];
@@ -3514,7 +3514,7 @@ cmsInt32Number CheckNamedColorLUT(cmsContext ContextID)
 
 
 
-    nc = cmsAllocNamedColorList(ContextID, 256, 3, "pre", "post");
+    nc = cmsAllocNamedColorList(256, 3, "pre", "post");
     if (nc == NULL) return 0;
 
     for (i=0; i < 256; i++) {
@@ -3523,12 +3523,12 @@ cmsInt32Number CheckNamedColorLUT(cmsContext ContextID)
         Colorant[0] = Colorant[1] = Colorant[2] = Colorant[3] = (cmsUInt16Number) i;
 
         sprintf(Name, "#%d", i);
-        if (!cmsAppendNamedColor(ContextID, nc, Name, PCS, Colorant)) { rc = 0; break; }
+        if (!cmsAppendNamedColor(nc, Name, PCS, Colorant)) { rc = 0; break; }
     }
 
-    cmsPipelineInsertStage(ContextID, lut, cmsAT_END, _cmsStageAllocNamedColor(ContextID, nc, FALSE));
+    cmsPipelineInsertStage(lut, cmsAT_END, _cmsStageAllocNamedColor(nc, FALSE));
 
-    cmsFreeNamedColorList(ContextID, nc);
+    cmsFreeNamedColorList(nc);
     if (rc == 0) return 0;
 
     n2=0;
@@ -3537,7 +3537,7 @@ cmsInt32Number CheckNamedColorLUT(cmsContext ContextID)
 
         Inw[0] = (cmsUInt16Number) j;
 
-        cmsPipelineEval16(ContextID, Inw, Outw, lut);
+        cmsPipelineEval16(Inw, Outw, lut);
         for (i=0; i < 3; i++) {
 
             if (Outw[i] != j) {
@@ -3547,7 +3547,7 @@ cmsInt32Number CheckNamedColorLUT(cmsContext ContextID)
 
     }
 
-    cmsPipelineFree(ContextID, lut);
+    cmsPipelineFree(lut);
     return (n2 == 0);
 }
 
@@ -3567,40 +3567,40 @@ cmsInt32Number CheckMLU(cmsContext ContextID)
     cmsHPROFILE h= NULL;
 
     // Allocate a MLU structure, no preferred size
-    mlu = cmsMLUalloc(ContextID, 0);
+    mlu = cmsMLUalloc(0);
 
     // Add some localizations
-    cmsMLUsetWide(ContextID, mlu, "en", "US", L"Hello, world");
-    cmsMLUsetWide(ContextID, mlu, "es", "ES", L"Hola, mundo");
-    cmsMLUsetWide(ContextID, mlu, "fr", "FR", L"Bonjour, le monde");
-    cmsMLUsetWide(ContextID, mlu, "ca", "CA", L"Hola, mon");
+    cmsMLUsetWide(mlu, "en", "US", L"Hello, world");
+    cmsMLUsetWide(mlu, "es", "ES", L"Hola, mundo");
+    cmsMLUsetWide(mlu, "fr", "FR", L"Bonjour, le monde");
+    cmsMLUsetWide(mlu, "ca", "CA", L"Hola, mon");
 
 
     // Check the returned string for each language
 
-    cmsMLUgetASCII(ContextID, mlu, "en", "US", Buffer, 256);
+    cmsMLUgetASCII(mlu, "en", "US", Buffer, 256);
     if (strcmp(Buffer, "Hello, world") != 0) rc = 0;
 
 
-    cmsMLUgetASCII(ContextID, mlu, "es", "ES", Buffer, 256);
+    cmsMLUgetASCII(mlu, "es", "ES", Buffer, 256);
     if (strcmp(Buffer, "Hola, mundo") != 0) rc = 0;
 
 
-    cmsMLUgetASCII(ContextID, mlu, "fr", "FR", Buffer, 256);
+    cmsMLUgetASCII(mlu, "fr", "FR", Buffer, 256);
     if (strcmp(Buffer, "Bonjour, le monde") != 0) rc = 0;
 
 
-    cmsMLUgetASCII(ContextID, mlu, "ca", "CA", Buffer, 256);
+    cmsMLUgetASCII(mlu, "ca", "CA", Buffer, 256);
     if (strcmp(Buffer, "Hola, mon") != 0) rc = 0;
 
     if (rc == 0)
         Fail("Unexpected string '%s'", Buffer);
 
     // So far, so good.
-    cmsMLUfree(ContextID, mlu);
+    cmsMLUfree(mlu);
 
     // Now for performance, allocate an empty struct
-    mlu = cmsMLUalloc(ContextID, 0);
+    mlu = cmsMLUalloc(0);
 
     // Fill it with several thousands of different lenguages
     for (i=0; i < 4096; i++) {
@@ -3612,14 +3612,14 @@ cmsInt32Number CheckMLU(cmsContext ContextID)
         Lang[2] = 0;
 
         sprintf(Buffer, "String #%i", i);
-        cmsMLUsetASCII(ContextID, mlu, Lang, Lang, Buffer);
+        cmsMLUsetASCII(mlu, Lang, Lang, Buffer);
     }
 
     // Duplicate it
-    mlu2 = cmsMLUdup(ContextID, mlu);
+    mlu2 = cmsMLUdup(mlu);
 
     // Get rid of original
-    cmsMLUfree(ContextID, mlu);
+    cmsMLUfree(mlu);
 
     // Check all is still in place
     for (i=0; i < 4096; i++) {
@@ -3630,7 +3630,7 @@ cmsInt32Number CheckMLU(cmsContext ContextID)
         Lang[1] = (char)(i / 255);
         Lang[2] = 0;
 
-        cmsMLUgetASCII(ContextID, mlu2, Lang, Lang, Buffer2, 256);
+        cmsMLUgetASCII(mlu2, Lang, Lang, Buffer2, 256);
         sprintf(Buffer, "String #%i", i);
 
         if (strcmp(Buffer, Buffer2) != 0) { rc = 0; break; }
@@ -3641,18 +3641,18 @@ cmsInt32Number CheckMLU(cmsContext ContextID)
 
     // Check profile IO
 
-    h = cmsOpenProfileFromFile(ContextID, "mlucheck.icc", "w");
+    h = cmsOpenProfileFromFile("mlucheck.icc", "w");
 
-    cmsSetProfileVersion(ContextID, h, 4.3);
+    cmsSetProfileVersion(h, 4.3);
 
-    cmsWriteTag(ContextID, h, cmsSigProfileDescriptionTag, mlu2);
-    cmsCloseProfile(ContextID, h);
-    cmsMLUfree(ContextID, mlu2);
+    cmsWriteTag(h, cmsSigProfileDescriptionTag, mlu2);
+    cmsCloseProfile(h);
+    cmsMLUfree(mlu2);
 
 
-    h = cmsOpenProfileFromFile(ContextID, "mlucheck.icc", "r");
+    h = cmsOpenProfileFromFile("mlucheck.icc", "r");
 
-    mlu3 = (cmsMLU *) cmsReadTag(ContextID, h, cmsSigProfileDescriptionTag);
+    mlu3 = (cmsMLU *) cmsReadTag(h, cmsSigProfileDescriptionTag);
     if (mlu3 == NULL) { Fail("Profile didn't get the MLU\n"); rc = 0; goto Error; }
 
     // Check all is still in place
@@ -3664,7 +3664,7 @@ cmsInt32Number CheckMLU(cmsContext ContextID)
         Lang[1] = (char) (i / 255);
         Lang[2] = 0;
 
-        cmsMLUgetASCII(ContextID, mlu3, Lang, Lang, Buffer2, 256);
+        cmsMLUgetASCII(mlu3, Lang, Lang, Buffer2, 256);
         sprintf(Buffer, "String #%i", i);
 
         if (strcmp(Buffer, Buffer2) != 0) { rc = 0; break; }
@@ -3674,7 +3674,7 @@ cmsInt32Number CheckMLU(cmsContext ContextID)
 
 Error:
 
-    if (h != NULL) cmsCloseProfile(ContextID, h);
+    if (h != NULL) cmsCloseProfile(h);
     remove("mlucheck.icc");
 
     return rc;
@@ -3695,7 +3695,7 @@ cmsInt32Number CheckNamedColorList(cmsContext ContextID)
     cmsUInt16Number CheckColorant[cmsMAXCHANNELS];
     cmsHPROFILE h;
 
-    nc = cmsAllocNamedColorList(ContextID, 0, 4, "prefix", "suffix");
+    nc = cmsAllocNamedColorList(0, 4, "prefix", "suffix");
     if (nc == NULL) return 0;
 
     for (i=0; i < 4096; i++) {
@@ -3705,7 +3705,7 @@ cmsInt32Number CheckNamedColorList(cmsContext ContextID)
         Colorant[0] = Colorant[1] = Colorant[2] = Colorant[3] = (cmsUInt16Number) (4096 - i);
 
         sprintf(Name, "#%d", i);
-        if (!cmsAppendNamedColor(ContextID, nc, Name, PCS, Colorant)) { rc = 0; break; }
+        if (!cmsAppendNamedColor(nc, Name, PCS, Colorant)) { rc = 0; break; }
     }
 
     for (i=0; i < 4096; i++) {
@@ -3714,7 +3714,7 @@ cmsInt32Number CheckNamedColorList(cmsContext ContextID)
         CheckColorant[0] = CheckColorant[1] = CheckColorant[2] = CheckColorant[3] = (cmsUInt16Number) (4096 - i);
 
         sprintf(CheckName, "#%d", i);
-        if (!cmsNamedColorInfo(ContextID, nc, i, Name, NULL, NULL, PCS, Colorant)) { rc = 0; goto Error; }
+        if (!cmsNamedColorInfo(nc, i, Name, NULL, NULL, PCS, Colorant)) { rc = 0; goto Error; }
 
 
         for (j=0; j < 3; j++) {
@@ -3728,19 +3728,19 @@ cmsInt32Number CheckNamedColorList(cmsContext ContextID)
         if (strcmp(Name, CheckName) != 0) {rc = 0; Fail("Invalid Name"); goto Error; };
     }
 
-    h = cmsOpenProfileFromFile(ContextID, "namedcol.icc", "w");
+    h = cmsOpenProfileFromFile("namedcol.icc", "w");
     if (h == NULL) return 0;
-    if (!cmsWriteTag(ContextID, h, cmsSigNamedColor2Tag, nc)) return 0;
-    cmsCloseProfile(ContextID, h);
-    cmsFreeNamedColorList(ContextID, nc);
+    if (!cmsWriteTag(h, cmsSigNamedColor2Tag, nc)) return 0;
+    cmsCloseProfile(h);
+    cmsFreeNamedColorList(nc);
     nc = NULL;
 
-    h = cmsOpenProfileFromFile(ContextID, "namedcol.icc", "r");
-    nc2 = (cmsNAMEDCOLORLIST *) cmsReadTag(ContextID, h, cmsSigNamedColor2Tag);
+    h = cmsOpenProfileFromFile("namedcol.icc", "r");
+    nc2 = (cmsNAMEDCOLORLIST *) cmsReadTag(h, cmsSigNamedColor2Tag);
 
-    if (cmsNamedColorCount(ContextID, nc2) != 4096) { rc = 0; Fail("Invalid count"); goto Error; }
+    if (cmsNamedColorCount(nc2) != 4096) { rc = 0; Fail("Invalid count"); goto Error; }
 
-    i = cmsNamedColorIndex(ContextID, nc2, "#123");
+    i = cmsNamedColorIndex(nc2, "#123");
     if (i != 123) { rc = 0; Fail("Invalid index"); goto Error; }
 
 
@@ -3750,7 +3750,7 @@ cmsInt32Number CheckNamedColorList(cmsContext ContextID)
         CheckColorant[0] = CheckColorant[1] = CheckColorant[2] = CheckColorant[3] = (cmsUInt16Number) (4096 - i);
 
         sprintf(CheckName, "#%d", i);
-        if (!cmsNamedColorInfo(ContextID, nc2, i, Name, NULL, NULL, PCS, Colorant)) { rc = 0; goto Error; }
+        if (!cmsNamedColorInfo(nc2, i, Name, NULL, NULL, PCS, Colorant)) { rc = 0; goto Error; }
 
 
         for (j=0; j < 3; j++) {
@@ -3764,11 +3764,11 @@ cmsInt32Number CheckNamedColorList(cmsContext ContextID)
         if (strcmp(Name, CheckName) != 0) {rc = 0; Fail("Invalid Name"); goto Error; };
     }
 
-    cmsCloseProfile(ContextID, h);
+    cmsCloseProfile(h);
     remove("namedcol.icc");
 
 Error:
-    if (nc != NULL) cmsFreeNamedColorList(ContextID, nc);
+    if (nc != NULL) cmsFreeNamedColorList(nc);
     return rc;
 }
 
@@ -3779,61 +3779,61 @@ static
 cmsInt32Number CreateNamedColorProfile(cmsContext ContextID)
 {
     // Color list database
-    cmsNAMEDCOLORLIST* colors = cmsAllocNamedColorList(ContextID, 10, 4, "PANTONE", "TCX");
+    cmsNAMEDCOLORLIST* colors = cmsAllocNamedColorList(10, 4, "PANTONE", "TCX");
 
     // Containers for names
     cmsMLU* DescriptionMLU, *CopyrightMLU;
 
     // Create n empty profile
-    cmsHPROFILE hProfile = cmsOpenProfileFromFile(ContextID, "named.icc", "w");
+    cmsHPROFILE hProfile = cmsOpenProfileFromFile("named.icc", "w");
 
     // Values
     cmsCIELab Lab;
     cmsUInt16Number PCS[3], Colorant[cmsMAXCHANNELS];
 
     // Set profile class
-    cmsSetProfileVersion(ContextID, hProfile, 4.3);
-    cmsSetDeviceClass(ContextID, hProfile, cmsSigNamedColorClass);
-    cmsSetColorSpace(ContextID, hProfile, cmsSigCmykData);
-    cmsSetPCS(ContextID, hProfile, cmsSigLabData);
-    cmsSetHeaderRenderingIntent(ContextID, hProfile, INTENT_PERCEPTUAL);
+    cmsSetProfileVersion(hProfile, 4.3);
+    cmsSetDeviceClass(hProfile, cmsSigNamedColorClass);
+    cmsSetColorSpace(hProfile, cmsSigCmykData);
+    cmsSetPCS(hProfile, cmsSigLabData);
+    cmsSetHeaderRenderingIntent(hProfile, INTENT_PERCEPTUAL);
 
     // Add description and copyright only in english/US
-    DescriptionMLU = cmsMLUalloc(ContextID, 1);
-    CopyrightMLU   = cmsMLUalloc(ContextID, 1);
+    DescriptionMLU = cmsMLUalloc(1);
+    CopyrightMLU   = cmsMLUalloc(1);
 
-    cmsMLUsetWide(ContextID, DescriptionMLU, "en", "US", L"Profile description");
-    cmsMLUsetWide(ContextID, CopyrightMLU,   "en", "US", L"Profile copyright");
+    cmsMLUsetWide(DescriptionMLU, "en", "US", L"Profile description");
+    cmsMLUsetWide(CopyrightMLU,   "en", "US", L"Profile copyright");
 
-    cmsWriteTag(ContextID, hProfile, cmsSigProfileDescriptionTag, DescriptionMLU);
-    cmsWriteTag(ContextID, hProfile, cmsSigCopyrightTag, CopyrightMLU);
+    cmsWriteTag(hProfile, cmsSigProfileDescriptionTag, DescriptionMLU);
+    cmsWriteTag(hProfile, cmsSigCopyrightTag, CopyrightMLU);
 
     // Set the media white point
-    cmsWriteTag(ContextID, hProfile, cmsSigMediaWhitePointTag, cmsD50_XYZ(ContextID));
+    cmsWriteTag(hProfile, cmsSigMediaWhitePointTag, cmsD50_XYZ(ContextID));
 
 
     // Populate one value, Colorant = CMYK values in 16 bits, PCS[] = Encoded Lab values (in V2 format!!)
     Lab.L = 50; Lab.a = 10; Lab.b = -10;
-    cmsFloat2LabEncodedV2(ContextID, PCS, &Lab);
+    cmsFloat2LabEncodedV2(PCS, &Lab);
     Colorant[0] = 10 * 257; Colorant[1] = 20 * 257; Colorant[2] = 30 * 257; Colorant[3] = 40 * 257;
-    cmsAppendNamedColor(ContextID, colors, "Hazelnut 14-1315", PCS, Colorant);
+    cmsAppendNamedColor(colors, "Hazelnut 14-1315", PCS, Colorant);
 
     // Another one. Consider to write a routine for that
     Lab.L = 40; Lab.a = -5; Lab.b = 8;
-    cmsFloat2LabEncodedV2(ContextID, PCS, &Lab);
+    cmsFloat2LabEncodedV2(PCS, &Lab);
     Colorant[0] = 10 * 257; Colorant[1] = 20 * 257; Colorant[2] = 30 * 257; Colorant[3] = 40 * 257;
-    cmsAppendNamedColor(ContextID, colors, "Kale 18-0107", PCS, Colorant);
+    cmsAppendNamedColor(colors, "Kale 18-0107", PCS, Colorant);
 
     // Write the colors database
-    cmsWriteTag(ContextID, hProfile, cmsSigNamedColor2Tag, colors);
+    cmsWriteTag(hProfile, cmsSigNamedColor2Tag, colors);
 
     // That will create the file
-    cmsCloseProfile(ContextID, hProfile);
+    cmsCloseProfile(hProfile);
 
     // Free resources
-    cmsFreeNamedColorList(ContextID, colors);
-    cmsMLUfree(ContextID, DescriptionMLU);
-    cmsMLUfree(ContextID, CopyrightMLU);
+    cmsFreeNamedColorList(colors);
+    cmsMLUfree(DescriptionMLU);
+    cmsMLUfree(CopyrightMLU);
 
     remove("named.icc");
 
@@ -4103,7 +4103,7 @@ cmsInt32Number CheckFormatters16(cmsContext ContextID)
 #undef C
 
 static
-void CheckSingleFormatterFloat(cmsContext ContextID, cmsUInt32Number Type, const char* Text)
+void CheckSingleFormatterFloat(cmsUInt32Number Type, const char* Text)
 {
     cmsFloat32Number Values[cmsMAXCHANNELS];
     cmsUInt8Number Buffer[1024];
@@ -4118,16 +4118,16 @@ void CheckSingleFormatterFloat(cmsContext ContextID, cmsUInt32Number Type, const
     info.OutputFormat = info.InputFormat = Type;
 
     // Go forth and back
-    f = _cmsGetFormatter(ContextID, Type,  cmsFormatterInput, CMS_PACK_FLAGS_FLOAT);
-    b = _cmsGetFormatter(ContextID, Type,  cmsFormatterOutput, CMS_PACK_FLAGS_FLOAT);
+    f = _cmsGetFormatter(Type,  cmsFormatterInput, CMS_PACK_FLAGS_FLOAT);
+    b = _cmsGetFormatter(Type,  cmsFormatterOutput, CMS_PACK_FLAGS_FLOAT);
 
     if (f.FmtFloat == NULL || b.FmtFloat == NULL) {
         Fail("no formatter for %s", Text);
         FormatterFailed = TRUE;
 
         // Useful for debug
-        f = _cmsGetFormatter(ContextID, Type,  cmsFormatterInput, CMS_PACK_FLAGS_FLOAT);
-        b = _cmsGetFormatter(ContextID, Type,  cmsFormatterOutput, CMS_PACK_FLAGS_FLOAT);
+        f = _cmsGetFormatter(Type,  cmsFormatterInput, CMS_PACK_FLAGS_FLOAT);
+        b = _cmsGetFormatter(Type,  cmsFormatterOutput, CMS_PACK_FLAGS_FLOAT);
         return;
     }
 
@@ -4139,9 +4139,9 @@ void CheckSingleFormatterFloat(cmsContext ContextID, cmsUInt32Number Type, const
             Values[i] = (cmsFloat32Number) (i+j);
         }
 
-        b.FmtFloat(ContextID, &info, Values, Buffer, 1);
+        b.FmtFloat(&info, Values, Buffer, 1);
         memset(Values, 0, sizeof(Values));
-        f.FmtFloat(ContextID, &info, Values, Buffer, 1);
+        f.FmtFloat(&info, Values, Buffer, 1);
 
         for (i=0; i < nChannels; i++) {
 
@@ -4157,15 +4157,15 @@ void CheckSingleFormatterFloat(cmsContext ContextID, cmsUInt32Number Type, const
                     Values[i] = (cmsFloat32Number) (i+j);
                 }
 
-                b.FmtFloat(ContextID, &info, Values, Buffer, 1);
-                f.FmtFloat(ContextID, &info, Values, Buffer, 1);
+                b.FmtFloat(&info, Values, Buffer, 1);
+                f.FmtFloat(&info, Values, Buffer, 1);
                 return;
             }
         }
     }
 }
 
-#define C(a) CheckSingleFormatterFloat(ContextID, a, #a)
+#define C(a) CheckSingleFormatterFloat(a, #a)
 
 static
 cmsInt32Number CheckFormattersFloat(cmsContext ContextID)
@@ -4245,7 +4245,7 @@ cmsInt32Number CheckFormattersHalf(cmsContext ContextID)
 #endif
 
 static
-cmsInt32Number CheckOneRGB(cmsContext ContextID, cmsHTRANSFORM xform, cmsUInt16Number R, cmsUInt16Number G, cmsUInt16Number B, cmsUInt16Number Ro, cmsUInt16Number Go, cmsUInt16Number Bo)
+cmsInt32Number CheckOneRGB(cmsHTRANSFORM xform, cmsUInt16Number R, cmsUInt16Number G, cmsUInt16Number B, cmsUInt16Number Ro, cmsUInt16Number Go, cmsUInt16Number Bo)
 {
     cmsUInt16Number RGB[3];
     cmsUInt16Number Out[3];
@@ -4254,7 +4254,7 @@ cmsInt32Number CheckOneRGB(cmsContext ContextID, cmsHTRANSFORM xform, cmsUInt16N
     RGB[1] = G;
     RGB[2] = B;
 
-    cmsDoTransform(ContextID, xform, RGB, Out, 1);
+    cmsDoTransform(xform, RGB, Out, 1);
 
     return IsGoodWord("R", Ro , Out[0]) &&
            IsGoodWord("G", Go , Out[1]) &&
@@ -4263,7 +4263,7 @@ cmsInt32Number CheckOneRGB(cmsContext ContextID, cmsHTRANSFORM xform, cmsUInt16N
 
 // Check known values going from sRGB to XYZ
 static
-cmsInt32Number CheckOneRGB_double(cmsContext ContextID, cmsHTRANSFORM xform, cmsFloat64Number R, cmsFloat64Number G, cmsFloat64Number B, cmsFloat64Number Ro, cmsFloat64Number Go, cmsFloat64Number Bo)
+cmsInt32Number CheckOneRGB_double(cmsHTRANSFORM xform, cmsFloat64Number R, cmsFloat64Number G, cmsFloat64Number B, cmsFloat64Number Ro, cmsFloat64Number Go, cmsFloat64Number Bo)
 {
     cmsFloat64Number RGB[3];
     cmsFloat64Number Out[3];
@@ -4272,7 +4272,7 @@ cmsInt32Number CheckOneRGB_double(cmsContext ContextID, cmsHTRANSFORM xform, cms
     RGB[1] = G;
     RGB[2] = B;
 
-    cmsDoTransform(ContextID, xform, RGB, Out, 1);
+    cmsDoTransform(xform, RGB, Out, 1);
 
     return IsGoodVal("R", Ro , Out[0], 0.01) &&
            IsGoodVal("G", Go , Out[1], 0.01) &&
@@ -4288,27 +4288,27 @@ cmsInt32Number CheckChangeBufferFormat(cmsContext ContextID)
     cmsHTRANSFORM xform2;
 
 
-    xform = cmsCreateTransform(ContextID, hsRGB, TYPE_RGB_16, hsRGB, TYPE_RGB_16, INTENT_PERCEPTUAL, 0);
-    cmsCloseProfile(ContextID, hsRGB);
+    xform = cmsCreateTransform(hsRGB, TYPE_RGB_16, hsRGB, TYPE_RGB_16, INTENT_PERCEPTUAL, 0);
+    cmsCloseProfile(hsRGB);
     if (xform == NULL) return 0;
 
 
-    if (!CheckOneRGB(ContextID, xform, 0, 0, 0, 0, 0, 0)) return 0;
-    if (!CheckOneRGB(ContextID, xform, 120, 0, 0, 120, 0, 0)) return 0;
-    if (!CheckOneRGB(ContextID, xform, 0, 222, 255, 0, 222, 255)) return 0;
+    if (!CheckOneRGB(xform, 0, 0, 0, 0, 0, 0)) return 0;
+    if (!CheckOneRGB(xform, 120, 0, 0, 120, 0, 0)) return 0;
+    if (!CheckOneRGB(xform, 0, 222, 255, 0, 222, 255)) return 0;
 
-    xform2 = cmsCloneTransformChangingFormats(ContextID, xform, TYPE_BGR_16, TYPE_RGB_16);
+    xform2 = cmsCloneTransformChangingFormats(xform, TYPE_BGR_16, TYPE_RGB_16);
     if (!xform2) return 0;
 
-    if (!CheckOneRGB(ContextID, xform2, 0, 0, 123, 123, 0, 0)) return 0;
-    if (!CheckOneRGB(ContextID, xform2, 154, 234, 0, 0, 234, 154)) return 0;
+    if (!CheckOneRGB(xform2, 0, 0, 123, 123, 0, 0)) return 0;
+    if (!CheckOneRGB(xform2, 154, 234, 0, 0, 234, 154)) return 0;
 
     cmsDeleteTransform(ContextID,xform2);
-    xform2 = cmsCloneTransformChangingFormats(ContextID, xform, TYPE_RGB_DBL, TYPE_RGB_DBL);
+    xform2 = cmsCloneTransformChangingFormats(xform, TYPE_RGB_DBL, TYPE_RGB_DBL);
     if (!xform2) return 0;
 
-    if (!CheckOneRGB_double(ContextID, xform2, 0.20, 0, 0, 0.20, 0, 0)) return 0;
-    if (!CheckOneRGB_double(ContextID, xform2, 0, 0.9, 1, 0, 0.9, 1)) return 0;
+    if (!CheckOneRGB_double(xform2, 0.20, 0, 0, 0.20, 0, 0)) return 0;
+    if (!CheckOneRGB_double(xform2, 0, 0.9, 1, 0, 0.9, 1)) return 0;
 
     cmsDeleteTransform(ContextID,xform2);
     cmsDeleteTransform(ContextID,xform);
@@ -4320,7 +4320,7 @@ return 1;
 // Write tag testbed ----------------------------------------------------------------------------------------
 
 static
-cmsInt32Number CheckXYZ(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE hProfile, cmsTagSignature tag)
+cmsInt32Number CheckXYZ(cmsInt32Number Pass, cmsHPROFILE hProfile, cmsTagSignature tag)
 {
     cmsCIEXYZ XYZ, *Pt;
 
@@ -4330,10 +4330,10 @@ cmsInt32Number CheckXYZ(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE h
         case 1:
 
             XYZ.X = 1.0; XYZ.Y = 1.1; XYZ.Z = 1.2;
-            return cmsWriteTag(ContextID, hProfile, tag, &XYZ);
+            return cmsWriteTag(hProfile, tag, &XYZ);
 
         case 2:
-            Pt = (cmsCIEXYZ *) cmsReadTag(ContextID, hProfile, tag);
+            Pt = (cmsCIEXYZ *) cmsReadTag(hProfile, tag);
             if (Pt == NULL) return 0;
             return IsGoodFixed15_16("X", 1.0, Pt ->X) &&
                    IsGoodFixed15_16("Y", 1.1, Pt->Y) &&
@@ -4346,7 +4346,7 @@ cmsInt32Number CheckXYZ(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE h
 
 
 static
-cmsInt32Number CheckGamma(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE hProfile, cmsTagSignature tag)
+cmsInt32Number CheckGamma(cmsInt32Number Pass, cmsHPROFILE hProfile, cmsTagSignature tag)
 {
     cmsToneCurve *g, *Pt;
     cmsInt32Number rc;
@@ -4355,15 +4355,15 @@ cmsInt32Number CheckGamma(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE
 
         case 1:
 
-            g = cmsBuildGamma(ContextID, 1.0);
-            rc = cmsWriteTag(ContextID, hProfile, tag, g);
-            cmsFreeToneCurve(ContextID, g);
+            g = cmsBuildGamma(1.0);
+            rc = cmsWriteTag(hProfile, tag, g);
+            cmsFreeToneCurve(g);
             return rc;
 
         case 2:
-            Pt = (cmsToneCurve *) cmsReadTag(ContextID, hProfile, tag);
+            Pt = (cmsToneCurve *) cmsReadTag(hProfile, tag);
             if (Pt == NULL) return 0;
-            return cmsIsToneCurveLinear(ContextID, Pt);
+            return cmsIsToneCurveLinear(Pt);
 
         default:
             return 0;
@@ -4371,7 +4371,7 @@ cmsInt32Number CheckGamma(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE
 }
 
 static
-cmsInt32Number CheckTextSingle(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE hProfile, cmsTagSignature tag)
+cmsInt32Number CheckTextSingle(cmsInt32Number Pass, cmsHPROFILE hProfile, cmsTagSignature tag)
 {
     cmsMLU *m, *Pt;
     cmsInt32Number rc;
@@ -4381,16 +4381,16 @@ cmsInt32Number CheckTextSingle(cmsContext ContextID, cmsInt32Number Pass, cmsHPR
     switch (Pass) {
 
     case 1:
-        m = cmsMLUalloc(ContextID, 0);
-        cmsMLUsetASCII(ContextID, m, cmsNoLanguage, cmsNoCountry, "Test test");
-        rc = cmsWriteTag(ContextID, hProfile, tag, m);
-        cmsMLUfree(ContextID, m);
+        m = cmsMLUalloc(0);
+        cmsMLUsetASCII(m, cmsNoLanguage, cmsNoCountry, "Test test");
+        rc = cmsWriteTag(hProfile, tag, m);
+        cmsMLUfree(m);
         return rc;
 
     case 2:
-        Pt = (cmsMLU *) cmsReadTag(ContextID, hProfile, tag);
+        Pt = (cmsMLU *) cmsReadTag(hProfile, tag);
         if (Pt == NULL) return 0;
-        cmsMLUgetASCII(ContextID, Pt, cmsNoLanguage, cmsNoCountry, Buffer, 256);
+        cmsMLUgetASCII(Pt, cmsNoLanguage, cmsNoCountry, Buffer, 256);
         if (strcmp(Buffer, "Test test") != 0) return FALSE;
         return TRUE;
 
@@ -4401,7 +4401,7 @@ cmsInt32Number CheckTextSingle(cmsContext ContextID, cmsInt32Number Pass, cmsHPR
 
 
 static
-cmsInt32Number CheckText(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE hProfile, cmsTagSignature tag)
+cmsInt32Number CheckText(cmsInt32Number Pass, cmsHPROFILE hProfile, cmsTagSignature tag)
 {
     cmsMLU *m, *Pt;
     cmsInt32Number rc;
@@ -4411,28 +4411,28 @@ cmsInt32Number CheckText(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE 
     switch (Pass) {
 
         case 1:
-            m = cmsMLUalloc(ContextID, 0);
-            cmsMLUsetASCII(ContextID, m, cmsNoLanguage, cmsNoCountry, "Test test");
-            cmsMLUsetASCII(ContextID, m, "en",  "US",  "1 1 1 1");
-            cmsMLUsetASCII(ContextID, m, "es",  "ES",  "2 2 2 2");
-            cmsMLUsetASCII(ContextID, m, "ct",  "ES",  "3 3 3 3");
-            cmsMLUsetASCII(ContextID, m, "en",  "GB",  "444444444");
-            rc = cmsWriteTag(ContextID, hProfile, tag, m);
-            cmsMLUfree(ContextID, m);
+            m = cmsMLUalloc(0);
+            cmsMLUsetASCII(m, cmsNoLanguage, cmsNoCountry, "Test test");
+            cmsMLUsetASCII(m, "en",  "US",  "1 1 1 1");
+            cmsMLUsetASCII(m, "es",  "ES",  "2 2 2 2");
+            cmsMLUsetASCII(m, "ct",  "ES",  "3 3 3 3");
+            cmsMLUsetASCII(m, "en",  "GB",  "444444444");
+            rc = cmsWriteTag(hProfile, tag, m);
+            cmsMLUfree(m);
             return rc;
 
         case 2:
-            Pt = (cmsMLU *) cmsReadTag(ContextID, hProfile, tag);
+            Pt = (cmsMLU *) cmsReadTag(hProfile, tag);
             if (Pt == NULL) return 0;
-            cmsMLUgetASCII(ContextID, Pt, cmsNoLanguage, cmsNoCountry, Buffer, 256);
+            cmsMLUgetASCII(Pt, cmsNoLanguage, cmsNoCountry, Buffer, 256);
             if (strcmp(Buffer, "Test test") != 0) return FALSE;
-            cmsMLUgetASCII(ContextID, Pt, "en", "US", Buffer, 256);
+            cmsMLUgetASCII(Pt, "en", "US", Buffer, 256);
             if (strcmp(Buffer, "1 1 1 1") != 0) return FALSE;
-            cmsMLUgetASCII(ContextID, Pt, "es", "ES", Buffer, 256);
+            cmsMLUgetASCII(Pt, "es", "ES", Buffer, 256);
             if (strcmp(Buffer, "2 2 2 2") != 0) return FALSE;
-            cmsMLUgetASCII(ContextID, Pt, "ct", "ES", Buffer, 256);
+            cmsMLUgetASCII(Pt, "ct", "ES", Buffer, 256);
             if (strcmp(Buffer, "3 3 3 3") != 0) return FALSE;
-            cmsMLUgetASCII(ContextID, Pt, "en", "GB",  Buffer, 256);
+            cmsMLUgetASCII(Pt, "en", "GB",  Buffer, 256);
             if (strcmp(Buffer, "444444444") != 0) return FALSE;
             return TRUE;
 
@@ -4442,7 +4442,7 @@ cmsInt32Number CheckText(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE 
 }
 
 static
-cmsInt32Number CheckData(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
+cmsInt32Number CheckData(cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
 {
     cmsICCData *Pt;
     cmsICCData d = { 1, 0, { '?' }};
@@ -4452,11 +4452,11 @@ cmsInt32Number CheckData(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE
     switch (Pass) {
 
         case 1:
-            rc = cmsWriteTag(ContextID, hProfile, tag, &d);
+            rc = cmsWriteTag(hProfile, tag, &d);
             return rc;
 
         case 2:
-            Pt = (cmsICCData *) cmsReadTag(ContextID, hProfile, tag);
+            Pt = (cmsICCData *) cmsReadTag(hProfile, tag);
             if (Pt == NULL) return 0;
             return (Pt ->data[0] == '?') && (Pt ->flag == 0) && (Pt ->len == 1);
 
@@ -4467,7 +4467,7 @@ cmsInt32Number CheckData(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE
 
 
 static
-cmsInt32Number CheckSignature(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
+cmsInt32Number CheckSignature(cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
 {
     cmsTagSignature *Pt, Holder;
 
@@ -4475,10 +4475,10 @@ cmsInt32Number CheckSignature(cmsContext ContextID, cmsInt32Number Pass,  cmsHPR
 
         case 1:
             Holder = (cmsTagSignature) cmsSigPerceptualReferenceMediumGamut;
-            return cmsWriteTag(ContextID, hProfile, tag, &Holder);
+            return cmsWriteTag(hProfile, tag, &Holder);
 
         case 2:
-            Pt = (cmsTagSignature *) cmsReadTag(ContextID, hProfile, tag);
+            Pt = (cmsTagSignature *) cmsReadTag(hProfile, tag);
             if (Pt == NULL) return 0;
             return *Pt == cmsSigPerceptualReferenceMediumGamut;
 
@@ -4489,7 +4489,7 @@ cmsInt32Number CheckSignature(cmsContext ContextID, cmsInt32Number Pass,  cmsHPR
 
 
 static
-cmsInt32Number CheckDateTime(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
+cmsInt32Number CheckDateTime(cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
 {
     struct tm *Pt, Holder;
 
@@ -4503,10 +4503,10 @@ cmsInt32Number CheckDateTime(cmsContext ContextID, cmsInt32Number Pass,  cmsHPRO
             Holder.tm_mday = 4;
             Holder.tm_mon = 5;
             Holder.tm_year = 2009 - 1900;
-            return cmsWriteTag(ContextID, hProfile, tag, &Holder);
+            return cmsWriteTag(hProfile, tag, &Holder);
 
         case 2:
-            Pt = (struct tm *) cmsReadTag(ContextID, hProfile, tag);
+            Pt = (struct tm *) cmsReadTag(hProfile, tag);
             if (Pt == NULL) return 0;
 
             return (Pt ->tm_hour == 1 &&
@@ -4524,7 +4524,7 @@ cmsInt32Number CheckDateTime(cmsContext ContextID, cmsInt32Number Pass,  cmsHPRO
 
 
 static
-cmsInt32Number CheckNamedColor(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag, cmsInt32Number max_check, cmsBool  colorant_check)
+cmsInt32Number CheckNamedColor(cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag, cmsInt32Number max_check, cmsBool  colorant_check)
 {
     cmsNAMEDCOLORLIST* nc;
     cmsInt32Number i, j, rc;
@@ -4539,7 +4539,7 @@ cmsInt32Number CheckNamedColor(cmsContext ContextID, cmsInt32Number Pass,  cmsHP
 
     case 1:
 
-        nc = cmsAllocNamedColorList(ContextID, 0, 4, "prefix", "suffix");
+        nc = cmsAllocNamedColorList(0, 4, "prefix", "suffix");
         if (nc == NULL) return 0;
 
         for (i=0; i < max_check; i++) {
@@ -4548,16 +4548,16 @@ cmsInt32Number CheckNamedColor(cmsContext ContextID, cmsInt32Number Pass,  cmsHP
             Colorant[0] = Colorant[1] = Colorant[2] = Colorant[3] = (cmsUInt16Number) (max_check - i);
 
             sprintf(Name, "#%d", i);
-            if (!cmsAppendNamedColor(ContextID, nc, Name, PCS, Colorant)) { Fail("Couldn't append named color"); return 0; }
+            if (!cmsAppendNamedColor(nc, Name, PCS, Colorant)) { Fail("Couldn't append named color"); return 0; }
         }
 
-        rc = cmsWriteTag(ContextID, hProfile, tag, nc);
-        cmsFreeNamedColorList(ContextID, nc);
+        rc = cmsWriteTag(hProfile, tag, nc);
+        cmsFreeNamedColorList(nc);
         return rc;
 
     case 2:
 
-        nc = (cmsNAMEDCOLORLIST *) cmsReadTag(ContextID, hProfile, tag);
+        nc = (cmsNAMEDCOLORLIST *) cmsReadTag(hProfile, tag);
         if (nc == NULL) return 0;
 
         for (i=0; i < max_check; i++) {
@@ -4566,7 +4566,7 @@ cmsInt32Number CheckNamedColor(cmsContext ContextID, cmsInt32Number Pass,  cmsHP
             CheckColorant[0] = CheckColorant[1] = CheckColorant[2] = CheckColorant[3] = (cmsUInt16Number) (max_check - i);
 
             sprintf(CheckName, "#%d", i);
-            if (!cmsNamedColorInfo(ContextID, nc, i, Name, NULL, NULL, PCS, Colorant)) { Fail("Invalid string"); return 0; }
+            if (!cmsNamedColorInfo(nc, i, Name, NULL, NULL, PCS, Colorant)) { Fail("Invalid string"); return 0; }
 
 
             for (j=0; j < 3; j++) {
@@ -4592,7 +4592,7 @@ cmsInt32Number CheckNamedColor(cmsContext ContextID, cmsInt32Number Pass,  cmsHP
 
 
 static
-cmsInt32Number CheckLUT(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
+cmsInt32Number CheckLUT(cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
 {
     cmsPipeline* Lut, *Pt;
     cmsInt32Number rc;
@@ -4602,24 +4602,24 @@ cmsInt32Number CheckLUT(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE 
 
         case 1:
 
-            Lut = cmsPipelineAlloc(ContextID, 3, 3);
+            Lut = cmsPipelineAlloc(3, 3);
             if (Lut == NULL) return 0;
 
             // Create an identity LUT
-            cmsPipelineInsertStage(ContextID, Lut, cmsAT_BEGIN, _cmsStageAllocIdentityCurves(ContextID, 3));
-            cmsPipelineInsertStage(ContextID, Lut, cmsAT_END, _cmsStageAllocIdentityCLut(ContextID, 3));
-            cmsPipelineInsertStage(ContextID, Lut, cmsAT_END, _cmsStageAllocIdentityCurves(ContextID, 3));
+            cmsPipelineInsertStage(Lut, cmsAT_BEGIN, _cmsStageAllocIdentityCurves(3));
+            cmsPipelineInsertStage(Lut, cmsAT_END, _cmsStageAllocIdentityCLut(3));
+            cmsPipelineInsertStage(Lut, cmsAT_END, _cmsStageAllocIdentityCurves(3));
 
-            rc =  cmsWriteTag(ContextID, hProfile, tag, Lut);
-            cmsPipelineFree(ContextID, Lut);
+            rc =  cmsWriteTag(hProfile, tag, Lut);
+            cmsPipelineFree(Lut);
             return rc;
 
         case 2:
-            Pt = (cmsPipeline *) cmsReadTag(ContextID, hProfile, tag);
+            Pt = (cmsPipeline *) cmsReadTag(hProfile, tag);
             if (Pt == NULL) return 0;
 
             // Transform values, check for identity
-            return Check16LUT(ContextID, Pt);
+            return Check16LUT(Pt);
 
         default:
             return 0;
@@ -4627,7 +4627,7 @@ cmsInt32Number CheckLUT(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE 
 }
 
 static
-cmsInt32Number CheckCHAD(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
+cmsInt32Number CheckCHAD(cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
 {
     cmsFloat64Number *Pt;
     cmsFloat64Number CHAD[] = { 0, .1, .2, .3, .4, .5, .6, .7, .8 };
@@ -4636,11 +4636,11 @@ cmsInt32Number CheckCHAD(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE
     switch (Pass) {
 
         case 1:
-            return cmsWriteTag(ContextID, hProfile, tag, CHAD);
+            return cmsWriteTag(hProfile, tag, CHAD);
 
 
         case 2:
-            Pt = (cmsFloat64Number *) cmsReadTag(ContextID, hProfile, tag);
+            Pt = (cmsFloat64Number *) cmsReadTag(hProfile, tag);
             if (Pt == NULL) return 0;
 
             for (i=0; i < 9; i++) {
@@ -4655,18 +4655,18 @@ cmsInt32Number CheckCHAD(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE
 }
 
 static
-cmsInt32Number CheckChromaticity(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
+cmsInt32Number CheckChromaticity(cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
 {
     cmsCIExyYTRIPLE *Pt, c = { {0, .1, 1 }, { .3, .4, 1 }, { .6, .7, 1 }};
 
     switch (Pass) {
 
         case 1:
-            return cmsWriteTag(ContextID, hProfile, tag, &c);
+            return cmsWriteTag(hProfile, tag, &c);
 
 
         case 2:
-            Pt = (cmsCIExyYTRIPLE *) cmsReadTag(ContextID, hProfile, tag);
+            Pt = (cmsCIExyYTRIPLE *) cmsReadTag(hProfile, tag);
             if (Pt == NULL) return 0;
 
             if (!IsGoodFixed15_16("xyY", Pt ->Red.x, c.Red.x)) return 0;
@@ -4684,7 +4684,7 @@ cmsInt32Number CheckChromaticity(cmsContext ContextID, cmsInt32Number Pass,  cms
 
 
 static
-cmsInt32Number CheckColorantOrder(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
+cmsInt32Number CheckColorantOrder(cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
 {
     cmsUInt8Number *Pt, c[cmsMAXCHANNELS];
     cmsInt32Number i;
@@ -4693,11 +4693,11 @@ cmsInt32Number CheckColorantOrder(cmsContext ContextID, cmsInt32Number Pass,  cm
 
         case 1:
             for (i=0; i < cmsMAXCHANNELS; i++) c[i] = (cmsUInt8Number) (cmsMAXCHANNELS - i - 1);
-            return cmsWriteTag(ContextID, hProfile, tag, c);
+            return cmsWriteTag(hProfile, tag, c);
 
 
         case 2:
-            Pt = (cmsUInt8Number *) cmsReadTag(ContextID, hProfile, tag);
+            Pt = (cmsUInt8Number *) cmsReadTag(hProfile, tag);
             if (Pt == NULL) return 0;
 
             for (i=0; i < cmsMAXCHANNELS; i++) {
@@ -4711,7 +4711,7 @@ cmsInt32Number CheckColorantOrder(cmsContext ContextID, cmsInt32Number Pass,  cm
 }
 
 static
-cmsInt32Number CheckMeasurement(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
+cmsInt32Number CheckMeasurement(cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
 {
     cmsICCMeasurementConditions *Pt, m;
 
@@ -4725,11 +4725,11 @@ cmsInt32Number CheckMeasurement(cmsContext ContextID, cmsInt32Number Pass,  cmsH
             m.Geometry = 1;
             m.IlluminantType = cmsILLUMINANT_TYPE_D50;
             m.Observer = 1;
-            return cmsWriteTag(ContextID, hProfile, tag, &m);
+            return cmsWriteTag(hProfile, tag, &m);
 
 
         case 2:
-            Pt = (cmsICCMeasurementConditions *) cmsReadTag(ContextID, hProfile, tag);
+            Pt = (cmsICCMeasurementConditions *) cmsReadTag(hProfile, tag);
             if (Pt == NULL) return 0;
 
             if (!IsGoodFixed15_16("Backing", Pt ->Backing.X, 0.1)) return 0;
@@ -4749,7 +4749,7 @@ cmsInt32Number CheckMeasurement(cmsContext ContextID, cmsInt32Number Pass,  cmsH
 
 
 static
-cmsInt32Number CheckUcrBg(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
+cmsInt32Number CheckUcrBg(cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
 {
     cmsUcrBg *Pt, m;
     cmsInt32Number rc;
@@ -4758,22 +4758,22 @@ cmsInt32Number CheckUcrBg(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFIL
     switch (Pass) {
 
         case 1:
-            m.Ucr = cmsBuildGamma(ContextID, 2.4);
-            m.Bg  = cmsBuildGamma(ContextID, -2.2);
-            m.Desc = cmsMLUalloc(ContextID, 1);
-            cmsMLUsetASCII(ContextID, m.Desc,  cmsNoLanguage, cmsNoCountry, "test UCR/BG");
-            rc = cmsWriteTag(ContextID, hProfile, tag, &m);
-            cmsMLUfree(ContextID, m.Desc);
-            cmsFreeToneCurve(ContextID, m.Bg);
-            cmsFreeToneCurve(ContextID, m.Ucr);
+            m.Ucr = cmsBuildGamma(2.4);
+            m.Bg  = cmsBuildGamma(-2.2);
+            m.Desc = cmsMLUalloc(1);
+            cmsMLUsetASCII(m.Desc,  cmsNoLanguage, cmsNoCountry, "test UCR/BG");
+            rc = cmsWriteTag(hProfile, tag, &m);
+            cmsMLUfree(m.Desc);
+            cmsFreeToneCurve(m.Bg);
+            cmsFreeToneCurve(m.Ucr);
             return rc;
 
 
         case 2:
-            Pt = (cmsUcrBg *) cmsReadTag(ContextID, hProfile, tag);
+            Pt = (cmsUcrBg *) cmsReadTag(hProfile, tag);
             if (Pt == NULL) return 0;
 
-            cmsMLUgetASCII(ContextID, Pt ->Desc, cmsNoLanguage, cmsNoCountry, Buffer, 256);
+            cmsMLUgetASCII(Pt ->Desc, cmsNoLanguage, cmsNoCountry, Buffer, 256);
             if (strcmp(Buffer, "test UCR/BG") != 0) return 0;
             return 1;
 
@@ -4784,7 +4784,7 @@ cmsInt32Number CheckUcrBg(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFIL
 
 
 static
-cmsInt32Number CheckCRDinfo(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
+cmsInt32Number CheckCRDinfo(cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
 {
     cmsMLU *mlu;
     char Buffer[256];
@@ -4793,41 +4793,41 @@ cmsInt32Number CheckCRDinfo(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROF
     switch (Pass) {
 
         case 1:
-            mlu = cmsMLUalloc(ContextID, 5);
+            mlu = cmsMLUalloc(5);
 
-            cmsMLUsetWide(ContextID, mlu,  "PS", "nm", L"test postscript");
-            cmsMLUsetWide(ContextID, mlu,  "PS", "#0", L"perceptual");
-            cmsMLUsetWide(ContextID, mlu,  "PS", "#1", L"relative_colorimetric");
-            cmsMLUsetWide(ContextID, mlu,  "PS", "#2", L"saturation");
-            cmsMLUsetWide(ContextID, mlu,  "PS", "#3", L"absolute_colorimetric");
-            rc = cmsWriteTag(ContextID, hProfile, tag, mlu);
-            cmsMLUfree(ContextID, mlu);
+            cmsMLUsetWide(mlu,  "PS", "nm", L"test postscript");
+            cmsMLUsetWide(mlu,  "PS", "#0", L"perceptual");
+            cmsMLUsetWide(mlu,  "PS", "#1", L"relative_colorimetric");
+            cmsMLUsetWide(mlu,  "PS", "#2", L"saturation");
+            cmsMLUsetWide(mlu,  "PS", "#3", L"absolute_colorimetric");
+            rc = cmsWriteTag(hProfile, tag, mlu);
+            cmsMLUfree(mlu);
             return rc;
 
 
         case 2:
-            mlu = (cmsMLU*) cmsReadTag(ContextID, hProfile, tag);
+            mlu = (cmsMLU*) cmsReadTag(hProfile, tag);
             if (mlu == NULL) return 0;
 
 
 
-             cmsMLUgetASCII(ContextID, mlu, "PS", "nm", Buffer, 256);
+             cmsMLUgetASCII(mlu, "PS", "nm", Buffer, 256);
              if (strcmp(Buffer, "test postscript") != 0) return 0;
 
 
-             cmsMLUgetASCII(ContextID, mlu, "PS", "#0", Buffer, 256);
+             cmsMLUgetASCII(mlu, "PS", "#0", Buffer, 256);
              if (strcmp(Buffer, "perceptual") != 0) return 0;
 
 
-             cmsMLUgetASCII(ContextID, mlu, "PS", "#1", Buffer, 256);
+             cmsMLUgetASCII(mlu, "PS", "#1", Buffer, 256);
              if (strcmp(Buffer, "relative_colorimetric") != 0) return 0;
 
 
-             cmsMLUgetASCII(ContextID, mlu, "PS", "#2", Buffer, 256);
+             cmsMLUgetASCII(mlu, "PS", "#2", Buffer, 256);
              if (strcmp(Buffer, "saturation") != 0) return 0;
 
 
-             cmsMLUgetASCII(ContextID, mlu, "PS", "#3", Buffer, 256);
+             cmsMLUgetASCII(mlu, "PS", "#3", Buffer, 256);
              if (strcmp(Buffer, "absolute_colorimetric") != 0) return 0;
              return 1;
 
@@ -4865,12 +4865,12 @@ cmsToneCurve *CreateSegmentedCurve(cmsContext ContextID)
     Seg[2].x0 = 1;
     Seg[2].x1 = 1E22F;
 
-    return cmsBuildSegmentedToneCurve(ContextID, 3, Seg);
+    return cmsBuildSegmentedToneCurve(3, Seg);
 }
 
 
 static
-cmsInt32Number CheckMPE(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
+cmsInt32Number CheckMPE(cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
 {
     cmsPipeline* Lut, *Pt;
     cmsToneCurve* G[3];
@@ -4880,24 +4880,24 @@ cmsInt32Number CheckMPE(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE 
 
         case 1:
 
-            Lut = cmsPipelineAlloc(ContextID, 3, 3);
+            Lut = cmsPipelineAlloc(3, 3);
 
-            cmsPipelineInsertStage(ContextID, Lut, cmsAT_BEGIN, _cmsStageAllocLabV2ToV4(ContextID));
-            cmsPipelineInsertStage(ContextID, Lut, cmsAT_END, _cmsStageAllocLabV4ToV2(ContextID));
-            AddIdentityCLUTfloat(ContextID, Lut);
+            cmsPipelineInsertStage(Lut, cmsAT_BEGIN, _cmsStageAllocLabV2ToV4(ContextID));
+            cmsPipelineInsertStage(Lut, cmsAT_END, _cmsStageAllocLabV4ToV2(ContextID));
+            AddIdentityCLUTfloat(Lut);
 
             G[0] = G[1] = G[2] = CreateSegmentedCurve(ContextID);
-            cmsPipelineInsertStage(ContextID, Lut, cmsAT_END, cmsStageAllocToneCurves(ContextID, 3, G));
-            cmsFreeToneCurve(ContextID, G[0]);
+            cmsPipelineInsertStage(Lut, cmsAT_END, cmsStageAllocToneCurves(3, G));
+            cmsFreeToneCurve(G[0]);
 
-            rc = cmsWriteTag(ContextID, hProfile, tag, Lut);
-            cmsPipelineFree(ContextID, Lut);
+            rc = cmsWriteTag(hProfile, tag, Lut);
+            cmsPipelineFree(Lut);
             return rc;
 
         case 2:
-            Pt = (cmsPipeline *) cmsReadTag(ContextID, hProfile, tag);
+            Pt = (cmsPipeline *) cmsReadTag(hProfile, tag);
             if (Pt == NULL) return 0;
-            return CheckFloatLUT(ContextID, Pt);
+            return CheckFloatLUT(Pt);
 
         default:
             return 0;
@@ -4906,7 +4906,7 @@ cmsInt32Number CheckMPE(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE 
 
 
 static
-cmsInt32Number CheckScreening(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
+cmsInt32Number CheckScreening(cmsInt32Number Pass,  cmsHPROFILE hProfile, cmsTagSignature tag)
 {
     cmsScreening *Pt, sc;
     cmsInt32Number rc;
@@ -4921,12 +4921,12 @@ cmsInt32Number CheckScreening(cmsContext ContextID, cmsInt32Number Pass,  cmsHPR
             sc.Channels[0].ScreenAngle = 3.0;
             sc.Channels[0].SpotShape = cmsSPOT_ELLIPSE;
 
-            rc = cmsWriteTag(ContextID, hProfile, tag, &sc);
+            rc = cmsWriteTag(hProfile, tag, &sc);
             return rc;
 
 
         case 2:
-            Pt = (cmsScreening *) cmsReadTag(ContextID, hProfile, tag);
+            Pt = (cmsScreening *) cmsReadTag(hProfile, tag);
             if (Pt == NULL) return 0;
 
             if (Pt ->nChannels != 1) return 0;
@@ -4943,17 +4943,17 @@ cmsInt32Number CheckScreening(cmsContext ContextID, cmsInt32Number Pass,  cmsHPR
 
 
 static
-cmsBool CheckOneStr(cmsContext ContextID, cmsMLU* mlu, cmsInt32Number n)
+cmsBool CheckOneStr(cmsMLU* mlu, cmsInt32Number n)
 {
     char Buffer[256], Buffer2[256];
 
 
-    cmsMLUgetASCII(ContextID, mlu, "en", "US", Buffer, 255);
+    cmsMLUgetASCII(mlu, "en", "US", Buffer, 255);
     sprintf(Buffer2, "Hello, world %d", n);
     if (strcmp(Buffer, Buffer2) != 0) return FALSE;
 
 
-    cmsMLUgetASCII(ContextID, mlu, "es", "ES", Buffer, 255);
+    cmsMLUgetASCII(mlu, "es", "ES", Buffer, 255);
     sprintf(Buffer2, "Hola, mundo %d", n);
     if (strcmp(Buffer, Buffer2) != 0) return FALSE;
 
@@ -4962,16 +4962,16 @@ cmsBool CheckOneStr(cmsContext ContextID, cmsMLU* mlu, cmsInt32Number n)
 
 
 static
-void SetOneStr(cmsContext ContextID, cmsMLU** mlu, const wchar_t* s1, const wchar_t* s2)
+void SetOneStr(cmsMLU** mlu, const wchar_t* s1, const wchar_t* s2)
 {
-    *mlu = cmsMLUalloc(ContextID, 0);
-    cmsMLUsetWide(ContextID, *mlu, "en", "US", s1);
-    cmsMLUsetWide(ContextID, *mlu, "es", "ES", s2);
+    *mlu = cmsMLUalloc(0);
+    cmsMLUsetWide(*mlu, "en", "US", s1);
+    cmsMLUsetWide(*mlu, "es", "ES", s2);
 }
 
 
 static
-cmsInt32Number CheckProfileSequenceTag(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile)
+cmsInt32Number CheckProfileSequenceTag(cmsInt32Number Pass,  cmsHPROFILE hProfile)
 {
     cmsSEQ* s;
     cmsInt32Number i;
@@ -4980,15 +4980,15 @@ cmsInt32Number CheckProfileSequenceTag(cmsContext ContextID, cmsInt32Number Pass
 
     case 1:
 
-        s = cmsAllocProfileSequenceDescription(ContextID, 3);
+        s = cmsAllocProfileSequenceDescription(3);
         if (s == NULL) return 0;
 
-        SetOneStr(ContextID, &s -> seq[0].Manufacturer, L"Hello, world 0", L"Hola, mundo 0");
-        SetOneStr(ContextID, &s -> seq[0].Model, L"Hello, world 0", L"Hola, mundo 0");
-        SetOneStr(ContextID, &s -> seq[1].Manufacturer, L"Hello, world 1", L"Hola, mundo 1");
-        SetOneStr(ContextID, &s -> seq[1].Model, L"Hello, world 1", L"Hola, mundo 1");
-        SetOneStr(ContextID, &s -> seq[2].Manufacturer, L"Hello, world 2", L"Hola, mundo 2");
-        SetOneStr(ContextID, &s -> seq[2].Model, L"Hello, world 2", L"Hola, mundo 2");
+        SetOneStr(&s -> seq[0].Manufacturer, L"Hello, world 0", L"Hola, mundo 0");
+        SetOneStr(&s -> seq[0].Model, L"Hello, world 0", L"Hola, mundo 0");
+        SetOneStr(&s -> seq[1].Manufacturer, L"Hello, world 1", L"Hola, mundo 1");
+        SetOneStr(&s -> seq[1].Model, L"Hello, world 1", L"Hola, mundo 1");
+        SetOneStr(&s -> seq[2].Manufacturer, L"Hello, world 2", L"Hola, mundo 2");
+        SetOneStr(&s -> seq[2].Model, L"Hello, world 2", L"Hola, mundo 2");
 
 
 #ifdef CMS_DONT_USE_INT64
@@ -5012,13 +5012,13 @@ cmsInt32Number CheckProfileSequenceTag(cmsContext ContextID, cmsInt32Number Pass
         s ->seq[2].attributes = cmsTransparency|cmsGlossy;
 #endif
 
-        if (!cmsWriteTag(ContextID, hProfile, cmsSigProfileSequenceDescTag, s)) return 0;
-        cmsFreeProfileSequenceDescription(ContextID, s);
+        if (!cmsWriteTag(hProfile, cmsSigProfileSequenceDescTag, s)) return 0;
+        cmsFreeProfileSequenceDescription(s);
         return 1;
 
     case 2:
 
-        s = (cmsSEQ *) cmsReadTag(ContextID, hProfile, cmsSigProfileSequenceDescTag);
+        s = (cmsSEQ *) cmsReadTag(hProfile, cmsSigProfileSequenceDescTag);
         if (s == NULL) return 0;
 
         if (s ->n != 3) return 0;
@@ -5047,8 +5047,8 @@ cmsInt32Number CheckProfileSequenceTag(cmsContext ContextID, cmsInt32Number Pass
         // Check MLU
         for (i=0; i < 3; i++) {
 
-            if (!CheckOneStr(ContextID, s -> seq[i].Manufacturer, i)) return 0;
-            if (!CheckOneStr(ContextID, s -> seq[i].Model, i)) return 0;
+            if (!CheckOneStr(s -> seq[i].Manufacturer, i)) return 0;
+            if (!CheckOneStr(s -> seq[i].Model, i)) return 0;
         }
         return 1;
 
@@ -5059,7 +5059,7 @@ cmsInt32Number CheckProfileSequenceTag(cmsContext ContextID, cmsInt32Number Pass
 
 
 static
-cmsInt32Number CheckProfileSequenceIDTag(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile)
+cmsInt32Number CheckProfileSequenceIDTag(cmsInt32Number Pass,  cmsHPROFILE hProfile)
 {
     cmsSEQ* s;
     cmsInt32Number i;
@@ -5068,7 +5068,7 @@ cmsInt32Number CheckProfileSequenceIDTag(cmsContext ContextID, cmsInt32Number Pa
 
     case 1:
 
-        s = cmsAllocProfileSequenceDescription(ContextID, 3);
+        s = cmsAllocProfileSequenceDescription(3);
         if (s == NULL) return 0;
 
         memcpy(s ->seq[0].ProfileID.ID8, "0123456789ABCDEF", 16);
@@ -5076,17 +5076,17 @@ cmsInt32Number CheckProfileSequenceIDTag(cmsContext ContextID, cmsInt32Number Pa
         memcpy(s ->seq[2].ProfileID.ID8, "2222222222222222", 16);
 
 
-        SetOneStr(ContextID, &s -> seq[0].Description, L"Hello, world 0", L"Hola, mundo 0");
-        SetOneStr(ContextID, &s -> seq[1].Description, L"Hello, world 1", L"Hola, mundo 1");
-        SetOneStr(ContextID, &s -> seq[2].Description, L"Hello, world 2", L"Hola, mundo 2");
+        SetOneStr(&s -> seq[0].Description, L"Hello, world 0", L"Hola, mundo 0");
+        SetOneStr(&s -> seq[1].Description, L"Hello, world 1", L"Hola, mundo 1");
+        SetOneStr(&s -> seq[2].Description, L"Hello, world 2", L"Hola, mundo 2");
 
-        if (!cmsWriteTag(ContextID, hProfile, cmsSigProfileSequenceIdTag, s)) return 0;
-        cmsFreeProfileSequenceDescription(ContextID, s);
+        if (!cmsWriteTag(hProfile, cmsSigProfileSequenceIdTag, s)) return 0;
+        cmsFreeProfileSequenceDescription(s);
         return 1;
 
     case 2:
 
-        s = (cmsSEQ *) cmsReadTag(ContextID, hProfile, cmsSigProfileSequenceIdTag);
+        s = (cmsSEQ *) cmsReadTag(hProfile, cmsSigProfileSequenceIdTag);
         if (s == NULL) return 0;
 
         if (s ->n != 3) return 0;
@@ -5097,7 +5097,7 @@ cmsInt32Number CheckProfileSequenceIDTag(cmsContext ContextID, cmsInt32Number Pa
 
         for (i=0; i < 3; i++) {
 
-            if (!CheckOneStr(ContextID, s -> seq[i].Description, i)) return 0;
+            if (!CheckOneStr(s -> seq[i].Description, i)) return 0;
         }
 
         return 1;
@@ -5109,7 +5109,7 @@ cmsInt32Number CheckProfileSequenceIDTag(cmsContext ContextID, cmsInt32Number Pa
 
 
 static
-cmsInt32Number CheckICCViewingConditions(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile)
+cmsInt32Number CheckICCViewingConditions(cmsInt32Number Pass,  cmsHPROFILE hProfile)
 {
     cmsICCViewingConditions* v;
     cmsICCViewingConditions  s;
@@ -5125,11 +5125,11 @@ cmsInt32Number CheckICCViewingConditions(cmsContext ContextID, cmsInt32Number Pa
             s.SurroundXYZ.Y = 0.5;
             s.SurroundXYZ.Z = 0.6;
 
-            if (!cmsWriteTag(ContextID, hProfile, cmsSigViewingConditionsTag, &s)) return 0;
+            if (!cmsWriteTag(hProfile, cmsSigViewingConditionsTag, &s)) return 0;
             return 1;
 
         case 2:
-            v = (cmsICCViewingConditions *) cmsReadTag(ContextID, hProfile, cmsSigViewingConditionsTag);
+            v = (cmsICCViewingConditions *) cmsReadTag(hProfile, cmsSigViewingConditionsTag);
             if (v == NULL) return 0;
 
             if (v ->IlluminantType != 1) return 0;
@@ -5151,7 +5151,7 @@ cmsInt32Number CheckICCViewingConditions(cmsContext ContextID, cmsInt32Number Pa
 
 
 static
-cmsInt32Number CheckVCGT(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile)
+cmsInt32Number CheckVCGT(cmsInt32Number Pass,  cmsHPROFILE hProfile)
 {
     cmsToneCurve* Curves[3];
     cmsToneCurve** PtrCurve;
@@ -5159,23 +5159,23 @@ cmsInt32Number CheckVCGT(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE
      switch (Pass) {
 
         case 1:
-            Curves[0] = cmsBuildGamma(ContextID, 1.1);
-            Curves[1] = cmsBuildGamma(ContextID, 2.2);
-            Curves[2] = cmsBuildGamma(ContextID, 3.4);
+            Curves[0] = cmsBuildGamma(1.1);
+            Curves[1] = cmsBuildGamma(2.2);
+            Curves[2] = cmsBuildGamma(3.4);
 
-            if (!cmsWriteTag(ContextID, hProfile, cmsSigVcgtTag, Curves)) return 0;
+            if (!cmsWriteTag(hProfile, cmsSigVcgtTag, Curves)) return 0;
 
-            cmsFreeToneCurveTriple(ContextID, Curves);
+            cmsFreeToneCurveTriple(Curves);
             return 1;
 
 
         case 2:
 
-             PtrCurve = (cmsToneCurve **) cmsReadTag(ContextID, hProfile, cmsSigVcgtTag);
+             PtrCurve = (cmsToneCurve **) cmsReadTag(hProfile, cmsSigVcgtTag);
              if (PtrCurve == NULL) return 0;
-             if (!IsGoodVal("VCGT R", cmsEstimateGamma(ContextID, PtrCurve[0], 0.01), 1.1, 0.001)) return 0;
-             if (!IsGoodVal("VCGT G", cmsEstimateGamma(ContextID, PtrCurve[1], 0.01), 2.2, 0.001)) return 0;
-             if (!IsGoodVal("VCGT B", cmsEstimateGamma(ContextID, PtrCurve[2], 0.01), 3.4, 0.001)) return 0;
+             if (!IsGoodVal("VCGT R", cmsEstimateGamma(PtrCurve[0], 0.01), 1.1, 0.001)) return 0;
+             if (!IsGoodVal("VCGT G", cmsEstimateGamma(PtrCurve[1], 0.01), 2.2, 0.001)) return 0;
+             if (!IsGoodVal("VCGT B", cmsEstimateGamma(PtrCurve[2], 0.01), 3.4, 0.001)) return 0;
              return 1;
 
         default:;
@@ -5187,7 +5187,7 @@ cmsInt32Number CheckVCGT(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE
 
 // Only one of the two following may be used, as they share the same tag
 static
-cmsInt32Number CheckDictionary16(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile)
+cmsInt32Number CheckDictionary16(cmsInt32Number Pass,  cmsHPROFILE hProfile)
 {
       cmsHANDLE hDict;
       const cmsDICTentry* e;
@@ -5195,30 +5195,30 @@ cmsInt32Number CheckDictionary16(cmsContext ContextID, cmsInt32Number Pass,  cms
 
         case 1:
             hDict = cmsDictAlloc(ContextID);
-            cmsDictAddEntry(ContextID, hDict, L"Name0",  NULL, NULL, NULL);
-            cmsDictAddEntry(ContextID, hDict, L"Name1",  L"", NULL, NULL);
-            cmsDictAddEntry(ContextID, hDict, L"Name",  L"String", NULL, NULL);
-            cmsDictAddEntry(ContextID, hDict, L"Name2", L"12",    NULL, NULL);
-            if (!cmsWriteTag(ContextID, hProfile, cmsSigMetaTag, hDict)) return 0;
-            cmsDictFree(ContextID, hDict);
+            cmsDictAddEntry(hDict, L"Name0",  NULL, NULL, NULL);
+            cmsDictAddEntry(hDict, L"Name1",  L"", NULL, NULL);
+            cmsDictAddEntry(hDict, L"Name",  L"String", NULL, NULL);
+            cmsDictAddEntry(hDict, L"Name2", L"12",    NULL, NULL);
+            if (!cmsWriteTag(hProfile, cmsSigMetaTag, hDict)) return 0;
+            cmsDictFree(hDict);
             return 1;
 
 
         case 2:
 
-             hDict = cmsReadTag(ContextID, hProfile, cmsSigMetaTag);
+             hDict = cmsReadTag(hProfile, cmsSigMetaTag);
              if (hDict == NULL) return 0;
-             e = cmsDictGetEntryList(ContextID, hDict);
+             e = cmsDictGetEntryList(hDict);
              if (memcmp(e ->Name, L"Name2", sizeof(wchar_t) * 5) != 0) return 0;
              if (memcmp(e ->Value, L"12",  sizeof(wchar_t) * 2) != 0) return 0;
-             e = cmsDictNextEntry(ContextID, e);
+             e = cmsDictNextEntry(e);
              if (memcmp(e ->Name, L"Name", sizeof(wchar_t) * 4) != 0) return 0;
              if (memcmp(e ->Value, L"String",  sizeof(wchar_t) * 6) != 0) return 0;
-             e = cmsDictNextEntry(ContextID, e);
+             e = cmsDictNextEntry(e);
              if (memcmp(e ->Name, L"Name1", sizeof(wchar_t) *5) != 0) return 0;
              if (e ->Value == NULL) return 0;
              if (*e->Value != 0) return 0;
-             e = cmsDictNextEntry(ContextID, e);
+             e = cmsDictNextEntry(e);
              if (memcmp(e ->Name, L"Name0", sizeof(wchar_t) * 5) != 0) return 0;
              if (e ->Value != NULL) return 0;
              return 1;
@@ -5233,7 +5233,7 @@ cmsInt32Number CheckDictionary16(cmsContext ContextID, cmsInt32Number Pass,  cms
 
 
 static
-cmsInt32Number CheckDictionary24(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile)
+cmsInt32Number CheckDictionary24(cmsInt32Number Pass,  cmsHPROFILE hProfile)
 {
     cmsHANDLE hDict;
     const cmsDICTentry* e;
@@ -5246,48 +5246,48 @@ cmsInt32Number CheckDictionary24(cmsContext ContextID, cmsInt32Number Pass,  cms
     case 1:
         hDict = cmsDictAlloc(ContextID);
 
-        DisplayName = cmsMLUalloc(ContextID, 0);
+        DisplayName = cmsMLUalloc(0);
 
-        cmsMLUsetWide(ContextID, DisplayName, "en", "US", L"Hello, world");
-        cmsMLUsetWide(ContextID, DisplayName, "es", "ES", L"Hola, mundo");
-        cmsMLUsetWide(ContextID, DisplayName, "fr", "FR", L"Bonjour, le monde");
-        cmsMLUsetWide(ContextID, DisplayName, "ca", "CA", L"Hola, mon");
+        cmsMLUsetWide(DisplayName, "en", "US", L"Hello, world");
+        cmsMLUsetWide(DisplayName, "es", "ES", L"Hola, mundo");
+        cmsMLUsetWide(DisplayName, "fr", "FR", L"Bonjour, le monde");
+        cmsMLUsetWide(DisplayName, "ca", "CA", L"Hola, mon");
 
-        cmsDictAddEntry(ContextID, hDict, L"Name",  L"String", DisplayName, NULL);
-        cmsMLUfree(ContextID, DisplayName);
+        cmsDictAddEntry(hDict, L"Name",  L"String", DisplayName, NULL);
+        cmsMLUfree(DisplayName);
 
-        cmsDictAddEntry(ContextID, hDict, L"Name2", L"12",    NULL, NULL);
-        if (!cmsWriteTag(ContextID, hProfile, cmsSigMetaTag, hDict)) return 0;
-        cmsDictFree(ContextID, hDict);
+        cmsDictAddEntry(hDict, L"Name2", L"12",    NULL, NULL);
+        if (!cmsWriteTag(hProfile, cmsSigMetaTag, hDict)) return 0;
+        cmsDictFree(hDict);
 
         return 1;
 
 
     case 2:
 
-        hDict = cmsReadTag(ContextID, hProfile, cmsSigMetaTag);
+        hDict = cmsReadTag(hProfile, cmsSigMetaTag);
         if (hDict == NULL) return 0;
 
-        e = cmsDictGetEntryList(ContextID, hDict);
+        e = cmsDictGetEntryList(hDict);
         if (memcmp(e ->Name, L"Name2", sizeof(wchar_t) * 5) != 0) return 0;
         if (memcmp(e ->Value, L"12",  sizeof(wchar_t) * 2) != 0) return 0;
-        e = cmsDictNextEntry(ContextID, e);
+        e = cmsDictNextEntry(e);
         if (memcmp(e ->Name, L"Name", sizeof(wchar_t) * 4) != 0) return 0;
         if (memcmp(e ->Value, L"String",  sizeof(wchar_t) * 6) != 0) return 0;
 
-        cmsMLUgetASCII(ContextID, e->DisplayName, "en", "US", Buffer, 256);
+        cmsMLUgetASCII(e->DisplayName, "en", "US", Buffer, 256);
         if (strcmp(Buffer, "Hello, world") != 0) rc = 0;
 
 
-        cmsMLUgetASCII(ContextID, e->DisplayName, "es", "ES", Buffer, 256);
+        cmsMLUgetASCII(e->DisplayName, "es", "ES", Buffer, 256);
         if (strcmp(Buffer, "Hola, mundo") != 0) rc = 0;
 
 
-        cmsMLUgetASCII(ContextID, e->DisplayName, "fr", "FR", Buffer, 256);
+        cmsMLUgetASCII(e->DisplayName, "fr", "FR", Buffer, 256);
         if (strcmp(Buffer, "Bonjour, le monde") != 0) rc = 0;
 
 
-        cmsMLUgetASCII(ContextID, e->DisplayName, "ca", "CA", Buffer, 256);
+        cmsMLUgetASCII(e->DisplayName, "ca", "CA", Buffer, 256);
         if (strcmp(Buffer, "Hola, mon") != 0) rc = 0;
 
         if (rc == 0)
@@ -5301,17 +5301,17 @@ cmsInt32Number CheckDictionary24(cmsContext ContextID, cmsInt32Number Pass,  cms
 }
 
 static
-cmsInt32Number CheckRAWtags(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile)
+cmsInt32Number CheckRAWtags(cmsInt32Number Pass,  cmsHPROFILE hProfile)
 {
     char Buffer[7];
 
     switch (Pass) {
 
         case 1:
-            return cmsWriteRawTag(ContextID, hProfile, (cmsTagSignature) 0x31323334, "data123", 7);
+            return cmsWriteRawTag(hProfile, (cmsTagSignature) 0x31323334, "data123", 7);
 
         case 2:
-            if (!cmsReadRawTag(ContextID, hProfile, (cmsTagSignature) 0x31323334, Buffer, 7)) return 0;
+            if (!cmsReadRawTag(hProfile, (cmsTagSignature) 0x31323334, Buffer, 7)) return 0;
 
             if (memcmp(Buffer, "data123", 7) != 0) return 0;
             return 1;
@@ -5324,7 +5324,7 @@ cmsInt32Number CheckRAWtags(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROF
 
 
 static
-cmsInt32Number Check_cicp(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE hProfile)
+cmsInt32Number Check_cicp(cmsInt32Number Pass, cmsHPROFILE hProfile)
 {
     cmsVideoSignalType* v;
     cmsVideoSignalType  s;
@@ -5337,11 +5337,11 @@ cmsInt32Number Check_cicp(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE
         s.MatrixCoefficients = 0;
         s.VideoFullRangeFlag = 1;
         
-        if (!cmsWriteTag(ContextID, hProfile, cmsSigcicpTag, &s)) return 0;
+        if (!cmsWriteTag(hProfile, cmsSigcicpTag, &s)) return 0;
         return 1;
 
     case 2:
-        v = (cmsVideoSignalType*)cmsReadTag(ContextID, hProfile, cmsSigcicpTag);
+        v = (cmsVideoSignalType*)cmsReadTag(hProfile, cmsSigcicpTag);
         if (v == NULL) return 0;
 
         if (v->ColourPrimaries != 1) return 0;
@@ -5372,7 +5372,7 @@ cmsBool CloseEnough(cmsFloat64Number a, cmsFloat64Number b)
 }
 
 static
-cmsBool IsOriginalMHC2Matrix(cmsContext ContextID, cmsFloat64Number XYZ2XYZmatrix[3][4])
+cmsBool IsOriginalMHC2Matrix(cmsFloat64Number XYZ2XYZmatrix[3][4])
 {
     cmsFloat64Number m[3][4];
     int i, j;
@@ -5388,7 +5388,7 @@ cmsBool IsOriginalMHC2Matrix(cmsContext ContextID, cmsFloat64Number XYZ2XYZmatri
 
 
 static
-cmsInt32Number Check_MHC2(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE hProfile)
+cmsInt32Number Check_MHC2(cmsInt32Number Pass, cmsHPROFILE hProfile)
 {
     cmsMHC2Type* v;
     cmsMHC2Type  s;
@@ -5433,152 +5433,152 @@ cmsInt32Number CheckProfileCreation(cmsContext ContextID)
     h = cmsCreateProfilePlaceholder(ContextID);
     if (h == NULL) return 0;
 
-    cmsSetProfileVersion(ContextID, h, 4.3);
-    if (cmsGetTagCount(ContextID, h) != 0) { Fail("Empty profile with nonzero number of tags"); goto Error; }
-    if (cmsIsTag(ContextID, h, cmsSigAToB0Tag)) { Fail("Found a tag in an empty profile"); goto Error; }
+    cmsSetProfileVersion(h, 4.3);
+    if (cmsGetTagCount(h) != 0) { Fail("Empty profile with nonzero number of tags"); goto Error; }
+    if (cmsIsTag(h, cmsSigAToB0Tag)) { Fail("Found a tag in an empty profile"); goto Error; }
 
-    cmsSetColorSpace(ContextID, h, cmsSigRgbData);
-    if (cmsGetColorSpace(ContextID, h) !=  cmsSigRgbData) { Fail("Unable to set colorspace"); goto Error; }
+    cmsSetColorSpace(h, cmsSigRgbData);
+    if (cmsGetColorSpace(h) !=  cmsSigRgbData) { Fail("Unable to set colorspace"); goto Error; }
 
-    cmsSetPCS(ContextID, h, cmsSigLabData);
-    if (cmsGetPCS(ContextID, h) !=  cmsSigLabData) { Fail("Unable to set colorspace"); goto Error; }
+    cmsSetPCS(h, cmsSigLabData);
+    if (cmsGetPCS(h) !=  cmsSigLabData) { Fail("Unable to set colorspace"); goto Error; }
 
-    cmsSetDeviceClass(ContextID, h, cmsSigDisplayClass);
-    if (cmsGetDeviceClass(ContextID, h) != cmsSigDisplayClass) { Fail("Unable to set deviceclass"); goto Error; }
+    cmsSetDeviceClass(h, cmsSigDisplayClass);
+    if (cmsGetDeviceClass(h) != cmsSigDisplayClass) { Fail("Unable to set deviceclass"); goto Error; }
 
-    cmsSetHeaderRenderingIntent(ContextID, h, INTENT_SATURATION);
-    if (cmsGetHeaderRenderingIntent(ContextID, h) != INTENT_SATURATION) { Fail("Unable to set rendering intent"); goto Error; }
+    cmsSetHeaderRenderingIntent(h, INTENT_SATURATION);
+    if (cmsGetHeaderRenderingIntent(h) != INTENT_SATURATION) { Fail("Unable to set rendering intent"); goto Error; }
 
     for (Pass = 1; Pass <= 2; Pass++) {
 
         SubTest("Tags holding XYZ");
 
-        if (!CheckXYZ(ContextID, Pass, h, cmsSigBlueColorantTag)) goto Error;
-        if (!CheckXYZ(ContextID, Pass, h, cmsSigGreenColorantTag)) goto Error;
-        if (!CheckXYZ(ContextID, Pass, h, cmsSigRedColorantTag)) goto Error;
-        if (!CheckXYZ(ContextID, Pass, h, cmsSigMediaBlackPointTag)) goto Error;
-        if (!CheckXYZ(ContextID, Pass, h, cmsSigMediaWhitePointTag)) goto Error;
-        if (!CheckXYZ(ContextID, Pass, h, cmsSigLuminanceTag)) goto Error;
+        if (!CheckXYZ(Pass, h, cmsSigBlueColorantTag)) goto Error;
+        if (!CheckXYZ(Pass, h, cmsSigGreenColorantTag)) goto Error;
+        if (!CheckXYZ(Pass, h, cmsSigRedColorantTag)) goto Error;
+        if (!CheckXYZ(Pass, h, cmsSigMediaBlackPointTag)) goto Error;
+        if (!CheckXYZ(Pass, h, cmsSigMediaWhitePointTag)) goto Error;
+        if (!CheckXYZ(Pass, h, cmsSigLuminanceTag)) goto Error;
 
         SubTest("Tags holding curves");
 
-        if (!CheckGamma(ContextID, Pass, h, cmsSigBlueTRCTag)) goto Error;
-        if (!CheckGamma(ContextID, Pass, h, cmsSigGrayTRCTag)) goto Error;
-        if (!CheckGamma(ContextID, Pass, h, cmsSigGreenTRCTag)) goto Error;
-        if (!CheckGamma(ContextID, Pass, h, cmsSigRedTRCTag)) goto Error;
+        if (!CheckGamma(Pass, h, cmsSigBlueTRCTag)) goto Error;
+        if (!CheckGamma(Pass, h, cmsSigGrayTRCTag)) goto Error;
+        if (!CheckGamma(Pass, h, cmsSigGreenTRCTag)) goto Error;
+        if (!CheckGamma(Pass, h, cmsSigRedTRCTag)) goto Error;
 
         SubTest("Tags holding text");
 
-        if (!CheckTextSingle(ContextID, Pass, h, cmsSigCharTargetTag)) goto Error;
-        if (!CheckTextSingle(ContextID, Pass, h, cmsSigScreeningDescTag)) goto Error;
+        if (!CheckTextSingle(Pass, h, cmsSigCharTargetTag)) goto Error;
+        if (!CheckTextSingle(Pass, h, cmsSigScreeningDescTag)) goto Error;
 
-        if (!CheckText(ContextID, Pass, h, cmsSigCopyrightTag)) goto Error;
-        if (!CheckText(ContextID, Pass, h, cmsSigProfileDescriptionTag)) goto Error;
-        if (!CheckText(ContextID, Pass, h, cmsSigDeviceMfgDescTag)) goto Error;
-        if (!CheckText(ContextID, Pass, h, cmsSigDeviceModelDescTag)) goto Error;
-        if (!CheckText(ContextID, Pass, h, cmsSigViewingCondDescTag)) goto Error;
+        if (!CheckText(Pass, h, cmsSigCopyrightTag)) goto Error;
+        if (!CheckText(Pass, h, cmsSigProfileDescriptionTag)) goto Error;
+        if (!CheckText(Pass, h, cmsSigDeviceMfgDescTag)) goto Error;
+        if (!CheckText(Pass, h, cmsSigDeviceModelDescTag)) goto Error;
+        if (!CheckText(Pass, h, cmsSigViewingCondDescTag)) goto Error;
 
 
 
         SubTest("Tags holding cmsICCData");
 
-        if (!CheckData(ContextID, Pass, h, cmsSigPs2CRD0Tag)) goto Error;
-        if (!CheckData(ContextID, Pass, h, cmsSigPs2CRD1Tag)) goto Error;
-        if (!CheckData(ContextID, Pass, h, cmsSigPs2CRD2Tag)) goto Error;
-        if (!CheckData(ContextID, Pass, h, cmsSigPs2CRD3Tag)) goto Error;
-        if (!CheckData(ContextID, Pass, h, cmsSigPs2CSATag)) goto Error;
-        if (!CheckData(ContextID, Pass, h, cmsSigPs2RenderingIntentTag)) goto Error;
+        if (!CheckData(Pass, h, cmsSigPs2CRD0Tag)) goto Error;
+        if (!CheckData(Pass, h, cmsSigPs2CRD1Tag)) goto Error;
+        if (!CheckData(Pass, h, cmsSigPs2CRD2Tag)) goto Error;
+        if (!CheckData(Pass, h, cmsSigPs2CRD3Tag)) goto Error;
+        if (!CheckData(Pass, h, cmsSigPs2CSATag)) goto Error;
+        if (!CheckData(Pass, h, cmsSigPs2RenderingIntentTag)) goto Error;
 
         SubTest("Tags holding signatures");
 
-        if (!CheckSignature(ContextID, Pass, h, cmsSigColorimetricIntentImageStateTag)) goto Error;
-        if (!CheckSignature(ContextID, Pass, h, cmsSigPerceptualRenderingIntentGamutTag)) goto Error;
-        if (!CheckSignature(ContextID, Pass, h, cmsSigSaturationRenderingIntentGamutTag)) goto Error;
-        if (!CheckSignature(ContextID, Pass, h, cmsSigTechnologyTag)) goto Error;
+        if (!CheckSignature(Pass, h, cmsSigColorimetricIntentImageStateTag)) goto Error;
+        if (!CheckSignature(Pass, h, cmsSigPerceptualRenderingIntentGamutTag)) goto Error;
+        if (!CheckSignature(Pass, h, cmsSigSaturationRenderingIntentGamutTag)) goto Error;
+        if (!CheckSignature(Pass, h, cmsSigTechnologyTag)) goto Error;
 
         SubTest("Tags holding date_time");
 
-        if (!CheckDateTime(ContextID, Pass, h, cmsSigCalibrationDateTimeTag)) goto Error;
-        if (!CheckDateTime(ContextID, Pass, h, cmsSigDateTimeTag)) goto Error;
+        if (!CheckDateTime(Pass, h, cmsSigCalibrationDateTimeTag)) goto Error;
+        if (!CheckDateTime(Pass, h, cmsSigDateTimeTag)) goto Error;
 
         SubTest("Tags holding named color lists");
 
-        if (!CheckNamedColor(ContextID, Pass, h, cmsSigColorantTableTag, 15, FALSE)) goto Error;
-        if (!CheckNamedColor(ContextID, Pass, h, cmsSigColorantTableOutTag, 15, FALSE)) goto Error;
-        if (!CheckNamedColor(ContextID, Pass, h, cmsSigNamedColor2Tag, 4096, TRUE)) goto Error;
+        if (!CheckNamedColor(Pass, h, cmsSigColorantTableTag, 15, FALSE)) goto Error;
+        if (!CheckNamedColor(Pass, h, cmsSigColorantTableOutTag, 15, FALSE)) goto Error;
+        if (!CheckNamedColor(Pass, h, cmsSigNamedColor2Tag, 4096, TRUE)) goto Error;
 
         SubTest("Tags holding LUTs");
 
-        if (!CheckLUT(ContextID, Pass, h, cmsSigAToB0Tag)) goto Error;
-        if (!CheckLUT(ContextID, Pass, h, cmsSigAToB1Tag)) goto Error;
-        if (!CheckLUT(ContextID, Pass, h, cmsSigAToB2Tag)) goto Error;
-        if (!CheckLUT(ContextID, Pass, h, cmsSigBToA0Tag)) goto Error;
-        if (!CheckLUT(ContextID, Pass, h, cmsSigBToA1Tag)) goto Error;
-        if (!CheckLUT(ContextID, Pass, h, cmsSigBToA2Tag)) goto Error;
-        if (!CheckLUT(ContextID, Pass, h, cmsSigPreview0Tag)) goto Error;
-        if (!CheckLUT(ContextID, Pass, h, cmsSigPreview1Tag)) goto Error;
-        if (!CheckLUT(ContextID, Pass, h, cmsSigPreview2Tag)) goto Error;
-        if (!CheckLUT(ContextID, Pass, h, cmsSigGamutTag)) goto Error;
+        if (!CheckLUT(Pass, h, cmsSigAToB0Tag)) goto Error;
+        if (!CheckLUT(Pass, h, cmsSigAToB1Tag)) goto Error;
+        if (!CheckLUT(Pass, h, cmsSigAToB2Tag)) goto Error;
+        if (!CheckLUT(Pass, h, cmsSigBToA0Tag)) goto Error;
+        if (!CheckLUT(Pass, h, cmsSigBToA1Tag)) goto Error;
+        if (!CheckLUT(Pass, h, cmsSigBToA2Tag)) goto Error;
+        if (!CheckLUT(Pass, h, cmsSigPreview0Tag)) goto Error;
+        if (!CheckLUT(Pass, h, cmsSigPreview1Tag)) goto Error;
+        if (!CheckLUT(Pass, h, cmsSigPreview2Tag)) goto Error;
+        if (!CheckLUT(Pass, h, cmsSigGamutTag)) goto Error;
 
         SubTest("Tags holding CHAD");
-        if (!CheckCHAD(ContextID, Pass, h, cmsSigChromaticAdaptationTag)) goto Error;
+        if (!CheckCHAD(Pass, h, cmsSigChromaticAdaptationTag)) goto Error;
 
         SubTest("Tags holding Chromaticity");
-        if (!CheckChromaticity(ContextID, Pass, h, cmsSigChromaticityTag)) goto Error;
+        if (!CheckChromaticity(Pass, h, cmsSigChromaticityTag)) goto Error;
 
         SubTest("Tags holding colorant order");
-        if (!CheckColorantOrder(ContextID, Pass, h, cmsSigColorantOrderTag)) goto Error;
+        if (!CheckColorantOrder(Pass, h, cmsSigColorantOrderTag)) goto Error;
 
         SubTest("Tags holding measurement");
-        if (!CheckMeasurement(ContextID, Pass, h, cmsSigMeasurementTag)) goto Error;
+        if (!CheckMeasurement(Pass, h, cmsSigMeasurementTag)) goto Error;
 
         SubTest("Tags holding CRD info");
-        if (!CheckCRDinfo(ContextID, Pass, h, cmsSigCrdInfoTag)) goto Error;
+        if (!CheckCRDinfo(Pass, h, cmsSigCrdInfoTag)) goto Error;
 
         SubTest("Tags holding UCR/BG");
-        if (!CheckUcrBg(ContextID, Pass, h, cmsSigUcrBgTag)) goto Error;
+        if (!CheckUcrBg(Pass, h, cmsSigUcrBgTag)) goto Error;
 
         SubTest("Tags holding MPE");
-        if (!CheckMPE(ContextID, Pass, h, cmsSigDToB0Tag)) goto Error;
-        if (!CheckMPE(ContextID, Pass, h, cmsSigDToB1Tag)) goto Error;
-        if (!CheckMPE(ContextID, Pass, h, cmsSigDToB2Tag)) goto Error;
-        if (!CheckMPE(ContextID, Pass, h, cmsSigDToB3Tag)) goto Error;
-        if (!CheckMPE(ContextID, Pass, h, cmsSigBToD0Tag)) goto Error;
-        if (!CheckMPE(ContextID, Pass, h, cmsSigBToD1Tag)) goto Error;
-        if (!CheckMPE(ContextID, Pass, h, cmsSigBToD2Tag)) goto Error;
-        if (!CheckMPE(ContextID, Pass, h, cmsSigBToD3Tag)) goto Error;
+        if (!CheckMPE(Pass, h, cmsSigDToB0Tag)) goto Error;
+        if (!CheckMPE(Pass, h, cmsSigDToB1Tag)) goto Error;
+        if (!CheckMPE(Pass, h, cmsSigDToB2Tag)) goto Error;
+        if (!CheckMPE(Pass, h, cmsSigDToB3Tag)) goto Error;
+        if (!CheckMPE(Pass, h, cmsSigBToD0Tag)) goto Error;
+        if (!CheckMPE(Pass, h, cmsSigBToD1Tag)) goto Error;
+        if (!CheckMPE(Pass, h, cmsSigBToD2Tag)) goto Error;
+        if (!CheckMPE(Pass, h, cmsSigBToD3Tag)) goto Error;
 
         SubTest("Tags using screening");
-        if (!CheckScreening(ContextID, Pass, h, cmsSigScreeningTag)) goto Error;
+        if (!CheckScreening(Pass, h, cmsSigScreeningTag)) goto Error;
 
         SubTest("Tags holding profile sequence description");
-        if (!CheckProfileSequenceTag(ContextID, Pass, h)) goto Error;
-        if (!CheckProfileSequenceIDTag(ContextID, Pass, h)) goto Error;
+        if (!CheckProfileSequenceTag(Pass, h)) goto Error;
+        if (!CheckProfileSequenceIDTag(Pass, h)) goto Error;
 
         SubTest("Tags holding ICC viewing conditions");
-        if (!CheckICCViewingConditions(ContextID, Pass, h)) goto Error;
+        if (!CheckICCViewingConditions(Pass, h)) goto Error;
 
         SubTest("VCGT tags");
-        if (!CheckVCGT(ContextID, Pass, h)) goto Error;
+        if (!CheckVCGT(Pass, h)) goto Error;
 
         SubTest("RAW tags");
-        if (!CheckRAWtags(ContextID, Pass, h)) goto Error;
+        if (!CheckRAWtags(Pass, h)) goto Error;
 
         SubTest("Dictionary meta tags");
-        // if (!CheckDictionary16(ContextID, Pass, h)) goto Error;
-        if (!CheckDictionary24(ContextID, Pass, h)) goto Error;
+        // if (!CheckDictionary16(Pass, h)) goto Error;
+        if (!CheckDictionary24(Pass, h)) goto Error;
 
         SubTest("cicp Video Signal Type");
-        if (!Check_cicp(ContextID, Pass, h)) goto Error;
+        if (!Check_cicp(Pass, h)) goto Error;
 
         SubTest("Microsoft MHC2 tag");
         if (!Check_MHC2(Pass, h)) goto Error;
 
 
         if (Pass == 1) {
-            cmsSaveProfileToFile(ContextID, h, "alltags.icc");
-            cmsCloseProfile(ContextID, h);
-            h = cmsOpenProfileFromFile(ContextID, "alltags.icc", "r");
+            cmsSaveProfileToFile(h, "alltags.icc");
+            cmsCloseProfile(h);
+            h = cmsOpenProfileFromFile("alltags.icc", "r");
         }
 
     }
@@ -5592,12 +5592,12 @@ cmsInt32Number CheckProfileCreation(cmsContext ContextID)
     cmsSigOutputResponseTag                 = 0x72657370,  // 'resp'  -- Possible patent on this
     */
 
-    cmsCloseProfile(ContextID, h);
+    cmsCloseProfile(h);
     remove("alltags.icc");
     return 1;
 
 Error:
-    cmsCloseProfile(ContextID, h);
+    cmsCloseProfile(h);
     remove("alltags.icc");
     return 0;
 }
@@ -5621,21 +5621,21 @@ cmsInt32Number CheckVersionHeaderWriting(cmsContext ContextID)
       h = cmsCreateProfilePlaceholder(ContextID);
       if (h == NULL) return 0;
 
-      cmsSetProfileVersion(ContextID, h, test_versions[index]);
+      cmsSetProfileVersion(h, test_versions[index]);
 
-      cmsSaveProfileToFile(ContextID, h, "versions.icc");
-      cmsCloseProfile(ContextID, h);
+      cmsSaveProfileToFile(h, "versions.icc");
+      cmsCloseProfile(h);
 
-      h = cmsOpenProfileFromFile(ContextID, "versions.icc", "r");
+      h = cmsOpenProfileFromFile("versions.icc", "r");
 
       // Only the first 3 digits are significant
-      if (fabs(cmsGetProfileVersion(ContextID, h) - test_versions[index]) > 0.005) {
+      if (fabs(cmsGetProfileVersion(h) - test_versions[index]) > 0.005) {
         Fail("Version failed to round-trip: wrote %.2f, read %.2f",
-             test_versions[index], cmsGetProfileVersion(ContextID, h));
+             test_versions[index], cmsGetProfileVersion(h));
         return 0;
       }
 
-      cmsCloseProfile(ContextID, h);
+      cmsCloseProfile(h);
       remove("versions.icc");
     }
     return 1;
@@ -5650,15 +5650,15 @@ cmsInt32Number CheckMultilocalizedProfile(cmsContext ContextID)
     cmsMLU *Pt;
     char Buffer[256];
 
-    hProfile = cmsOpenProfileFromFile(ContextID, "crayons.icc", "r");
+    hProfile = cmsOpenProfileFromFile("crayons.icc", "r");
 
-    Pt = (cmsMLU *) cmsReadTag(ContextID, hProfile, cmsSigProfileDescriptionTag);
-    cmsMLUgetASCII(ContextID, Pt, "en", "GB", Buffer, 256);
+    Pt = (cmsMLU *) cmsReadTag(hProfile, cmsSigProfileDescriptionTag);
+    cmsMLUgetASCII(Pt, "en", "GB", Buffer, 256);
     if (strcmp(Buffer, "Crayon Colours") != 0) return FALSE;
-    cmsMLUgetASCII(ContextID, Pt, "en", "US", Buffer, 256);
+    cmsMLUgetASCII(Pt, "en", "US", Buffer, 256);
     if (strcmp(Buffer, "Crayon Colors") != 0) return FALSE;
 
-    cmsCloseProfile(ContextID, hProfile);
+    cmsCloseProfile(hProfile);
 
     return TRUE;
 }
@@ -5668,13 +5668,13 @@ cmsInt32Number CheckMultilocalizedProfile(cmsContext ContextID)
 
 
 static
-void ErrorReportingFunction(cmsContext ContextID, cmsUInt32Number ErrorCode, const char *Text)
+void ErrorReportingFunction(cmsUInt32Number ErrorCode, const char *Text)
 {
     TrappedError = TRUE;
     SimultaneousErrors++;
     strncpy(ReasonToFailBuffer, Text, TEXT_ERROR_BUFFER_SIZE-1);
 
-    cmsUNUSED_PARAMETER(ContextID);
+    
     cmsUNUSED_PARAMETER(ErrorCode);
 }
 
@@ -5684,58 +5684,58 @@ cmsInt32Number CheckBadProfiles(cmsContext ContextID)
 {
     cmsHPROFILE h;
 
-    h = cmsOpenProfileFromFile(ContextID, "IDoNotExist.icc", "r");
+    h = cmsOpenProfileFromFile("IDoNotExist.icc", "r");
     if (h != NULL) {
-        cmsCloseProfile(ContextID, h);
+        cmsCloseProfile(h);
         return 0;
     }
 
-    h = cmsOpenProfileFromFile(ContextID, "IAmIllFormed*.icc", "r");
+    h = cmsOpenProfileFromFile("IAmIllFormed*.icc", "r");
     if (h != NULL) {
-        cmsCloseProfile(ContextID, h);
+        cmsCloseProfile(h);
         return 0;
     }
 
     // No profile name given
-    h = cmsOpenProfileFromFile(ContextID, "", "r");
+    h = cmsOpenProfileFromFile("", "r");
     if (h != NULL) {
-        cmsCloseProfile(ContextID, h);
+        cmsCloseProfile(h);
         return 0;
     }
 
-    h = cmsOpenProfileFromFile(ContextID, "..", "r");
+    h = cmsOpenProfileFromFile("..", "r");
     if (h != NULL) {
-        cmsCloseProfile(ContextID, h);
+        cmsCloseProfile(h);
         return 0;
     }
 
-    h = cmsOpenProfileFromFile(ContextID, "IHaveBadAccessMode.icc", "@");
+    h = cmsOpenProfileFromFile("IHaveBadAccessMode.icc", "@");
     if (h != NULL) {
-        cmsCloseProfile(ContextID, h);
+        cmsCloseProfile(h);
         return 0;
     }
 
-    h = cmsOpenProfileFromFile(ContextID, "bad.icc", "r");
+    h = cmsOpenProfileFromFile("bad.icc", "r");
     if (h != NULL) {
-        cmsCloseProfile(ContextID, h);
+        cmsCloseProfile(h);
         return 0;
     }
 
-     h = cmsOpenProfileFromFile(ContextID, "toosmall.icc", "r");
+     h = cmsOpenProfileFromFile("toosmall.icc", "r");
     if (h != NULL) {
-        cmsCloseProfile(ContextID, h);
+        cmsCloseProfile(h);
         return 0;
     }
 
-    h = cmsOpenProfileFromMem(ContextID, NULL, 3);
+    h = cmsOpenProfileFromMem(NULL, 3);
     if (h != NULL) {
-        cmsCloseProfile(ContextID, h);
+        cmsCloseProfile(h);
         return 0;
     }
 
-    h = cmsOpenProfileFromMem(ContextID, "123", 3);
+    h = cmsOpenProfileFromMem("123", 3);
     if (h != NULL) {
-        cmsCloseProfile(ContextID, h);
+        cmsCloseProfile(h);
         return 0;
     }
 
@@ -5750,9 +5750,9 @@ cmsInt32Number CheckErrReportingOnBadProfiles(cmsContext ContextID)
 {
     cmsInt32Number rc;
 
-    cmsSetLogErrorHandler(ContextID, ErrorReportingFunction);
+    cmsSetLogErrorHandler(ErrorReportingFunction);
     rc = CheckBadProfiles(ContextID);
-    cmsSetLogErrorHandler(ContextID, FatalErrorQuit);
+    cmsSetLogErrorHandler(FatalErrorQuit);
 
     // Reset the error state
     TrappedError = FALSE;
@@ -5766,52 +5766,52 @@ cmsInt32Number CheckBadTransforms(cmsContext ContextID)
     cmsHPROFILE h1 = cmsCreate_sRGBProfile(ContextID);
     cmsHTRANSFORM x1;
 
-    x1 = cmsCreateTransform(ContextID, NULL, 0, NULL, 0, 0, 0);
+    x1 = cmsCreateTransform(NULL, 0, NULL, 0, 0, 0);
     if (x1 != NULL) {
-        cmsDeleteTransform(ContextID, x1);
+        cmsDeleteTransform(x1);
         return 0;
     }
 
 
 
-    x1 = cmsCreateTransform(ContextID, h1, TYPE_RGB_8, h1, TYPE_RGB_8, 12345, 0);
+    x1 = cmsCreateTransform(h1, TYPE_RGB_8, h1, TYPE_RGB_8, 12345, 0);
     if (x1 != NULL) {
-        cmsDeleteTransform(ContextID, x1);
+        cmsDeleteTransform(x1);
         return 0;
     }
 
-    x1 = cmsCreateTransform(ContextID, h1, TYPE_CMYK_8, h1, TYPE_RGB_8, 0, 0);
+    x1 = cmsCreateTransform(h1, TYPE_CMYK_8, h1, TYPE_RGB_8, 0, 0);
     if (x1 != NULL) {
-        cmsDeleteTransform(ContextID, x1);
+        cmsDeleteTransform(x1);
         return 0;
     }
 
-    x1 = cmsCreateTransform(ContextID, h1, TYPE_RGB_8, h1, TYPE_CMYK_8, 1, 0);
+    x1 = cmsCreateTransform(h1, TYPE_RGB_8, h1, TYPE_CMYK_8, 1, 0);
     if (x1 != NULL) {
-        cmsDeleteTransform(ContextID, x1);
+        cmsDeleteTransform(x1);
         return 0;
     }
 
     // sRGB does its output as XYZ!
-    x1 = cmsCreateTransform(ContextID, h1, TYPE_RGB_8, NULL, TYPE_Lab_8, 1, 0);
+    x1 = cmsCreateTransform(h1, TYPE_RGB_8, NULL, TYPE_Lab_8, 1, 0);
     if (x1 != NULL) {
-        cmsDeleteTransform(ContextID, x1);
+        cmsDeleteTransform(x1);
         return 0;
     }
 
-    cmsCloseProfile(ContextID, h1);
+    cmsCloseProfile(h1);
 
 
     {
 
-    cmsHPROFILE hp1 = cmsOpenProfileFromFile(ContextID,  "test1.icc", "r");
+    cmsHPROFILE hp1 = cmsOpenProfileFromFile( "test1.icc", "r");
     cmsHPROFILE hp2 = cmsCreate_sRGBProfile(ContextID);
 
-    x1 = cmsCreateTransform(ContextID, hp1, TYPE_BGR_8, hp2, TYPE_BGR_8, INTENT_PERCEPTUAL, 0);
+    x1 = cmsCreateTransform(hp1, TYPE_BGR_8, hp2, TYPE_BGR_8, INTENT_PERCEPTUAL, 0);
 
-    cmsCloseProfile(ContextID, hp1); cmsCloseProfile(ContextID, hp2);
+    cmsCloseProfile(hp1); cmsCloseProfile(hp2);
     if (x1 != NULL) {
-        cmsDeleteTransform(ContextID, x1);
+        cmsDeleteTransform(x1);
         return 0;
     }
     }
@@ -5825,9 +5825,9 @@ cmsInt32Number CheckErrReportingOnBadTransforms(cmsContext ContextID)
 {
     cmsInt32Number rc;
 
-    cmsSetLogErrorHandler(ContextID, ErrorReportingFunction);
+    cmsSetLogErrorHandler(ErrorReportingFunction);
     rc = CheckBadTransforms(ContextID);
-    cmsSetLogErrorHandler(ContextID, FatalErrorQuit);
+    cmsSetLogErrorHandler(FatalErrorQuit);
 
     // Reset the error state
     TrappedError = FALSE;
@@ -5841,7 +5841,7 @@ cmsInt32Number CheckErrReportingOnBadTransforms(cmsContext ContextID)
 
 // Check a linear xform
 static
-cmsInt32Number Check8linearXFORM(cmsContext ContextID, cmsHTRANSFORM xform, cmsInt32Number nChan)
+cmsInt32Number Check8linearXFORM(cmsHTRANSFORM xform, cmsInt32Number nChan)
 {
     cmsInt32Number n2, i, j;
     cmsUInt8Number Inw[cmsMAXCHANNELS], Outw[cmsMAXCHANNELS];
@@ -5851,7 +5851,7 @@ cmsInt32Number Check8linearXFORM(cmsContext ContextID, cmsHTRANSFORM xform, cmsI
     for (j=0; j < 0xFF; j++) {
 
         memset(Inw, j, sizeof(Inw));
-        cmsDoTransform(ContextID, xform, Inw, Outw, 1);
+        cmsDoTransform(xform, Inw, Outw, 1);
 
         for (i=0; i < nChan; i++) {
 
@@ -5872,7 +5872,7 @@ cmsInt32Number Check8linearXFORM(cmsContext ContextID, cmsHTRANSFORM xform, cmsI
 }
 
 static
-cmsInt32Number Compare8bitXFORM(cmsContext ContextID, cmsHTRANSFORM xform1, cmsHTRANSFORM xform2, cmsInt32Number nChan)
+cmsInt32Number Compare8bitXFORM(cmsHTRANSFORM xform1, cmsHTRANSFORM xform2, cmsInt32Number nChan)
 {
     cmsInt32Number n2, i, j;
     cmsUInt8Number Inw[cmsMAXCHANNELS], Outw1[cmsMAXCHANNELS], Outw2[cmsMAXCHANNELS];;
@@ -5882,8 +5882,8 @@ cmsInt32Number Compare8bitXFORM(cmsContext ContextID, cmsHTRANSFORM xform1, cmsH
     for (j=0; j < 0xFF; j++) {
 
         memset(Inw, j, sizeof(Inw));
-        cmsDoTransform(ContextID, xform1, Inw, Outw1, 1);
-        cmsDoTransform(ContextID, xform2, Inw, Outw2, 1);
+        cmsDoTransform(xform1, Inw, Outw1, 1);
+        cmsDoTransform(xform2, Inw, Outw2, 1);
 
         for (i=0; i < nChan; i++) {
 
@@ -5907,7 +5907,7 @@ cmsInt32Number Compare8bitXFORM(cmsContext ContextID, cmsHTRANSFORM xform1, cmsH
 
 // Check a linear xform
 static
-cmsInt32Number Check16linearXFORM(cmsContext ContextID, cmsHTRANSFORM xform, cmsInt32Number nChan)
+cmsInt32Number Check16linearXFORM(cmsHTRANSFORM xform, cmsInt32Number nChan)
 {
     cmsInt32Number n2, i, j;
     cmsUInt16Number Inw[cmsMAXCHANNELS], Outw[cmsMAXCHANNELS];
@@ -5917,7 +5917,7 @@ cmsInt32Number Check16linearXFORM(cmsContext ContextID, cmsHTRANSFORM xform, cms
 
         for (i=0; i < nChan; i++) Inw[i] = (cmsUInt16Number) j;
 
-        cmsDoTransform(ContextID, xform, Inw, Outw, 1);
+        cmsDoTransform(xform, Inw, Outw, 1);
 
         for (i=0; i < nChan; i++) {
 
@@ -5939,7 +5939,7 @@ cmsInt32Number Check16linearXFORM(cmsContext ContextID, cmsHTRANSFORM xform, cms
 }
 
 static
-cmsInt32Number Compare16bitXFORM(cmsContext ContextID, cmsHTRANSFORM xform1, cmsHTRANSFORM xform2, cmsInt32Number nChan)
+cmsInt32Number Compare16bitXFORM(cmsHTRANSFORM xform1, cmsHTRANSFORM xform2, cmsInt32Number nChan)
 {
     cmsInt32Number n2, i, j;
     cmsUInt16Number Inw[cmsMAXCHANNELS], Outw1[cmsMAXCHANNELS], Outw2[cmsMAXCHANNELS];;
@@ -5950,8 +5950,8 @@ cmsInt32Number Compare16bitXFORM(cmsContext ContextID, cmsHTRANSFORM xform1, cms
 
         for (i=0; i < nChan; i++) Inw[i] = (cmsUInt16Number) j;
 
-        cmsDoTransform(ContextID, xform1, Inw, Outw1, 1);
-        cmsDoTransform(ContextID, xform2, Inw, Outw2, 1);
+        cmsDoTransform(xform1, Inw, Outw1, 1);
+        cmsDoTransform(xform2, Inw, Outw2, 1);
 
         for (i=0; i < nChan; i++) {
 
@@ -5975,7 +5975,7 @@ cmsInt32Number Compare16bitXFORM(cmsContext ContextID, cmsHTRANSFORM xform1, cms
 
 // Check a linear xform
 static
-cmsInt32Number CheckFloatlinearXFORM(cmsContext ContextID, cmsHTRANSFORM xform, cmsInt32Number nChan)
+cmsInt32Number CheckFloatlinearXFORM(cmsHTRANSFORM xform, cmsInt32Number nChan)
 {
     cmsInt32Number i, j;
     cmsFloat32Number In[cmsMAXCHANNELS], Out[cmsMAXCHANNELS];
@@ -5984,7 +5984,7 @@ cmsInt32Number CheckFloatlinearXFORM(cmsContext ContextID, cmsHTRANSFORM xform, 
 
         for (i=0; i < nChan; i++) In[i] = (cmsFloat32Number) (j / 65535.0);;
 
-        cmsDoTransform(ContextID, xform, In, Out, 1);
+        cmsDoTransform(xform, In, Out, 1);
 
         for (i=0; i < nChan; i++) {
 
@@ -6000,7 +6000,7 @@ cmsInt32Number CheckFloatlinearXFORM(cmsContext ContextID, cmsHTRANSFORM xform, 
 
 // Check a linear xform
 static
-cmsInt32Number CompareFloatXFORM(cmsContext ContextID, cmsHTRANSFORM xform1, cmsHTRANSFORM xform2, cmsInt32Number nChan)
+cmsInt32Number CompareFloatXFORM(cmsHTRANSFORM xform1, cmsHTRANSFORM xform2, cmsInt32Number nChan)
 {
     cmsInt32Number i, j;
     cmsFloat32Number In[cmsMAXCHANNELS], Out1[cmsMAXCHANNELS], Out2[cmsMAXCHANNELS];
@@ -6009,8 +6009,8 @@ cmsInt32Number CompareFloatXFORM(cmsContext ContextID, cmsHTRANSFORM xform1, cms
 
         for (i=0; i < nChan; i++) In[i] = (cmsFloat32Number) (j / 65535.0);;
 
-        cmsDoTransform(ContextID, xform1, In, Out1, 1);
-        cmsDoTransform(ContextID, xform2, In, Out2, 1);
+        cmsDoTransform(xform1, In, Out1, 1);
+        cmsDoTransform(xform2, In, Out2, 1);
 
         for (i=0; i < nChan; i++) {
 
@@ -6037,64 +6037,64 @@ cmsInt32Number CheckCurvesOnlyTransforms(cmsContext ContextID)
     cmsInt32Number rc = 1;
 
 
-    c1 = cmsBuildGamma(ContextID, 2.2);
-    c2 = cmsBuildGamma(ContextID, 1/2.2);
-    c3 = cmsBuildGamma(ContextID, 4.84);
+    c1 = cmsBuildGamma(2.2);
+    c2 = cmsBuildGamma(1/2.2);
+    c3 = cmsBuildGamma(4.84);
 
-    h1 = cmsCreateLinearizationDeviceLink(ContextID, cmsSigGrayData, &c1);
-    h2 = cmsCreateLinearizationDeviceLink(ContextID, cmsSigGrayData, &c2);
-    h3 = cmsCreateLinearizationDeviceLink(ContextID, cmsSigGrayData, &c3);
+    h1 = cmsCreateLinearizationDeviceLink(cmsSigGrayData, &c1);
+    h2 = cmsCreateLinearizationDeviceLink(cmsSigGrayData, &c2);
+    h3 = cmsCreateLinearizationDeviceLink(cmsSigGrayData, &c3);
 
     SubTest("Gray float optimizeable transform");
-    xform1 = cmsCreateTransform(ContextID, h1, TYPE_GRAY_FLT, h2, TYPE_GRAY_FLT, INTENT_PERCEPTUAL, 0);
-    rc &= CheckFloatlinearXFORM(ContextID, xform1, 1);
-    cmsDeleteTransform(ContextID, xform1);
+    xform1 = cmsCreateTransform(h1, TYPE_GRAY_FLT, h2, TYPE_GRAY_FLT, INTENT_PERCEPTUAL, 0);
+    rc &= CheckFloatlinearXFORM(xform1, 1);
+    cmsDeleteTransform(xform1);
     if (rc == 0) goto Error;
 
     SubTest("Gray 8 optimizeable transform");
-    xform1 = cmsCreateTransform(ContextID, h1, TYPE_GRAY_8, h2, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
-    rc &= Check8linearXFORM(ContextID, xform1, 1);
-    cmsDeleteTransform(ContextID, xform1);
+    xform1 = cmsCreateTransform(h1, TYPE_GRAY_8, h2, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
+    rc &= Check8linearXFORM(xform1, 1);
+    cmsDeleteTransform(xform1);
     if (rc == 0) goto Error;
 
     SubTest("Gray 16 optimizeable transform");
-    xform1 = cmsCreateTransform(ContextID, h1, TYPE_GRAY_16, h2, TYPE_GRAY_16, INTENT_PERCEPTUAL, 0);
-    rc &= Check16linearXFORM(ContextID, xform1, 1);
-    cmsDeleteTransform(ContextID, xform1);
+    xform1 = cmsCreateTransform(h1, TYPE_GRAY_16, h2, TYPE_GRAY_16, INTENT_PERCEPTUAL, 0);
+    rc &= Check16linearXFORM(xform1, 1);
+    cmsDeleteTransform(xform1);
     if (rc == 0) goto Error;
 
     SubTest("Gray float non-optimizeable transform");
-    xform1 = cmsCreateTransform(ContextID, h1, TYPE_GRAY_FLT, h1, TYPE_GRAY_FLT, INTENT_PERCEPTUAL, 0);
-    xform2 = cmsCreateTransform(ContextID, h3, TYPE_GRAY_FLT, NULL, TYPE_GRAY_FLT, INTENT_PERCEPTUAL, 0);
+    xform1 = cmsCreateTransform(h1, TYPE_GRAY_FLT, h1, TYPE_GRAY_FLT, INTENT_PERCEPTUAL, 0);
+    xform2 = cmsCreateTransform(h3, TYPE_GRAY_FLT, NULL, TYPE_GRAY_FLT, INTENT_PERCEPTUAL, 0);
 
-    rc &= CompareFloatXFORM(ContextID, xform1, xform2, 1);
-    cmsDeleteTransform(ContextID, xform1);
-    cmsDeleteTransform(ContextID, xform2);
+    rc &= CompareFloatXFORM(xform1, xform2, 1);
+    cmsDeleteTransform(xform1);
+    cmsDeleteTransform(xform2);
     if (rc == 0) goto Error;
 
     SubTest("Gray 8 non-optimizeable transform");
-    xform1 = cmsCreateTransform(ContextID, h1, TYPE_GRAY_8, h1, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
-    xform2 = cmsCreateTransform(ContextID, h3, TYPE_GRAY_8, NULL, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
+    xform1 = cmsCreateTransform(h1, TYPE_GRAY_8, h1, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
+    xform2 = cmsCreateTransform(h3, TYPE_GRAY_8, NULL, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
 
-    rc &= Compare8bitXFORM(ContextID, xform1, xform2, 1);
-    cmsDeleteTransform(ContextID, xform1);
-    cmsDeleteTransform(ContextID, xform2);
+    rc &= Compare8bitXFORM(xform1, xform2, 1);
+    cmsDeleteTransform(xform1);
+    cmsDeleteTransform(xform2);
     if (rc == 0) goto Error;
 
 
     SubTest("Gray 16 non-optimizeable transform");
-    xform1 = cmsCreateTransform(ContextID, h1, TYPE_GRAY_16, h1, TYPE_GRAY_16, INTENT_PERCEPTUAL, 0);
-    xform2 = cmsCreateTransform(ContextID, h3, TYPE_GRAY_16, NULL, TYPE_GRAY_16, INTENT_PERCEPTUAL, 0);
+    xform1 = cmsCreateTransform(h1, TYPE_GRAY_16, h1, TYPE_GRAY_16, INTENT_PERCEPTUAL, 0);
+    xform2 = cmsCreateTransform(h3, TYPE_GRAY_16, NULL, TYPE_GRAY_16, INTENT_PERCEPTUAL, 0);
 
-    rc &= Compare16bitXFORM(ContextID, xform1, xform2, 1);
-    cmsDeleteTransform(ContextID, xform1);
-    cmsDeleteTransform(ContextID, xform2);
+    rc &= Compare16bitXFORM(xform1, xform2, 1);
+    cmsDeleteTransform(xform1);
+    cmsDeleteTransform(xform2);
     if (rc == 0) goto Error;
 
 Error:
 
-    cmsCloseProfile(ContextID, h1); cmsCloseProfile(ContextID, h2); cmsCloseProfile(ContextID, h3);
-    cmsFreeToneCurve(ContextID, c1); cmsFreeToneCurve(ContextID, c2); cmsFreeToneCurve(ContextID, c3);
+    cmsCloseProfile(h1); cmsCloseProfile(h2); cmsCloseProfile(h3);
+    cmsFreeToneCurve(c1); cmsFreeToneCurve(c2); cmsFreeToneCurve(c3);
 
     return rc;
 }
@@ -6106,21 +6106,21 @@ Error:
 static cmsFloat64Number MaxDE;
 
 static
-cmsInt32Number CheckOneLab(cmsContext ContextID, cmsHTRANSFORM xform, cmsFloat64Number L, cmsFloat64Number a, cmsFloat64Number b)
+cmsInt32Number CheckOneLab(cmsHTRANSFORM xform, cmsFloat64Number L, cmsFloat64Number a, cmsFloat64Number b)
 {
     cmsCIELab In, Out;
     cmsFloat64Number dE;
 
     In.L = L; In.a = a; In.b = b;
-    cmsDoTransform(ContextID, xform, &In, &Out, 1);
+    cmsDoTransform(xform, &In, &Out, 1);
 
-    dE = cmsDeltaE(ContextID, &In, &Out);
+    dE = cmsDeltaE(&In, &Out);
 
     if (dE > MaxDE) MaxDE = dE;
 
     if (MaxDE >  0.003) {
         Fail("dE=%f Lab1=(%f, %f, %f)\n\tLab2=(%f %f %f)", MaxDE, In.L, In.a, In.b, Out.L, Out.a, Out.b);
-        cmsDoTransform(ContextID, xform, &In, &Out, 1);
+        cmsDoTransform(xform, &In, &Out, 1);
         return 0;
     }
 
@@ -6129,7 +6129,7 @@ cmsInt32Number CheckOneLab(cmsContext ContextID, cmsHTRANSFORM xform, cmsFloat64
 
 // Check several Lab, slicing at non-exact values. Precision should be 16 bits. 50x50x50 checks aprox.
 static
-cmsInt32Number CheckSeveralLab(cmsContext ContextID, cmsHTRANSFORM xform)
+cmsInt32Number CheckSeveralLab(cmsHTRANSFORM xform)
 {
     cmsInt32Number L, a, b;
 
@@ -6140,7 +6140,7 @@ cmsInt32Number CheckSeveralLab(cmsContext ContextID, cmsHTRANSFORM xform)
 
             for (b = 0; b < 65536; b += 1111) {
 
-                if (!CheckOneLab(ContextID, xform, (L * 100.0) / 65535.0,
+                if (!CheckOneLab(xform, (L * 100.0) / 65535.0,
                                         (a  / 257.0) - 128, (b / 257.0) - 128))
                     return 0;
             }
@@ -6153,17 +6153,17 @@ cmsInt32Number CheckSeveralLab(cmsContext ContextID, cmsHTRANSFORM xform)
 
 
 static
-cmsInt32Number OneTrivialLab(cmsContext ContextID, cmsHPROFILE hLab1, cmsHPROFILE hLab2, const char* txt)
+cmsInt32Number OneTrivialLab(cmsHPROFILE hLab1, cmsHPROFILE hLab2, const char* txt)
 {
     cmsHTRANSFORM xform;
     cmsInt32Number rc;
 
     SubTest(txt);
-    xform = cmsCreateTransform(ContextID, hLab1, TYPE_Lab_DBL, hLab2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsCloseProfile(ContextID, hLab1); cmsCloseProfile(ContextID, hLab2);
+    xform = cmsCreateTransform(hLab1, TYPE_Lab_DBL, hLab2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsCloseProfile(hLab1); cmsCloseProfile(hLab2);
 
-    rc = CheckSeveralLab(ContextID, xform);
-    cmsDeleteTransform(ContextID, xform);
+    rc = CheckSeveralLab(xform);
+    cmsDeleteTransform(xform);
     return rc;
 }
 
@@ -6171,10 +6171,10 @@ cmsInt32Number OneTrivialLab(cmsContext ContextID, cmsHPROFILE hLab1, cmsHPROFIL
 static
 cmsInt32Number CheckFloatLabTransforms(cmsContext ContextID)
 {
-    return OneTrivialLab(ContextID, cmsCreateLab4Profile(ContextID, NULL), cmsCreateLab4Profile(ContextID, NULL),  "Lab4/Lab4") &&
-           OneTrivialLab(ContextID, cmsCreateLab2Profile(ContextID, NULL), cmsCreateLab2Profile(ContextID, NULL),  "Lab2/Lab2") &&
-           OneTrivialLab(ContextID, cmsCreateLab4Profile(ContextID, NULL), cmsCreateLab2Profile(ContextID, NULL),  "Lab4/Lab2") &&
-           OneTrivialLab(ContextID, cmsCreateLab2Profile(ContextID, NULL), cmsCreateLab4Profile(ContextID, NULL),  "Lab2/Lab4");
+    return OneTrivialLab(cmsCreateLab4Profile(NULL), cmsCreateLab4Profile(NULL),  "Lab4/Lab4") &&
+           OneTrivialLab(cmsCreateLab2Profile(NULL), cmsCreateLab2Profile(NULL),  "Lab2/Lab2") &&
+           OneTrivialLab(cmsCreateLab4Profile(NULL), cmsCreateLab2Profile(NULL),  "Lab4/Lab2") &&
+           OneTrivialLab(cmsCreateLab2Profile(NULL), cmsCreateLab4Profile(NULL),  "Lab2/Lab4");
 }
 
 
@@ -6187,83 +6187,83 @@ cmsInt32Number CheckEncodedLabTransforms(cmsContext ContextID)
     cmsCIELab Lab;
     cmsCIELab White = { 100, 0, 0 };
     cmsCIELab Color = { 7.11070, -76, 26 };
-    cmsHPROFILE hLab1 = cmsCreateLab4Profile(ContextID, NULL);
-    cmsHPROFILE hLab2 = cmsCreateLab4Profile(ContextID, NULL);
+    cmsHPROFILE hLab1 = cmsCreateLab4Profile(NULL);
+    cmsHPROFILE hLab2 = cmsCreateLab4Profile(NULL);
 
 
-    xform = cmsCreateTransform(ContextID, hLab1, TYPE_Lab_16, hLab2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsCloseProfile(ContextID, hLab1); cmsCloseProfile(ContextID, hLab2);
+    xform = cmsCreateTransform(hLab1, TYPE_Lab_16, hLab2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsCloseProfile(hLab1); cmsCloseProfile(hLab2);
 
     In[0] = 0xFFFF;
     In[1] = 0x8080;
     In[2] = 0x8080;
 
-    cmsDoTransform(ContextID, xform, In, &Lab, 1);
+    cmsDoTransform(xform, In, &Lab, 1);
 
-    if (cmsDeltaE(ContextID, &Lab, &White) > 0.0001) return 0;
+    if (cmsDeltaE(&Lab, &White) > 0.0001) return 0;
 
 
     In[0] = 0x1234;
     In[1] = 0x3434;
     In[2] = 0x9A9A;
 
-    cmsDoTransform(ContextID, xform, In, &Lab, 1);
-    cmsFloat2LabEncoded(ContextID, wLab, &Lab);
+    cmsDoTransform(xform, In, &Lab, 1);
+    cmsFloat2LabEncoded(wLab, &Lab);
     if (memcmp(In, wLab, sizeof(wLab)) != 0) return 0;
-    if (cmsDeltaE(ContextID, &Lab, &Color) > 0.0001) return 0;
+    if (cmsDeltaE(&Lab, &Color) > 0.0001) return 0;
 
-    cmsDeleteTransform(ContextID, xform);
+    cmsDeleteTransform(xform);
 
-    hLab1 = cmsCreateLab2Profile(ContextID, NULL);
-    hLab2 = cmsCreateLab4Profile(ContextID, NULL);
+    hLab1 = cmsCreateLab2Profile(NULL);
+    hLab2 = cmsCreateLab4Profile(NULL);
 
-    xform = cmsCreateTransform(ContextID, hLab1, TYPE_LabV2_16, hLab2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsCloseProfile(ContextID, hLab1); cmsCloseProfile(ContextID, hLab2);
+    xform = cmsCreateTransform(hLab1, TYPE_LabV2_16, hLab2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsCloseProfile(hLab1); cmsCloseProfile(hLab2);
 
     In[0] = 0xFF00;
     In[1] = 0x8000;
     In[2] = 0x8000;
 
-    cmsDoTransform(ContextID, xform, In, &Lab, 1);
+    cmsDoTransform(xform, In, &Lab, 1);
 
-    if (cmsDeltaE(ContextID, &Lab, &White) > 0.0001) return 0;
+    if (cmsDeltaE(&Lab, &White) > 0.0001) return 0;
 
-    cmsDeleteTransform(ContextID, xform);
+    cmsDeleteTransform(xform);
 
-    hLab2 = cmsCreateLab2Profile(ContextID, NULL);
-    hLab1 = cmsCreateLab4Profile(ContextID, NULL);
+    hLab2 = cmsCreateLab2Profile(NULL);
+    hLab1 = cmsCreateLab4Profile(NULL);
 
-    xform = cmsCreateTransform(ContextID, hLab1, TYPE_Lab_DBL, hLab2, TYPE_LabV2_16, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsCloseProfile(ContextID, hLab1); cmsCloseProfile(ContextID, hLab2);
+    xform = cmsCreateTransform(hLab1, TYPE_Lab_DBL, hLab2, TYPE_LabV2_16, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsCloseProfile(hLab1); cmsCloseProfile(hLab2);
 
     Lab.L = 100;
     Lab.a = 0;
     Lab.b = 0;
 
-    cmsDoTransform(ContextID, xform, &Lab, In, 1);
+    cmsDoTransform(xform, &Lab, In, 1);
     if (In[0] != 0xFF00 ||
         In[1] != 0x8000 ||
         In[2] != 0x8000) return 0;
 
-    cmsDeleteTransform(ContextID, xform);
+    cmsDeleteTransform(xform);
 
-    hLab1 = cmsCreateLab4Profile(ContextID, NULL);
-    hLab2 = cmsCreateLab4Profile(ContextID, NULL);
+    hLab1 = cmsCreateLab4Profile(NULL);
+    hLab2 = cmsCreateLab4Profile(NULL);
 
-    xform = cmsCreateTransform(ContextID, hLab1, TYPE_Lab_DBL, hLab2, TYPE_Lab_16, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsCloseProfile(ContextID, hLab1); cmsCloseProfile(ContextID, hLab2);
+    xform = cmsCreateTransform(hLab1, TYPE_Lab_DBL, hLab2, TYPE_Lab_16, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsCloseProfile(hLab1); cmsCloseProfile(hLab2);
 
     Lab.L = 100;
     Lab.a = 0;
     Lab.b = 0;
 
-    cmsDoTransform(ContextID, xform, &Lab, In, 1);
+    cmsDoTransform(xform, &Lab, In, 1);
 
     if (In[0] != 0xFFFF ||
         In[1] != 0x8080 ||
         In[2] != 0x8080) return 0;
 
-    cmsDeleteTransform(ContextID, xform);
+    cmsDeleteTransform(xform);
 
     return 1;
 }
@@ -6275,61 +6275,61 @@ cmsInt32Number CheckStoredIdentities(cmsContext ContextID)
     cmsHTRANSFORM xform;
     cmsInt32Number rc = 1;
 
-    hLab  = cmsCreateLab4Profile(ContextID, NULL);
-    xform = cmsCreateTransform(ContextID, hLab, TYPE_Lab_8, hLab, TYPE_Lab_8, 0, 0);
+    hLab  = cmsCreateLab4Profile(NULL);
+    xform = cmsCreateTransform(hLab, TYPE_Lab_8, hLab, TYPE_Lab_8, 0, 0);
 
-    hLink = cmsTransform2DeviceLink(ContextID, xform, 3.4, 0);
-    cmsSaveProfileToFile(ContextID, hLink, "abstractv2.icc");
-    cmsCloseProfile(ContextID, hLink);
+    hLink = cmsTransform2DeviceLink(xform, 3.4, 0);
+    cmsSaveProfileToFile(hLink, "abstractv2.icc");
+    cmsCloseProfile(hLink);
 
-    hLink = cmsTransform2DeviceLink(ContextID, xform, 4.3, 0);
-    cmsSaveProfileToFile(ContextID, hLink, "abstractv4.icc");
-    cmsCloseProfile(ContextID, hLink);
+    hLink = cmsTransform2DeviceLink(xform, 4.3, 0);
+    cmsSaveProfileToFile(hLink, "abstractv4.icc");
+    cmsCloseProfile(hLink);
 
-    cmsDeleteTransform(ContextID, xform);
-    cmsCloseProfile(ContextID, hLab);
+    cmsDeleteTransform(xform);
+    cmsCloseProfile(hLab);
 
-    h4 = cmsOpenProfileFromFile(ContextID, "abstractv4.icc", "r");
+    h4 = cmsOpenProfileFromFile("abstractv4.icc", "r");
 
-    xform = cmsCreateTransform(ContextID, h4, TYPE_Lab_DBL, h4, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(h4, TYPE_Lab_DBL, h4, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
 
     SubTest("V4");
-    rc &= CheckSeveralLab(ContextID, xform);
+    rc &= CheckSeveralLab(xform);
 
-    cmsDeleteTransform(ContextID, xform);
-    cmsCloseProfile(ContextID, h4);
+    cmsDeleteTransform(xform);
+    cmsCloseProfile(h4);
     if (!rc) goto Error;
 
 
     SubTest("V2");
-    h2 = cmsOpenProfileFromFile(ContextID, "abstractv2.icc", "r");
+    h2 = cmsOpenProfileFromFile("abstractv2.icc", "r");
 
-    xform = cmsCreateTransform(ContextID, h2, TYPE_Lab_DBL, h2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
-    rc &= CheckSeveralLab(ContextID, xform);
-    cmsDeleteTransform(ContextID, xform);
-    cmsCloseProfile(ContextID, h2);
+    xform = cmsCreateTransform(h2, TYPE_Lab_DBL, h2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    rc &= CheckSeveralLab(xform);
+    cmsDeleteTransform(xform);
+    cmsCloseProfile(h2);
     if (!rc) goto Error;
 
 
     SubTest("V2 -> V4");
-    h2 = cmsOpenProfileFromFile(ContextID, "abstractv2.icc", "r");
-    h4 = cmsOpenProfileFromFile(ContextID, "abstractv4.icc", "r");
+    h2 = cmsOpenProfileFromFile("abstractv2.icc", "r");
+    h4 = cmsOpenProfileFromFile("abstractv4.icc", "r");
 
-    xform = cmsCreateTransform(ContextID, h4, TYPE_Lab_DBL, h2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
-    rc &= CheckSeveralLab(ContextID, xform);
-    cmsDeleteTransform(ContextID, xform);
-    cmsCloseProfile(ContextID, h2);
-    cmsCloseProfile(ContextID, h4);
+    xform = cmsCreateTransform(h4, TYPE_Lab_DBL, h2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    rc &= CheckSeveralLab(xform);
+    cmsDeleteTransform(xform);
+    cmsCloseProfile(h2);
+    cmsCloseProfile(h4);
 
     SubTest("V4 -> V2");
-    h2 = cmsOpenProfileFromFile(ContextID, "abstractv2.icc", "r");
-    h4 = cmsOpenProfileFromFile(ContextID, "abstractv4.icc", "r");
+    h2 = cmsOpenProfileFromFile("abstractv2.icc", "r");
+    h4 = cmsOpenProfileFromFile("abstractv4.icc", "r");
 
-    xform = cmsCreateTransform(ContextID, h2, TYPE_Lab_DBL, h4, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
-    rc &= CheckSeveralLab(ContextID, xform);
-    cmsDeleteTransform(ContextID, xform);
-    cmsCloseProfile(ContextID, h2);
-    cmsCloseProfile(ContextID, h4);
+    xform = cmsCreateTransform(h2, TYPE_Lab_DBL, h4, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    rc &= CheckSeveralLab(xform);
+    cmsDeleteTransform(xform);
+    cmsCloseProfile(h2);
+    cmsCloseProfile(h4);
 
 Error:
     remove("abstractv2.icc");
@@ -6349,16 +6349,16 @@ cmsInt32Number CheckMatrixShaperXFORMFloat(cmsContext ContextID)
     cmsInt32Number rc1, rc2;
 
     hAbove = Create_AboveRGB(ContextID);
-    xform = cmsCreateTransform(ContextID, hAbove, TYPE_RGB_FLT, hAbove, TYPE_RGB_FLT,  INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsCloseProfile(ContextID, hAbove);
-    rc1 = CheckFloatlinearXFORM(ContextID, xform, 3);
-    cmsDeleteTransform(ContextID, xform);
+    xform = cmsCreateTransform(hAbove, TYPE_RGB_FLT, hAbove, TYPE_RGB_FLT,  INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsCloseProfile(hAbove);
+    rc1 = CheckFloatlinearXFORM(xform, 3);
+    cmsDeleteTransform(xform);
 
     hSRGB = cmsCreate_sRGBProfile(ContextID);
-    xform = cmsCreateTransform(ContextID, hSRGB, TYPE_RGB_FLT, hSRGB, TYPE_RGB_FLT,  INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsCloseProfile(ContextID, hSRGB);
-    rc2 = CheckFloatlinearXFORM(ContextID, xform, 3);
-    cmsDeleteTransform(ContextID, xform);
+    xform = cmsCreateTransform(hSRGB, TYPE_RGB_FLT, hSRGB, TYPE_RGB_FLT,  INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsCloseProfile(hSRGB);
+    rc2 = CheckFloatlinearXFORM(xform, 3);
+    cmsDeleteTransform(xform);
 
 
     return rc1 && rc2;
@@ -6373,17 +6373,17 @@ cmsInt32Number CheckMatrixShaperXFORM16(cmsContext ContextID)
     cmsInt32Number rc1, rc2;
 
     hAbove = Create_AboveRGB(ContextID);
-    xform = cmsCreateTransform(ContextID, hAbove, TYPE_RGB_16, hAbove, TYPE_RGB_16,  INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsCloseProfile(ContextID, hAbove);
+    xform = cmsCreateTransform(hAbove, TYPE_RGB_16, hAbove, TYPE_RGB_16,  INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsCloseProfile(hAbove);
 
-    rc1 = Check16linearXFORM(ContextID, xform, 3);
-    cmsDeleteTransform(ContextID, xform);
+    rc1 = Check16linearXFORM(xform, 3);
+    cmsDeleteTransform(xform);
 
     hSRGB = cmsCreate_sRGBProfile(ContextID);
-    xform = cmsCreateTransform(ContextID, hSRGB, TYPE_RGB_16, hSRGB, TYPE_RGB_16,  INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsCloseProfile(ContextID, hSRGB);
-    rc2 = Check16linearXFORM(ContextID, xform, 3);
-    cmsDeleteTransform(ContextID, xform);
+    xform = cmsCreateTransform(hSRGB, TYPE_RGB_16, hSRGB, TYPE_RGB_16,  INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsCloseProfile(hSRGB);
+    rc2 = Check16linearXFORM(xform, 3);
+    cmsDeleteTransform(xform);
 
     return rc1 && rc2;
 
@@ -6399,16 +6399,16 @@ cmsInt32Number CheckMatrixShaperXFORM8(cmsContext ContextID)
     cmsInt32Number rc1, rc2;
 
     hAbove = Create_AboveRGB(ContextID);
-    xform = cmsCreateTransform(ContextID, hAbove, TYPE_RGB_8, hAbove, TYPE_RGB_8,  INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsCloseProfile(ContextID, hAbove);
-    rc1 = Check8linearXFORM(ContextID, xform, 3);
-    cmsDeleteTransform(ContextID, xform);
+    xform = cmsCreateTransform(hAbove, TYPE_RGB_8, hAbove, TYPE_RGB_8,  INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsCloseProfile(hAbove);
+    rc1 = Check8linearXFORM(xform, 3);
+    cmsDeleteTransform(xform);
 
     hSRGB = cmsCreate_sRGBProfile(ContextID);
-    xform = cmsCreateTransform(ContextID, hSRGB, TYPE_RGB_8, hSRGB, TYPE_RGB_8,  INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsCloseProfile(ContextID, hSRGB);
-    rc2 = Check8linearXFORM(ContextID, xform, 3);
-    cmsDeleteTransform(ContextID, xform);
+    xform = cmsCreateTransform(hSRGB, TYPE_RGB_8, hSRGB, TYPE_RGB_8,  INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsCloseProfile(hSRGB);
+    rc2 = Check8linearXFORM(xform, 3);
+    cmsDeleteTransform(xform);
 
 
     return rc1 && rc2;
@@ -6427,7 +6427,7 @@ cmsInt32Number CheckMatrixShaperXFORM8(cmsContext ContextID)
 
 // Check known values going from sRGB to XYZ
 static
-cmsInt32Number CheckOneRGB_f(cmsContext ContextID, cmsHTRANSFORM xform, cmsInt32Number R, cmsInt32Number G, cmsInt32Number B, cmsFloat64Number X, cmsFloat64Number Y, cmsFloat64Number Z, cmsFloat64Number err)
+cmsInt32Number CheckOneRGB_f(cmsHTRANSFORM xform, cmsInt32Number R, cmsInt32Number G, cmsInt32Number B, cmsFloat64Number X, cmsFloat64Number Y, cmsFloat64Number Z, cmsFloat64Number err)
 {
     cmsFloat32Number RGB[3];
     cmsFloat64Number Out[3];
@@ -6436,7 +6436,7 @@ cmsInt32Number CheckOneRGB_f(cmsContext ContextID, cmsHTRANSFORM xform, cmsInt32
     RGB[1] = (cmsFloat32Number) (G / 255.0);
     RGB[2] = (cmsFloat32Number) (B / 255.0);
 
-    cmsDoTransform(ContextID, xform, RGB, Out, 1);
+    cmsDoTransform(xform, RGB, Out, 1);
 
     return IsGoodVal("X", X , Out[0], err) &&
            IsGoodVal("Y", Y , Out[1], err) &&
@@ -6453,34 +6453,34 @@ cmsInt32Number Chack_sRGB_Float(cmsContext ContextID)
 
     hsRGB = cmsCreate_sRGBProfile(ContextID);
     hXYZ  = cmsCreateXYZProfile(ContextID);
-    hLab  = cmsCreateLab4Profile(ContextID, NULL);
+    hLab  = cmsCreateLab4Profile(NULL);
 
-    xform1 =  cmsCreateTransform(ContextID, hsRGB, TYPE_RGB_FLT, hXYZ, TYPE_XYZ_DBL,
+    xform1 =  cmsCreateTransform(hsRGB, TYPE_RGB_FLT, hXYZ, TYPE_XYZ_DBL,
                                 INTENT_RELATIVE_COLORIMETRIC, 0);
 
-    xform2 =  cmsCreateTransform(ContextID, hsRGB, TYPE_RGB_FLT, hLab, TYPE_Lab_DBL,
+    xform2 =  cmsCreateTransform(hsRGB, TYPE_RGB_FLT, hLab, TYPE_Lab_DBL,
                                 INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsCloseProfile(ContextID, hsRGB);
-    cmsCloseProfile(ContextID, hXYZ);
-    cmsCloseProfile(ContextID, hLab);
+    cmsCloseProfile(hsRGB);
+    cmsCloseProfile(hXYZ);
+    cmsCloseProfile(hLab);
 
     MaxErr = 0;
 
     // Xform 1 goes from 8 bits to XYZ,
-    rc  = CheckOneRGB_f(ContextID, xform1, 1, 1, 1,        0.0002927, 0.0003035,  0.000250,  0.0001);
-    rc  &= CheckOneRGB_f(ContextID, xform1, 127, 127, 127, 0.2046329, 0.212230,   0.175069,  0.0001);
-    rc  &= CheckOneRGB_f(ContextID, xform1, 12, 13, 15,    0.0038364, 0.0039928,  0.003853,  0.0001);
-    rc  &= CheckOneRGB_f(ContextID, xform1, 128, 0, 0,     0.0941240, 0.0480256,  0.003005,  0.0001);
-    rc  &= CheckOneRGB_f(ContextID, xform1, 190, 25, 210,  0.3204592, 0.1605926,  0.468213,  0.0001);
+    rc  = CheckOneRGB_f(xform1, 1, 1, 1,        0.0002927, 0.0003035,  0.000250,  0.0001);
+    rc  &= CheckOneRGB_f(xform1, 127, 127, 127, 0.2046329, 0.212230,   0.175069,  0.0001);
+    rc  &= CheckOneRGB_f(xform1, 12, 13, 15,    0.0038364, 0.0039928,  0.003853,  0.0001);
+    rc  &= CheckOneRGB_f(xform1, 128, 0, 0,     0.0941240, 0.0480256,  0.003005,  0.0001);
+    rc  &= CheckOneRGB_f(xform1, 190, 25, 210,  0.3204592, 0.1605926,  0.468213,  0.0001);
 
     // Xform 2 goes from 8 bits to Lab, we allow 0.01 error max
-    rc  &= CheckOneRGB_f(ContextID, xform2, 1, 1, 1,       0.2741748, 0, 0,                   0.01);
-    rc  &= CheckOneRGB_f(ContextID, xform2, 127, 127, 127, 53.192776, 0, 0,                   0.01);
-    rc  &= CheckOneRGB_f(ContextID, xform2, 190, 25, 210,  47.052136, 74.565610, -56.883274,  0.01);
-    rc  &= CheckOneRGB_f(ContextID, xform2, 128, 0, 0,     26.164701, 48.478171, 39.4384713,  0.01);
+    rc  &= CheckOneRGB_f(xform2, 1, 1, 1,       0.2741748, 0, 0,                   0.01);
+    rc  &= CheckOneRGB_f(xform2, 127, 127, 127, 53.192776, 0, 0,                   0.01);
+    rc  &= CheckOneRGB_f(xform2, 190, 25, 210,  47.052136, 74.565610, -56.883274,  0.01);
+    rc  &= CheckOneRGB_f(xform2, 128, 0, 0,     26.164701, 48.478171, 39.4384713,  0.01);
 
-    cmsDeleteTransform(ContextID, xform1);
-    cmsDeleteTransform(ContextID, xform2);
+    cmsDeleteTransform(xform1);
+    cmsDeleteTransform(xform2);
     return rc;
 }
 
@@ -6502,13 +6502,13 @@ cmsBool GetProfileRGBPrimaries(cmsContext ContextID,
     hXYZ = cmsCreateXYZProfile(ContextID);
     if (hXYZ == NULL) return FALSE;
 
-    hTransform = cmsCreateTransform(ContextID, hProfile, TYPE_RGB_DBL, hXYZ, TYPE_XYZ_DBL,
+    hTransform = cmsCreateTransform(hProfile, TYPE_RGB_DBL, hXYZ, TYPE_XYZ_DBL,
         intent, cmsFLAGS_NOCACHE | cmsFLAGS_NOOPTIMIZE);
-    cmsCloseProfile(ContextID, hXYZ);
+    cmsCloseProfile(hXYZ);
     if (hTransform == NULL) return FALSE;
 
-    cmsDoTransform(ContextID, hTransform, rgb, result, 3);
-    cmsDeleteTransform(ContextID, hTransform);
+    cmsDoTransform(hTransform, rgb, result, 3);
+    cmsDeleteTransform(hTransform);
     return TRUE;
 }
 
@@ -6521,19 +6521,19 @@ int CheckRGBPrimaries(cmsContext ContextID)
     cmsCIExyYTRIPLE tripxyY;
     cmsBool result;
 
-    cmsSetAdaptationState(ContextID, 0);
+    cmsSetAdaptationState(0);
     hsRGB = cmsCreate_sRGBProfile(ContextID);
     if (!hsRGB) return 0;
 
-    result = GetProfileRGBPrimaries(ContextID, hsRGB, &tripXYZ,
+    result = GetProfileRGBPrimaries(hsRGB, &tripXYZ,
         INTENT_ABSOLUTE_COLORIMETRIC);
 
-    cmsCloseProfile(ContextID, hsRGB);
+    cmsCloseProfile(hsRGB);
     if (!result) return 0;
 
-    cmsXYZ2xyY(ContextID, &tripxyY.Red, &tripXYZ.Red);
-    cmsXYZ2xyY(ContextID, &tripxyY.Green, &tripXYZ.Green);
-    cmsXYZ2xyY(ContextID, &tripxyY.Blue, &tripXYZ.Blue);
+    cmsXYZ2xyY(&tripxyY.Red, &tripXYZ.Red);
+    cmsXYZ2xyY(&tripxyY.Green, &tripXYZ.Green);
+    cmsXYZ2xyY(&tripxyY.Blue, &tripXYZ.Blue);
 
     /* valus were taken from
     http://en.wikipedia.org/wiki/RGB_color_spaces#Specifications */
@@ -6557,10 +6557,10 @@ int CheckRGBPrimaries(cmsContext ContextID)
 // This function will check CMYK -> CMYK transforms. It uses FOGRA29 and SWOP ICC profiles
 
 static
-cmsInt32Number CheckCMYK(cmsContext ContextID, cmsInt32Number Intent, const char *Profile1, const char* Profile2)
+cmsInt32Number CheckCMYK(cmsInt32Number Intent, const char *Profile1, const char* Profile2)
 {
-    cmsHPROFILE hSWOP  = cmsOpenProfileFromFile(ContextID, Profile1, "r");
-    cmsHPROFILE hFOGRA = cmsOpenProfileFromFile(ContextID, Profile2, "r");
+    cmsHPROFILE hSWOP  = cmsOpenProfileFromFile(Profile1, "r");
+    cmsHPROFILE hFOGRA = cmsOpenProfileFromFile(Profile2, "r");
     cmsHTRANSFORM xform, swop_lab, fogra_lab;
     cmsFloat32Number CMYK1[4], CMYK2[4];
     cmsCIELab Lab1, Lab2;
@@ -6568,12 +6568,12 @@ cmsInt32Number CheckCMYK(cmsContext ContextID, cmsInt32Number Intent, const char
     cmsFloat64Number DeltaL, Max;
     cmsInt32Number i;
 
-    hLab = cmsCreateLab4Profile(ContextID, NULL);
+    hLab = cmsCreateLab4Profile(NULL);
 
-    xform = cmsCreateTransform(ContextID, hSWOP, TYPE_CMYK_FLT, hFOGRA, TYPE_CMYK_FLT, Intent, 0);
+    xform = cmsCreateTransform(hSWOP, TYPE_CMYK_FLT, hFOGRA, TYPE_CMYK_FLT, Intent, 0);
 
-    swop_lab = cmsCreateTransform(ContextID, hSWOP,   TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, Intent, 0);
-    fogra_lab = cmsCreateTransform(ContextID, hFOGRA, TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, Intent, 0);
+    swop_lab = cmsCreateTransform(hSWOP,   TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, Intent, 0);
+    fogra_lab = cmsCreateTransform(hFOGRA, TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, Intent, 0);
 
     Max = 0;
     for (i=0; i <= 100; i++) {
@@ -6583,9 +6583,9 @@ cmsInt32Number CheckCMYK(cmsContext ContextID, cmsInt32Number Intent, const char
         CMYK1[2] = 30;
         CMYK1[3] = (cmsFloat32Number) i;
 
-        cmsDoTransform(ContextID, swop_lab, CMYK1, &Lab1, 1);
-        cmsDoTransform(ContextID, xform, CMYK1, CMYK2, 1);
-        cmsDoTransform(ContextID, fogra_lab, CMYK2, &Lab2, 1);
+        cmsDoTransform(swop_lab, CMYK1, &Lab1, 1);
+        cmsDoTransform(xform, CMYK1, CMYK2, 1);
+        cmsDoTransform(fogra_lab, CMYK2, &Lab2, 1);
 
         DeltaL = fabs(Lab1.L - Lab2.L);
 
@@ -6593,10 +6593,10 @@ cmsInt32Number CheckCMYK(cmsContext ContextID, cmsInt32Number Intent, const char
     }
 
 
-    cmsDeleteTransform(ContextID, xform);
+    cmsDeleteTransform(xform);
 
 
-    xform = cmsCreateTransform(ContextID,  hFOGRA, TYPE_CMYK_FLT, hSWOP, TYPE_CMYK_FLT, Intent, 0);
+    xform = cmsCreateTransform( hFOGRA, TYPE_CMYK_FLT, hSWOP, TYPE_CMYK_FLT, Intent, 0);
 
     for (i=0; i <= 100; i++) {
         CMYK1[0] = 10;
@@ -6604,9 +6604,9 @@ cmsInt32Number CheckCMYK(cmsContext ContextID, cmsInt32Number Intent, const char
         CMYK1[2] = 30;
         CMYK1[3] = (cmsFloat32Number) i;
 
-        cmsDoTransform(ContextID, fogra_lab, CMYK1, &Lab1, 1);
-        cmsDoTransform(ContextID, xform, CMYK1, CMYK2, 1);
-        cmsDoTransform(ContextID, swop_lab, CMYK2, &Lab2, 1);
+        cmsDoTransform(fogra_lab, CMYK1, &Lab1, 1);
+        cmsDoTransform(xform, CMYK1, CMYK2, 1);
+        cmsDoTransform(swop_lab, CMYK2, &Lab2, 1);
 
         DeltaL = fabs(Lab1.L - Lab2.L);
 
@@ -6614,13 +6614,13 @@ cmsInt32Number CheckCMYK(cmsContext ContextID, cmsInt32Number Intent, const char
     }
 
 
-    cmsCloseProfile(ContextID, hSWOP);
-    cmsCloseProfile(ContextID, hFOGRA);
-    cmsCloseProfile(ContextID, hLab);
+    cmsCloseProfile(hSWOP);
+    cmsCloseProfile(hFOGRA);
+    cmsCloseProfile(hLab);
 
-    cmsDeleteTransform(ContextID, xform);
-    cmsDeleteTransform(ContextID, swop_lab);
-    cmsDeleteTransform(ContextID, fogra_lab);
+    cmsDeleteTransform(xform);
+    cmsDeleteTransform(swop_lab);
+    cmsDeleteTransform(fogra_lab);
 
     return Max < 3.0;
 }
@@ -6628,14 +6628,14 @@ cmsInt32Number CheckCMYK(cmsContext ContextID, cmsInt32Number Intent, const char
 static
 cmsInt32Number CheckCMYKRoundtrip(cmsContext ContextID)
 {
-    return CheckCMYK(ContextID, INTENT_RELATIVE_COLORIMETRIC, "test1.icc", "test1.icc");
+    return CheckCMYK(INTENT_RELATIVE_COLORIMETRIC, "test1.icc", "test1.icc");
 }
 
 
 static
 cmsInt32Number CheckCMYKPerceptual(cmsContext ContextID)
 {
-    return CheckCMYK(ContextID, INTENT_PERCEPTUAL, "test1.icc", "test2.icc");
+    return CheckCMYK(INTENT_PERCEPTUAL, "test1.icc", "test2.icc");
 }
 
 
@@ -6643,7 +6643,7 @@ cmsInt32Number CheckCMYKPerceptual(cmsContext ContextID)
 static
 cmsInt32Number CheckCMYKRelCol(cmsContext ContextID)
 {
-    return CheckCMYK(ContextID, INTENT_RELATIVE_COLORIMETRIC, "test1.icc", "test2.icc");
+    return CheckCMYK(INTENT_RELATIVE_COLORIMETRIC, "test1.icc", "test2.icc");
 }
 #endif
 
@@ -6651,8 +6651,8 @@ cmsInt32Number CheckCMYKRelCol(cmsContext ContextID)
 static
 cmsInt32Number CheckKOnlyBlackPreserving(cmsContext ContextID)
 {
-    cmsHPROFILE hSWOP  = cmsOpenProfileFromFile(ContextID, "test1.icc", "r");
-    cmsHPROFILE hFOGRA = cmsOpenProfileFromFile(ContextID, "test2.icc", "r");
+    cmsHPROFILE hSWOP  = cmsOpenProfileFromFile("test1.icc", "r");
+    cmsHPROFILE hFOGRA = cmsOpenProfileFromFile("test2.icc", "r");
     cmsHTRANSFORM xform, swop_lab, fogra_lab;
     cmsFloat32Number CMYK1[4], CMYK2[4];
     cmsCIELab Lab1, Lab2;
@@ -6660,12 +6660,12 @@ cmsInt32Number CheckKOnlyBlackPreserving(cmsContext ContextID)
     cmsFloat64Number DeltaL, Max;
     cmsInt32Number i;
 
-    hLab = cmsCreateLab4Profile(ContextID, NULL);
+    hLab = cmsCreateLab4Profile(NULL);
 
-    xform = cmsCreateTransform(ContextID, hSWOP, TYPE_CMYK_FLT, hFOGRA, TYPE_CMYK_FLT, INTENT_PRESERVE_K_ONLY_PERCEPTUAL, 0);
+    xform = cmsCreateTransform(hSWOP, TYPE_CMYK_FLT, hFOGRA, TYPE_CMYK_FLT, INTENT_PRESERVE_K_ONLY_PERCEPTUAL, 0);
 
-    swop_lab = cmsCreateTransform(ContextID, hSWOP,   TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, INTENT_PERCEPTUAL, 0);
-    fogra_lab = cmsCreateTransform(ContextID, hFOGRA, TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, INTENT_PERCEPTUAL, 0);
+    swop_lab = cmsCreateTransform(hSWOP,   TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, INTENT_PERCEPTUAL, 0);
+    fogra_lab = cmsCreateTransform(hFOGRA, TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, INTENT_PERCEPTUAL, 0);
 
     Max = 0;
 
@@ -6676,13 +6676,13 @@ cmsInt32Number CheckKOnlyBlackPreserving(cmsContext ContextID)
         CMYK1[3] = (cmsFloat32Number) i;
 
         // SWOP CMYK to Lab1
-        cmsDoTransform(ContextID, swop_lab, CMYK1, &Lab1, 1);
+        cmsDoTransform(swop_lab, CMYK1, &Lab1, 1);
 
         // SWOP To FOGRA using black preservation
-        cmsDoTransform(ContextID, xform, CMYK1, CMYK2, 1);
+        cmsDoTransform(xform, CMYK1, CMYK2, 1);
 
         // Obtained FOGRA CMYK to Lab2
-        cmsDoTransform(ContextID, fogra_lab, CMYK2, &Lab2, 1);
+        cmsDoTransform(fogra_lab, CMYK2, &Lab2, 1);
 
         // We care only on L*
         DeltaL = fabs(Lab1.L - Lab2.L);
@@ -6691,13 +6691,13 @@ cmsInt32Number CheckKOnlyBlackPreserving(cmsContext ContextID)
     }
 
 
-    cmsDeleteTransform(ContextID, xform);
+    cmsDeleteTransform(xform);
 
     // dL should be below 3.0
 
 
     // Same, but FOGRA to SWOP
-    xform = cmsCreateTransform(ContextID, hFOGRA, TYPE_CMYK_FLT, hSWOP, TYPE_CMYK_FLT, INTENT_PRESERVE_K_ONLY_PERCEPTUAL, 0);
+    xform = cmsCreateTransform(hFOGRA, TYPE_CMYK_FLT, hSWOP, TYPE_CMYK_FLT, INTENT_PRESERVE_K_ONLY_PERCEPTUAL, 0);
 
     for (i=0; i <= 100; i++) {
         CMYK1[0] = 0;
@@ -6705,9 +6705,9 @@ cmsInt32Number CheckKOnlyBlackPreserving(cmsContext ContextID)
         CMYK1[2] = 0;
         CMYK1[3] = (cmsFloat32Number) i;
 
-        cmsDoTransform(ContextID, fogra_lab, CMYK1, &Lab1, 1);
-        cmsDoTransform(ContextID, xform, CMYK1, CMYK2, 1);
-        cmsDoTransform(ContextID, swop_lab, CMYK2, &Lab2, 1);
+        cmsDoTransform(fogra_lab, CMYK1, &Lab1, 1);
+        cmsDoTransform(xform, CMYK1, CMYK2, 1);
+        cmsDoTransform(swop_lab, CMYK2, &Lab2, 1);
 
         DeltaL = fabs(Lab1.L - Lab2.L);
 
@@ -6715,13 +6715,13 @@ cmsInt32Number CheckKOnlyBlackPreserving(cmsContext ContextID)
     }
 
 
-    cmsCloseProfile(ContextID, hSWOP);
-    cmsCloseProfile(ContextID, hFOGRA);
-    cmsCloseProfile(ContextID, hLab);
+    cmsCloseProfile(hSWOP);
+    cmsCloseProfile(hFOGRA);
+    cmsCloseProfile(hLab);
 
-    cmsDeleteTransform(ContextID, xform);
-    cmsDeleteTransform(ContextID, swop_lab);
-    cmsDeleteTransform(ContextID, fogra_lab);
+    cmsDeleteTransform(xform);
+    cmsDeleteTransform(swop_lab);
+    cmsDeleteTransform(fogra_lab);
 
     return Max < 3.0;
 }
@@ -6729,8 +6729,8 @@ cmsInt32Number CheckKOnlyBlackPreserving(cmsContext ContextID)
 static
 cmsInt32Number CheckKPlaneBlackPreserving(cmsContext ContextID)
 {
-    cmsHPROFILE hSWOP  = cmsOpenProfileFromFile(ContextID, "test1.icc", "r");
-    cmsHPROFILE hFOGRA = cmsOpenProfileFromFile(ContextID, "test2.icc", "r");
+    cmsHPROFILE hSWOP  = cmsOpenProfileFromFile("test1.icc", "r");
+    cmsHPROFILE hFOGRA = cmsOpenProfileFromFile("test2.icc", "r");
     cmsHTRANSFORM xform, swop_lab, fogra_lab;
     cmsFloat32Number CMYK1[4], CMYK2[4];
     cmsCIELab Lab1, Lab2;
@@ -6738,12 +6738,12 @@ cmsInt32Number CheckKPlaneBlackPreserving(cmsContext ContextID)
     cmsFloat64Number DeltaE, Max;
     cmsInt32Number i;
 
-    hLab = cmsCreateLab4Profile(ContextID, NULL);
+    hLab = cmsCreateLab4Profile(NULL);
 
-    xform = cmsCreateTransform(ContextID, hSWOP, TYPE_CMYK_FLT, hFOGRA, TYPE_CMYK_FLT, INTENT_PERCEPTUAL, 0);
+    xform = cmsCreateTransform(hSWOP, TYPE_CMYK_FLT, hFOGRA, TYPE_CMYK_FLT, INTENT_PERCEPTUAL, 0);
 
-    swop_lab = cmsCreateTransform(ContextID, hSWOP,  TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, INTENT_PERCEPTUAL, 0);
-    fogra_lab = cmsCreateTransform(ContextID, hFOGRA, TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, INTENT_PERCEPTUAL, 0);
+    swop_lab = cmsCreateTransform(hSWOP,  TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, INTENT_PERCEPTUAL, 0);
+    fogra_lab = cmsCreateTransform(hFOGRA, TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, INTENT_PERCEPTUAL, 0);
 
     Max = 0;
 
@@ -6753,19 +6753,19 @@ cmsInt32Number CheckKPlaneBlackPreserving(cmsContext ContextID)
         CMYK1[2] = 0;
         CMYK1[3] = (cmsFloat32Number) i;
 
-        cmsDoTransform(ContextID, swop_lab, CMYK1, &Lab1, 1);
-        cmsDoTransform(ContextID, xform, CMYK1, CMYK2, 1);
-        cmsDoTransform(ContextID, fogra_lab, CMYK2, &Lab2, 1);
+        cmsDoTransform(swop_lab, CMYK1, &Lab1, 1);
+        cmsDoTransform(xform, CMYK1, CMYK2, 1);
+        cmsDoTransform(fogra_lab, CMYK2, &Lab2, 1);
 
-        DeltaE = cmsDeltaE(ContextID, &Lab1, &Lab2);
+        DeltaE = cmsDeltaE(&Lab1, &Lab2);
 
         if (DeltaE > Max) Max = DeltaE;
     }
 
 
-    cmsDeleteTransform(ContextID, xform);
+    cmsDeleteTransform(xform);
 
-    xform = cmsCreateTransform(ContextID,  hFOGRA, TYPE_CMYK_FLT, hSWOP, TYPE_CMYK_FLT, INTENT_PRESERVE_K_PLANE_PERCEPTUAL, 0);
+    xform = cmsCreateTransform( hFOGRA, TYPE_CMYK_FLT, hSWOP, TYPE_CMYK_FLT, INTENT_PRESERVE_K_PLANE_PERCEPTUAL, 0);
 
     for (i=0; i <= 100; i++) {
         CMYK1[0] = 30;
@@ -6773,26 +6773,26 @@ cmsInt32Number CheckKPlaneBlackPreserving(cmsContext ContextID)
         CMYK1[2] = 10;
         CMYK1[3] = (cmsFloat32Number) i;
 
-        cmsDoTransform(ContextID, fogra_lab, CMYK1, &Lab1, 1);
-        cmsDoTransform(ContextID, xform, CMYK1, CMYK2, 1);
-        cmsDoTransform(ContextID, swop_lab, CMYK2, &Lab2, 1);
+        cmsDoTransform(fogra_lab, CMYK1, &Lab1, 1);
+        cmsDoTransform(xform, CMYK1, CMYK2, 1);
+        cmsDoTransform(swop_lab, CMYK2, &Lab2, 1);
 
-        DeltaE = cmsDeltaE(ContextID, &Lab1, &Lab2);
+        DeltaE = cmsDeltaE(&Lab1, &Lab2);
 
         if (DeltaE > Max) Max = DeltaE;
     }
 
-    cmsDeleteTransform(ContextID, xform);
+    cmsDeleteTransform(xform);
 
 
 
-    cmsCloseProfile(ContextID, hSWOP);
-    cmsCloseProfile(ContextID, hFOGRA);
-    cmsCloseProfile(ContextID, hLab);
+    cmsCloseProfile(hSWOP);
+    cmsCloseProfile(hFOGRA);
+    cmsCloseProfile(hLab);
 
 
-    cmsDeleteTransform(ContextID, swop_lab);
-    cmsDeleteTransform(ContextID, fogra_lab);
+    cmsDeleteTransform(swop_lab);
+    cmsDeleteTransform(fogra_lab);
 
     return Max < 30.0;
 }
@@ -6809,11 +6809,11 @@ cmsInt32Number CheckProofingXFORMFloat(cmsContext ContextID)
     cmsInt32Number rc;
 
     hAbove = Create_AboveRGB(ContextID);
-    xform =  cmsCreateProofingTransform(ContextID, hAbove, TYPE_RGB_FLT, hAbove, TYPE_RGB_FLT, hAbove,
+    xform =  cmsCreateProofingTransform(hAbove, TYPE_RGB_FLT, hAbove, TYPE_RGB_FLT, hAbove,
                                 INTENT_RELATIVE_COLORIMETRIC, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_SOFTPROOFING);
-    cmsCloseProfile(ContextID, hAbove);
-    rc = CheckFloatlinearXFORM(ContextID, xform, 3);
-    cmsDeleteTransform(ContextID, xform);
+    cmsCloseProfile(hAbove);
+    rc = CheckFloatlinearXFORM(xform, 3);
+    cmsDeleteTransform(xform);
     return rc;
 }
 
@@ -6825,11 +6825,11 @@ cmsInt32Number CheckProofingXFORM16(cmsContext ContextID)
     cmsInt32Number rc;
 
     hAbove = Create_AboveRGB(ContextID);
-    xform =  cmsCreateProofingTransform(ContextID, hAbove, TYPE_RGB_16, hAbove, TYPE_RGB_16, hAbove,
+    xform =  cmsCreateProofingTransform(hAbove, TYPE_RGB_16, hAbove, TYPE_RGB_16, hAbove,
                                 INTENT_RELATIVE_COLORIMETRIC, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_SOFTPROOFING|cmsFLAGS_NOCACHE);
-    cmsCloseProfile(ContextID, hAbove);
-    rc = Check16linearXFORM(ContextID, xform, 3);
-    cmsDeleteTransform(ContextID, xform);
+    cmsCloseProfile(hAbove);
+    rc = Check16linearXFORM(xform, 3);
+    cmsDeleteTransform(xform);
     return rc;
 }
 
@@ -6843,7 +6843,7 @@ cmsInt32Number CheckGamutCheck(cmsContext ContextID)
         cmsUInt16Number Alarm[16] = { 0xDEAD, 0xBABE, 0xFACE };
 
         // Set alarm codes to fancy values so we could check the out of gamut condition
-        cmsSetAlarmCodes(ContextID, Alarm);
+        cmsSetAlarmCodes(Alarm);
 
         // Create the profiles
         hSRGB  = cmsCreate_sRGBProfile(ContextID);
@@ -6854,31 +6854,31 @@ cmsInt32Number CheckGamutCheck(cmsContext ContextID)
         SubTest("Gamut check on floating point");
 
         // Create a gamut checker in the same space. No value should be out of gamut
-        xform = cmsCreateProofingTransform(ContextID, hAbove, TYPE_RGB_FLT, hAbove, TYPE_RGB_FLT, hAbove,
+        xform = cmsCreateProofingTransform(hAbove, TYPE_RGB_FLT, hAbove, TYPE_RGB_FLT, hAbove,
                                 INTENT_RELATIVE_COLORIMETRIC, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_GAMUTCHECK);
 
 
-        if (!CheckFloatlinearXFORM(ContextID, xform, 3)) {
-            cmsCloseProfile(ContextID, hSRGB);
-            cmsCloseProfile(ContextID, hAbove);
-            cmsDeleteTransform(ContextID, xform);
+        if (!CheckFloatlinearXFORM(xform, 3)) {
+            cmsCloseProfile(hSRGB);
+            cmsCloseProfile(hAbove);
+            cmsDeleteTransform(xform);
             Fail("Gamut check on same profile failed");
             return 0;
         }
 
-        cmsDeleteTransform(ContextID, xform);
+        cmsDeleteTransform(xform);
 
         SubTest("Gamut check on 16 bits");
 
-        xform = cmsCreateProofingTransform(ContextID, hAbove, TYPE_RGB_16, hAbove, TYPE_RGB_16, hSRGB,
+        xform = cmsCreateProofingTransform(hAbove, TYPE_RGB_16, hAbove, TYPE_RGB_16, hSRGB,
                                 INTENT_RELATIVE_COLORIMETRIC, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_GAMUTCHECK);
 
-        cmsCloseProfile(ContextID, hSRGB);
-        cmsCloseProfile(ContextID, hAbove);
+        cmsCloseProfile(hSRGB);
+        cmsCloseProfile(hAbove);
 
-        rc = Check16linearXFORM(ContextID, xform, 3);
+        rc = Check16linearXFORM(xform, 3);
 
-        cmsDeleteTransform(ContextID, xform);
+        cmsDeleteTransform(xform);
 
         return rc;
 }
@@ -6894,48 +6894,48 @@ cmsInt32Number CheckBlackPoint(cmsContext ContextID)
     cmsCIEXYZ Black;
     cmsCIELab Lab;
 
-    hProfile  = cmsOpenProfileFromFile(ContextID, "test5.icc", "r");
-    cmsDetectDestinationBlackPoint(ContextID, &Black, hProfile, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsCloseProfile(ContextID, hProfile);
+    hProfile  = cmsOpenProfileFromFile("test5.icc", "r");
+    cmsDetectDestinationBlackPoint(&Black, hProfile, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsCloseProfile(hProfile);
 
 
-    hProfile = cmsOpenProfileFromFile(ContextID, "test1.icc", "r");
-    cmsDetectDestinationBlackPoint(ContextID, &Black, hProfile, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsXYZ2Lab(ContextID, NULL, &Lab, &Black);
-    cmsCloseProfile(ContextID, hProfile);
+    hProfile = cmsOpenProfileFromFile("test1.icc", "r");
+    cmsDetectDestinationBlackPoint(&Black, hProfile, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsXYZ2Lab(NULL, &Lab, &Black);
+    cmsCloseProfile(hProfile);
 
-    hProfile = cmsOpenProfileFromFile(ContextID, "lcms2cmyk.icc", "r");
-    cmsDetectDestinationBlackPoint(ContextID, &Black, hProfile, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsXYZ2Lab(ContextID, NULL, &Lab, &Black);
-    cmsCloseProfile(ContextID, hProfile);
+    hProfile = cmsOpenProfileFromFile("lcms2cmyk.icc", "r");
+    cmsDetectDestinationBlackPoint(&Black, hProfile, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsXYZ2Lab(NULL, &Lab, &Black);
+    cmsCloseProfile(hProfile);
 
-    hProfile = cmsOpenProfileFromFile(ContextID, "test2.icc", "r");
-    cmsDetectDestinationBlackPoint(ContextID, &Black, hProfile, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsXYZ2Lab(ContextID, NULL, &Lab, &Black);
-    cmsCloseProfile(ContextID, hProfile);
+    hProfile = cmsOpenProfileFromFile("test2.icc", "r");
+    cmsDetectDestinationBlackPoint(&Black, hProfile, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsXYZ2Lab(NULL, &Lab, &Black);
+    cmsCloseProfile(hProfile);
 
-    hProfile = cmsOpenProfileFromFile(ContextID, "test1.icc", "r");
-    cmsDetectDestinationBlackPoint(ContextID, &Black, hProfile, INTENT_PERCEPTUAL, 0);
-    cmsXYZ2Lab(ContextID, NULL, &Lab, &Black);
-    cmsCloseProfile(ContextID, hProfile);
+    hProfile = cmsOpenProfileFromFile("test1.icc", "r");
+    cmsDetectDestinationBlackPoint(&Black, hProfile, INTENT_PERCEPTUAL, 0);
+    cmsXYZ2Lab(NULL, &Lab, &Black);
+    cmsCloseProfile(hProfile);
 
     return 1;
 }
 
 
 static
-cmsInt32Number CheckOneTAC(cmsContext ContextID, cmsFloat64Number InkLimit)
+cmsInt32Number CheckOneTAC(cmsFloat64Number InkLimit)
 {
     cmsHPROFILE h;
     cmsFloat64Number d;
 
-    h =CreateFakeCMYK(ContextID, InkLimit, TRUE);
-    cmsSaveProfileToFile(ContextID, h, "lcmstac.icc");
-    cmsCloseProfile(ContextID, h);
+    h =CreateFakeCMYK(InkLimit, TRUE);
+    cmsSaveProfileToFile(h, "lcmstac.icc");
+    cmsCloseProfile(h);
 
-    h = cmsOpenProfileFromFile(ContextID, "lcmstac.icc", "r");
-    d = cmsDetectTAC(ContextID, h);
-    cmsCloseProfile(ContextID, h);
+    h = cmsOpenProfileFromFile("lcmstac.icc", "r");
+    d = cmsDetectTAC(h);
+    cmsCloseProfile(h);
 
     remove("lcmstac.icc");
 
@@ -6948,11 +6948,11 @@ cmsInt32Number CheckOneTAC(cmsContext ContextID, cmsFloat64Number InkLimit)
 static
 cmsInt32Number CheckTAC(cmsContext ContextID)
 {
-    if (!CheckOneTAC(ContextID, 180)) return 0;
-    if (!CheckOneTAC(ContextID, 220)) return 0;
-    if (!CheckOneTAC(ContextID, 286)) return 0;
-    if (!CheckOneTAC(ContextID, 310)) return 0;
-    if (!CheckOneTAC(ContextID, 330)) return 0;
+    if (!CheckOneTAC(180)) return 0;
+    if (!CheckOneTAC(220)) return 0;
+    if (!CheckOneTAC(286)) return 0;
+    if (!CheckOneTAC(310)) return 0;
+    if (!CheckOneTAC(330)) return 0;
 
     return 1;
 }
@@ -6972,21 +6972,21 @@ cmsInt32Number CheckCGATS(cmsContext ContextID)
     it8 = cmsIT8Alloc(ContextID);
     if (it8 == NULL) return 0;
 
-    cmsIT8SetSheetType(ContextID, it8, "LCMS/TESTING");
-    cmsIT8SetPropertyStr(ContextID, it8, "ORIGINATOR",   "1 2 3 4");
-    cmsIT8SetPropertyUncooked(ContextID, it8, "DESCRIPTOR",   "1234");
-    cmsIT8SetPropertyStr(ContextID, it8, "MANUFACTURER", "3");
-    cmsIT8SetPropertyDbl(ContextID, it8, "CREATED",      4);
-    cmsIT8SetPropertyDbl(ContextID, it8, "SERIAL",       5);
-    cmsIT8SetPropertyHex(ContextID, it8, "MATERIAL",     0x123);
+    cmsIT8SetSheetType(it8, "LCMS/TESTING");
+    cmsIT8SetPropertyStr(it8, "ORIGINATOR",   "1 2 3 4");
+    cmsIT8SetPropertyUncooked(it8, "DESCRIPTOR",   "1234");
+    cmsIT8SetPropertyStr(it8, "MANUFACTURER", "3");
+    cmsIT8SetPropertyDbl(it8, "CREATED",      4);
+    cmsIT8SetPropertyDbl(it8, "SERIAL",       5);
+    cmsIT8SetPropertyHex(it8, "MATERIAL",     0x123);
 
-    cmsIT8SetPropertyDbl(ContextID, it8, "NUMBER_OF_SETS", NPOINTS_IT8);
-    cmsIT8SetPropertyDbl(ContextID, it8, "NUMBER_OF_FIELDS", 4);
+    cmsIT8SetPropertyDbl(it8, "NUMBER_OF_SETS", NPOINTS_IT8);
+    cmsIT8SetPropertyDbl(it8, "NUMBER_OF_FIELDS", 4);
 
-    cmsIT8SetDataFormat(ContextID, it8, 0, "SAMPLE_ID");
-    cmsIT8SetDataFormat(ContextID, it8, 1, "RGB_R");
-    cmsIT8SetDataFormat(ContextID, it8, 2, "RGB_G");
-    cmsIT8SetDataFormat(ContextID, it8, 3, "RGB_B");
+    cmsIT8SetDataFormat(it8, 0, "SAMPLE_ID");
+    cmsIT8SetDataFormat(it8, 1, "RGB_R");
+    cmsIT8SetDataFormat(it8, 2, "RGB_G");
+    cmsIT8SetDataFormat(it8, 3, "RGB_B");
 
     SubTest("Table creation");
     for (i=0; i < NPOINTS_IT8; i++) {
@@ -6995,73 +6995,73 @@ cmsInt32Number CheckCGATS(cmsContext ContextID)
 
           sprintf(Patch, "P%d", i);
 
-          cmsIT8SetDataRowCol(ContextID, it8, i, 0, Patch);
-          cmsIT8SetDataRowColDbl(ContextID, it8, i, 1, i);
-          cmsIT8SetDataRowColDbl(ContextID, it8, i, 2, i);
-          cmsIT8SetDataRowColDbl(ContextID, it8, i, 3, i);
+          cmsIT8SetDataRowCol(it8, i, 0, Patch);
+          cmsIT8SetDataRowColDbl(it8, i, 1, i);
+          cmsIT8SetDataRowColDbl(it8, i, 2, i);
+          cmsIT8SetDataRowColDbl(it8, i, 3, i);
     }
 
     SubTest("Save to file");
-    cmsIT8SaveToFile(ContextID, it8, "TEST.IT8");
-    cmsIT8Free(ContextID, it8);
+    cmsIT8SaveToFile(it8, "TEST.IT8");
+    cmsIT8Free(it8);
 
     SubTest("Load from file");
-    it8 = cmsIT8LoadFromFile(ContextID, "TEST.IT8");
+    it8 = cmsIT8LoadFromFile("TEST.IT8");
     if (it8 == NULL) return 0;
 
     SubTest("Save again file");
-    cmsIT8SaveToFile(ContextID, it8, "TEST.IT8");
-    cmsIT8Free(ContextID, it8);
+    cmsIT8SaveToFile(it8, "TEST.IT8");
+    cmsIT8Free(it8);
 
 
     SubTest("Load from file (II)");
-    it8 = cmsIT8LoadFromFile(ContextID, "TEST.IT8");
+    it8 = cmsIT8LoadFromFile("TEST.IT8");
     if (it8 == NULL) return 0;
 
 
      SubTest("Change prop value");
-    if (cmsIT8GetPropertyDbl(ContextID, it8, "DESCRIPTOR") != 1234) {
+    if (cmsIT8GetPropertyDbl(it8, "DESCRIPTOR") != 1234) {
 
         return 0;
     }
 
 
-    cmsIT8SetPropertyDbl(ContextID, it8, "DESCRIPTOR", 5678);
-    if (cmsIT8GetPropertyDbl(ContextID, it8, "DESCRIPTOR") != 5678) {
+    cmsIT8SetPropertyDbl(it8, "DESCRIPTOR", 5678);
+    if (cmsIT8GetPropertyDbl(it8, "DESCRIPTOR") != 5678) {
 
         return 0;
     }
 
      SubTest("Positive numbers");
-    if (cmsIT8GetDataDbl(ContextID, it8, "P3", "RGB_G") != 3) {
+    if (cmsIT8GetDataDbl(it8, "P3", "RGB_G") != 3) {
 
         return 0;
     }
 
 
      SubTest("Positive exponent numbers");
-     cmsIT8SetPropertyDbl(ContextID, it8, "DBL_PROP", 123E+12);
-     if ((cmsIT8GetPropertyDbl(ContextID, it8, "DBL_PROP") - 123E+12) > 1 ) {
+     cmsIT8SetPropertyDbl(it8, "DBL_PROP", 123E+12);
+     if ((cmsIT8GetPropertyDbl(it8, "DBL_PROP") - 123E+12) > 1 ) {
 
         return 0;
     }
 
     SubTest("Negative exponent numbers");
-    cmsIT8SetPropertyDbl(ContextID, it8, "DBL_PROP_NEG", 123E-45);
-     if ((cmsIT8GetPropertyDbl(ContextID, it8, "DBL_PROP_NEG") - 123E-45) > 1E-45 ) {
+    cmsIT8SetPropertyDbl(it8, "DBL_PROP_NEG", 123E-45);
+     if ((cmsIT8GetPropertyDbl(it8, "DBL_PROP_NEG") - 123E-45) > 1E-45 ) {
 
         return 0;
     }
 
 
     SubTest("Negative numbers");
-    cmsIT8SetPropertyDbl(ContextID, it8, "DBL_NEG_VAL", -123);
-    if ((cmsIT8GetPropertyDbl(ContextID, it8, "DBL_NEG_VAL")) != -123 ) {
+    cmsIT8SetPropertyDbl(it8, "DBL_NEG_VAL", -123);
+    if ((cmsIT8GetPropertyDbl(it8, "DBL_NEG_VAL")) != -123 ) {
 
         return 0;
     }
 
-    cmsIT8Free(ContextID, it8);
+    cmsIT8Free(it8);
 
     remove("TEST.IT8");
     return 1;
@@ -7075,9 +7075,9 @@ cmsInt32Number CheckCGATS2(cmsContext ContextID)
     cmsHANDLE handle;
     const cmsUInt8Number junk[] = { 0x0, 0xd, 0xd, 0xa, 0x20, 0xd, 0x20, 0x20, 0x20, 0x3a, 0x31, 0x3d, 0x3d, 0x3d, 0x3d };
 
-    handle = cmsIT8LoadFromMem(ContextID, (const void*)junk, sizeof(junk));
+    handle = cmsIT8LoadFromMem((const void*)junk, sizeof(junk));
     if (handle)
-        cmsIT8Free(ContextID, handle);
+        cmsIT8Free(handle);
 
     return 1;
 }
@@ -7089,9 +7089,9 @@ cmsInt32Number CheckCGATS_Overflow(cmsContext ContextID)
     cmsHANDLE handle;
     const cmsUInt8Number junk[] = { "@\nA 1.e2147483648\n" };
 
-    handle = cmsIT8LoadFromMem(ContextID, (const void*)junk, sizeof(junk));
+    handle = cmsIT8LoadFromMem((const void*)junk, sizeof(junk));
     if (handle)
-        cmsIT8Free(ContextID, handle);
+        cmsIT8Free(handle);
 
     return 1;
 }
@@ -7168,30 +7168,30 @@ void GenerateCRD(cmsContext BuffThread, const char* cOutProf, const char* FileNa
 static
 cmsInt32Number CheckPostScript(cmsContext ContextID)
 {
-    GenerateCSA(ContextID, "test5.icc", "sRGB_CSA.ps");
-    GenerateCSA(ContextID, "aRGBlcms2.icc", "aRGB_CSA.ps");
-    GenerateCSA(ContextID, "test4.icc", "sRGBV4_CSA.ps");
-    GenerateCSA(ContextID, "test1.icc", "SWOP_CSA.ps");
-    GenerateCSA(ContextID, NULL, "Lab_CSA.ps");
-    GenerateCSA(ContextID, "graylcms2.icc", "gray_CSA.ps");
+    GenerateCSA("test5.icc", "sRGB_CSA.ps");
+    GenerateCSA("aRGBlcms2.icc", "aRGB_CSA.ps");
+    GenerateCSA("test4.icc", "sRGBV4_CSA.ps");
+    GenerateCSA("test1.icc", "SWOP_CSA.ps");
+    GenerateCSA(NULL, "Lab_CSA.ps");
+    GenerateCSA("graylcms2.icc", "gray_CSA.ps");
 
-    GenerateCRD(ContextID, "test5.icc", "sRGB_CRD.ps");
-    GenerateCRD(ContextID, "aRGBlcms2.icc", "aRGB_CRD.ps");
-    GenerateCRD(ContextID, NULL, "Lab_CRD.ps");
-    GenerateCRD(ContextID, "test1.icc", "SWOP_CRD.ps");
-    GenerateCRD(ContextID, "test4.icc", "sRGBV4_CRD.ps");
-    GenerateCRD(ContextID, "graylcms2.icc", "gray_CRD.ps");
+    GenerateCRD("test5.icc", "sRGB_CRD.ps");
+    GenerateCRD("aRGBlcms2.icc", "aRGB_CRD.ps");
+    GenerateCRD(NULL, "Lab_CRD.ps");
+    GenerateCRD("test1.icc", "SWOP_CRD.ps");
+    GenerateCRD("test4.icc", "sRGBV4_CRD.ps");
+    GenerateCRD("graylcms2.icc", "gray_CRD.ps");
 
     return 1;
 }
 
 
 static
-cmsInt32Number CheckGray(cmsContext ContextID, cmsHTRANSFORM xform, cmsUInt8Number g, double L)
+cmsInt32Number CheckGray(cmsHTRANSFORM xform, cmsUInt8Number g, double L)
 {
     cmsCIELab Lab;
 
-    cmsDoTransform(ContextID, xform, &g, &Lab, 1);
+    cmsDoTransform(xform, &g, &Lab, 1);
 
     if (!IsGoodVal("a axis on gray", 0, Lab.a, 0.001)) return 0;
     if (!IsGoodVal("b axis on gray", 0, Lab.b, 0.001)) return 0;
@@ -7203,20 +7203,20 @@ static
 cmsInt32Number CheckInputGray(cmsContext ContextID)
 {
     cmsHPROFILE hGray = Create_Gray22(ContextID);
-    cmsHPROFILE hLab  = cmsCreateLab4Profile(ContextID, NULL);
+    cmsHPROFILE hLab  = cmsCreateLab4Profile(NULL);
     cmsHTRANSFORM xform;
 
     if (hGray == NULL || hLab == NULL) return 0;
 
-    xform = cmsCreateTransform(ContextID, hGray, TYPE_GRAY_8, hLab, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsCloseProfile(ContextID, hGray); cmsCloseProfile(ContextID, hLab);
+    xform = cmsCreateTransform(hGray, TYPE_GRAY_8, hLab, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsCloseProfile(hGray); cmsCloseProfile(hLab);
 
-    if (!CheckGray(ContextID, xform, 0, 0)) return 0;
-    if (!CheckGray(ContextID, xform, 125, 52.768)) return 0;
-    if (!CheckGray(ContextID, xform, 200, 81.069)) return 0;
-    if (!CheckGray(ContextID, xform, 255, 100.0)) return 0;
+    if (!CheckGray(xform, 0, 0)) return 0;
+    if (!CheckGray(xform, 125, 52.768)) return 0;
+    if (!CheckGray(xform, 200, 81.069)) return 0;
+    if (!CheckGray(xform, 255, 100.0)) return 0;
 
-    cmsDeleteTransform(ContextID, xform);
+    cmsDeleteTransform(xform);
     return 1;
 }
 
@@ -7224,26 +7224,26 @@ static
 cmsInt32Number CheckLabInputGray(cmsContext ContextID)
 {
     cmsHPROFILE hGray = Create_GrayLab(ContextID);
-    cmsHPROFILE hLab  = cmsCreateLab4Profile(ContextID, NULL);
+    cmsHPROFILE hLab  = cmsCreateLab4Profile(NULL);
     cmsHTRANSFORM xform;
 
     if (hGray == NULL || hLab == NULL) return 0;
 
-    xform = cmsCreateTransform(ContextID, hGray, TYPE_GRAY_8, hLab, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsCloseProfile(ContextID, hGray); cmsCloseProfile(ContextID, hLab);
+    xform = cmsCreateTransform(hGray, TYPE_GRAY_8, hLab, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsCloseProfile(hGray); cmsCloseProfile(hLab);
 
-    if (!CheckGray(ContextID, xform, 0, 0)) return 0;
-    if (!CheckGray(ContextID, xform, 125, 49.019)) return 0;
-    if (!CheckGray(ContextID, xform, 200, 78.431)) return 0;
-    if (!CheckGray(ContextID, xform, 255, 100.0)) return 0;
+    if (!CheckGray(xform, 0, 0)) return 0;
+    if (!CheckGray(xform, 125, 49.019)) return 0;
+    if (!CheckGray(xform, 200, 78.431)) return 0;
+    if (!CheckGray(xform, 255, 100.0)) return 0;
 
-    cmsDeleteTransform(ContextID, xform);
+    cmsDeleteTransform(xform);
     return 1;
 }
 
 
 static
-cmsInt32Number CheckOutGray(cmsContext ContextID, cmsHTRANSFORM xform, double L, cmsUInt8Number g)
+cmsInt32Number CheckOutGray(cmsHTRANSFORM xform, double L, cmsUInt8Number g)
 {
     cmsCIELab Lab;
     cmsUInt8Number g_out;
@@ -7252,7 +7252,7 @@ cmsInt32Number CheckOutGray(cmsContext ContextID, cmsHTRANSFORM xform, double L,
     Lab.a = 0;
     Lab.b = 0;
 
-    cmsDoTransform(ContextID, xform, &Lab, &g_out, 1);
+    cmsDoTransform(xform, &Lab, &g_out, 1);
 
     return IsGoodVal("Gray value", g, (double) g_out, 0.01);
 }
@@ -7261,22 +7261,22 @@ static
 cmsInt32Number CheckOutputGray(cmsContext ContextID)
 {
     cmsHPROFILE hGray = Create_Gray22(ContextID);
-    cmsHPROFILE hLab  = cmsCreateLab4Profile(ContextID, NULL);
+    cmsHPROFILE hLab  = cmsCreateLab4Profile(NULL);
     cmsHTRANSFORM xform;
 
     if (hGray == NULL || hLab == NULL) return 0;
 
-    xform = cmsCreateTransform(ContextID, hLab, TYPE_Lab_DBL, hGray, TYPE_GRAY_8, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsCloseProfile(ContextID, hGray); cmsCloseProfile(ContextID, hLab);
+    xform = cmsCreateTransform(hLab, TYPE_Lab_DBL, hGray, TYPE_GRAY_8, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsCloseProfile(hGray); cmsCloseProfile(hLab);
 
-    if (!CheckOutGray(ContextID, xform, 0, 0)) return 0;
-    if (!CheckOutGray(ContextID, xform, 100, 255)) return 0;
+    if (!CheckOutGray(xform, 0, 0)) return 0;
+    if (!CheckOutGray(xform, 100, 255)) return 0;
 
-    if (!CheckOutGray(ContextID, xform, 20, 52)) return 0;
-    if (!CheckOutGray(ContextID, xform, 50, 118)) return 0;
+    if (!CheckOutGray(xform, 20, 52)) return 0;
+    if (!CheckOutGray(xform, 50, 118)) return 0;
 
 
-    cmsDeleteTransform(ContextID, xform);
+    cmsDeleteTransform(xform);
     return 1;
 }
 
@@ -7285,17 +7285,17 @@ static
 cmsInt32Number CheckLabOutputGray(cmsContext ContextID)
 {
     cmsHPROFILE hGray = Create_GrayLab(ContextID);
-    cmsHPROFILE hLab  = cmsCreateLab4Profile(ContextID, NULL);
+    cmsHPROFILE hLab  = cmsCreateLab4Profile(NULL);
     cmsHTRANSFORM xform;
     cmsInt32Number i;
 
     if (hGray == NULL || hLab == NULL) return 0;
 
-    xform = cmsCreateTransform(ContextID, hLab, TYPE_Lab_DBL, hGray, TYPE_GRAY_8, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsCloseProfile(ContextID, hGray); cmsCloseProfile(ContextID, hLab);
+    xform = cmsCreateTransform(hLab, TYPE_Lab_DBL, hGray, TYPE_GRAY_8, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsCloseProfile(hGray); cmsCloseProfile(hLab);
 
-    if (!CheckOutGray(ContextID, xform, 0, 0)) return 0;
-    if (!CheckOutGray(ContextID, xform, 100, 255)) return 0;
+    if (!CheckOutGray(xform, 0, 0)) return 0;
+    if (!CheckOutGray(xform, 100, 255)) return 0;
 
     for (i=0; i < 100; i++) {
 
@@ -7303,11 +7303,11 @@ cmsInt32Number CheckLabOutputGray(cmsContext ContextID)
 
         g = (cmsUInt8Number) floor(i * 255.0 / 100.0 + 0.5);
 
-        if (!CheckOutGray(ContextID, xform, i, g)) return 0;
+        if (!CheckOutGray(xform, i, g)) return 0;
     }
 
 
-    cmsDeleteTransform(ContextID, xform);
+    cmsDeleteTransform(xform);
     return 1;
 }
 
@@ -7317,18 +7317,18 @@ cmsInt32Number CheckV4gamma(cmsContext ContextID)
 {
     cmsHPROFILE h;
     cmsUInt16Number Lin[] = {0, 0xffff};
-    cmsToneCurve*g = cmsBuildTabulatedToneCurve16(ContextID, 2, Lin);
+    cmsToneCurve*g = cmsBuildTabulatedToneCurve16(2, Lin);
 
-    h = cmsOpenProfileFromFile(ContextID, "v4gamma.icc", "w");
+    h = cmsOpenProfileFromFile("v4gamma.icc", "w");
     if (h == NULL) return 0;
 
 
-    cmsSetProfileVersion(ContextID, h, 4.3);
+    cmsSetProfileVersion(h, 4.3);
 
-    if (!cmsWriteTag(ContextID, h, cmsSigGrayTRCTag, g)) return 0;
-    cmsCloseProfile(ContextID, h);
+    if (!cmsWriteTag(h, cmsSigGrayTRCTag, g)) return 0;
+    cmsCloseProfile(h);
 
-    cmsFreeToneCurve(ContextID, g);
+    cmsFreeToneCurve(g);
     remove("v4gamma.icc");
     return 1;
 }
@@ -7359,12 +7359,12 @@ cmsInt32Number CheckGBD(cmsContext ContextID)
                 Lab.L = L;
                 Lab.a = a;
                 Lab.b = b;
-                if (!cmsGDBAddPoint(ContextID, h, &Lab)) return 0;
+                if (!cmsGDBAddPoint(h, &Lab)) return 0;
             }
 
     // Complete boundaries
     SubTest("computing Lab gamut");
-    if (!cmsGDBCompute(ContextID, h, 0)) return 0;
+    if (!cmsGDBCompute(h, 0)) return 0;
 
 
     // All points should be inside gamut
@@ -7376,21 +7376,21 @@ cmsInt32Number CheckGBD(cmsContext ContextID)
                 Lab.L = L;
                 Lab.a = a;
                 Lab.b = b;
-                if (!cmsGDBCheckPoint(ContextID, h, &Lab)) {
+                if (!cmsGDBCheckPoint(h, &Lab)) {
                     return 0;
                 }
             }
-    cmsGBDFree(ContextID, h);
+    cmsGBDFree(h);
 
 
     // Now for sRGB
     SubTest("checking sRGB gamut");
     h = cmsGBDAlloc(ContextID);
     hsRGB = cmsCreate_sRGBProfile(ContextID);
-    hLab  = cmsCreateLab4Profile(ContextID, NULL);
+    hLab  = cmsCreateLab4Profile(NULL);
 
-    xform = cmsCreateTransform(ContextID, hsRGB, TYPE_RGB_8, hLab, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_NOCACHE);
-    cmsCloseProfile(ContextID, hsRGB); cmsCloseProfile(ContextID, hLab);
+    xform = cmsCreateTransform(hsRGB, TYPE_RGB_8, hLab, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_NOCACHE);
+    cmsCloseProfile(hsRGB); cmsCloseProfile(hLab);
 
 
     for (r1=0; r1 < 256; r1 += 5) {
@@ -7404,12 +7404,12 @@ cmsInt32Number CheckGBD(cmsContext ContextID)
                 rgb[1] = (cmsUInt8Number) g1;
                 rgb[2] = (cmsUInt8Number) b1;
 
-                cmsDoTransform(ContextID, xform, rgb, &Lab, 1);
+                cmsDoTransform(xform, rgb, &Lab, 1);
 
                 // if (fabs(Lab.b) < 20 && Lab.a > 0) continue;
 
-                if (!cmsGDBAddPoint(ContextID, h, &Lab)) {
-                    cmsGBDFree(ContextID, h);
+                if (!cmsGDBAddPoint(h, &Lab)) {
+                    cmsGBDFree(h);
                     return 0;
                 }
 
@@ -7418,7 +7418,7 @@ cmsInt32Number CheckGBD(cmsContext ContextID)
     }
 
 
-    if (!cmsGDBCompute(ContextID, h, 0)) return 0;
+    if (!cmsGDBCompute(h, 0)) return 0;
     // cmsGBDdumpVRML(h, "c:\\colormaps\\lab.wrl");
 
     for (r1=10; r1 < 200; r1 += 10) {
@@ -7432,19 +7432,19 @@ cmsInt32Number CheckGBD(cmsContext ContextID)
                 rgb[1] = (cmsUInt8Number) g1;
                 rgb[2] = (cmsUInt8Number) b1;
 
-                cmsDoTransform(ContextID, xform, rgb, &Lab, 1);
-                if (!cmsGDBCheckPoint(ContextID, h, &Lab)) {
+                cmsDoTransform(xform, rgb, &Lab, 1);
+                if (!cmsGDBCheckPoint(h, &Lab)) {
 
-                    cmsDeleteTransform(ContextID, xform);
-                    cmsGBDFree(ContextID, h);
+                    cmsDeleteTransform(xform);
+                    cmsGBDFree(h);
                     return 0;
                 }
             }
     }
 
 
-    cmsDeleteTransform(ContextID, xform);
-    cmsGBDFree(ContextID, h);
+    cmsDeleteTransform(xform);
+    cmsGBDFree(h);
 
     SubTest("checking LCh chroma ring");
     h = cmsGBDAlloc(ContextID);
@@ -7458,17 +7458,17 @@ cmsInt32Number CheckGBD(cmsContext ContextID)
         LCh.C = 60;
         LCh.h = r1;
 
-        cmsLCh2Lab(ContextID, &Lab, &LCh);
-        if (!cmsGDBAddPoint(ContextID, h, &Lab)) {
-                    cmsGBDFree(ContextID, h);
+        cmsLCh2Lab(&Lab, &LCh);
+        if (!cmsGDBAddPoint(h, &Lab)) {
+                    cmsGBDFree(h);
                     return 0;
                 }
     }
 
 
-    if (!cmsGDBCompute(ContextID, h, 0)) return 0;
+    if (!cmsGDBCompute(h, 0)) return 0;
 
-    cmsGBDFree(ContextID, h);
+    cmsGBDFree(h);
 
     return 1;
 }
@@ -7477,20 +7477,20 @@ cmsInt32Number CheckGBD(cmsContext ContextID)
 static
 int CheckMD5(cmsContext ContextID)
 {    
-    cmsHPROFILE pProfile = cmsOpenProfileFromFile(ContextID, "sRGBlcms2.icc", "r");
+    cmsHPROFILE pProfile = cmsOpenProfileFromFile("sRGBlcms2.icc", "r");
     cmsProfileID ProfileID1, ProfileID2, ProfileID3, ProfileID4;
  
-    if (cmsMD5computeID(ContextID, pProfile)) cmsGetHeaderProfileID(ContextID, pProfile, ProfileID1.ID8);
-    if (cmsMD5computeID(ContextID, pProfile)) cmsGetHeaderProfileID(ContextID, pProfile,ProfileID2.ID8);
+    if (cmsMD5computeID(pProfile)) cmsGetHeaderProfileID(pProfile, ProfileID1.ID8);
+    if (cmsMD5computeID(pProfile)) cmsGetHeaderProfileID(pProfile,ProfileID2.ID8);
 
-    cmsCloseProfile(ContextID, pProfile);
+    cmsCloseProfile(pProfile);
 
-    pProfile = cmsOpenProfileFromFile(ContextID, "sRGBlcms2.icc", "r");
+    pProfile = cmsOpenProfileFromFile("sRGBlcms2.icc", "r");
     
-    if (cmsMD5computeID(ContextID, pProfile)) cmsGetHeaderProfileID(ContextID, pProfile, ProfileID3.ID8);
-    if (cmsMD5computeID(ContextID, pProfile)) cmsGetHeaderProfileID(ContextID, pProfile,ProfileID4.ID8);
+    if (cmsMD5computeID(pProfile)) cmsGetHeaderProfileID(pProfile, ProfileID3.ID8);
+    if (cmsMD5computeID(pProfile)) cmsGetHeaderProfileID(pProfile,ProfileID4.ID8);
 
-    cmsCloseProfile(ContextID, pProfile);
+    cmsCloseProfile(pProfile);
 
     return ((memcmp(ProfileID1.ID8, ProfileID3.ID8, sizeof(ProfileID1)) == 0) &&
             (memcmp(ProfileID2.ID8, ProfileID4.ID8, sizeof(ProfileID2)) == 0));
@@ -7506,40 +7506,40 @@ int CheckLinking(cmsContext ContextID)
     cmsStage *stageBegin, *stageEnd;
 
     // Create a CLUT based profile
-     h = cmsCreateInkLimitingDeviceLink(ContextID, cmsSigCmykData, 150);
+     h = cmsCreateInkLimitingDeviceLink(cmsSigCmykData, 150);
 
      // link a second tag
-     cmsLinkTag(ContextID, h, cmsSigAToB1Tag, cmsSigAToB0Tag);
+     cmsLinkTag(h, cmsSigAToB1Tag, cmsSigAToB0Tag);
 
      // Save the linked devicelink
-    if (!cmsSaveProfileToFile(ContextID, h, "lcms2link.icc")) return 0;
-    cmsCloseProfile(ContextID, h);
+    if (!cmsSaveProfileToFile(h, "lcms2link.icc")) return 0;
+    cmsCloseProfile(h);
 
     // Now open the profile and read the pipeline
-    h = cmsOpenProfileFromFile(ContextID, "lcms2link.icc", "r");
+    h = cmsOpenProfileFromFile("lcms2link.icc", "r");
     if (h == NULL) return 0;
 
-    pipeline = (cmsPipeline*) cmsReadTag(ContextID, h, cmsSigAToB1Tag);
+    pipeline = (cmsPipeline*) cmsReadTag(h, cmsSigAToB1Tag);
     if (pipeline == NULL)
     {
         return 0;
     }
 
-    pipeline = cmsPipelineDup(ContextID, pipeline);
+    pipeline = cmsPipelineDup(pipeline);
 
     // extract stage from pipe line
-    cmsPipelineUnlinkStage(ContextID, pipeline, cmsAT_BEGIN, &stageBegin);
-    cmsPipelineUnlinkStage(ContextID, pipeline, cmsAT_END,   &stageEnd);
-    cmsPipelineInsertStage(ContextID, pipeline, cmsAT_END,    stageEnd);
-    cmsPipelineInsertStage(ContextID, pipeline, cmsAT_BEGIN,  stageBegin);
+    cmsPipelineUnlinkStage(pipeline, cmsAT_BEGIN, &stageBegin);
+    cmsPipelineUnlinkStage(pipeline, cmsAT_END,   &stageEnd);
+    cmsPipelineInsertStage(pipeline, cmsAT_END,    stageEnd);
+    cmsPipelineInsertStage(pipeline, cmsAT_BEGIN,  stageBegin);
 
-    if (cmsTagLinkedTo(ContextID, h, cmsSigAToB1Tag) != cmsSigAToB0Tag) return 0;
+    if (cmsTagLinkedTo(h, cmsSigAToB1Tag) != cmsSigAToB0Tag) return 0;
 
-    cmsWriteTag(ContextID, h, cmsSigAToB0Tag, pipeline);
-    cmsPipelineFree(ContextID, pipeline);
+    cmsWriteTag(h, cmsSigAToB0Tag, pipeline);
+    cmsPipelineFree(pipeline);
 
-    if (!cmsSaveProfileToFile(ContextID, h, "lcms2link2.icc")) return 0;
-    cmsCloseProfile(ContextID, h);
+    if (!cmsSaveProfileToFile(h, "lcms2link2.icc")) return 0;
+    cmsCloseProfile(h);
 
 
     return 1;
@@ -7781,23 +7781,23 @@ cmsInt32Number CheckParametricRec709(cmsContext ContextID)
     params[5] = -0.099; /* e */
     params[6] = 0.0; /* f */
 
-    t = cmsBuildParametricToneCurve (ContextID, 5, params);
+    t = cmsBuildParametricToneCurve (5, params);
 
 
     for (i=0; i < 256; i++)
     {
         cmsFloat32Number n = (cmsFloat32Number) i / 255.0F;
-        cmsUInt16Number f1 = (cmsUInt16Number) floor(255.0 * cmsEvalToneCurveFloat(ContextID, t, n) + 0.5);
+        cmsUInt16Number f1 = (cmsUInt16Number) floor(255.0 * cmsEvalToneCurveFloat(t, n) + 0.5);
         cmsUInt16Number f2 = (cmsUInt16Number) floor(255.0*Rec709((double) i / 255.0) + 0.5);
 
         if (f1 != f2)
         {
-            cmsFreeToneCurve(ContextID, t);
+            cmsFreeToneCurve(t);
             return 0;
         }
     }
 
-    cmsFreeToneCurve(ContextID, t);
+    cmsFreeToneCurve(t);
     return 1;
 }
 
@@ -7811,7 +7811,7 @@ static cmsFloat32Number StraightLine( cmsFloat32Number x)
     return (cmsFloat32Number) (0.1 + 0.9 * x);
 }
 
-static cmsInt32Number TestCurve(cmsContext ContextID, const char* label, cmsToneCurve* curve, Function fn)
+static cmsInt32Number TestCurve(const char* label, cmsToneCurve* curve, Function fn)
 {
     cmsInt32Number ok = 1;
     int i;
@@ -7819,7 +7819,7 @@ static cmsInt32Number TestCurve(cmsContext ContextID, const char* label, cmsTone
 
         cmsFloat32Number x = (cmsFloat32Number)i / (kNumPoints*3 - 1);
         cmsFloat32Number expectedY = fn(x);
-        cmsFloat32Number out = cmsEvalToneCurveFloat(ContextID,  curve, x);
+        cmsFloat32Number out = cmsEvalToneCurveFloat( curve, x);
 
         if (!IsGoodVal(label, expectedY, out, FLOAT_PRECISSION)) {
             ok = 0;
@@ -7842,9 +7842,9 @@ cmsInt32Number CheckFloatSamples(cmsContext ContextID)
         y[i] = StraightLine(x);
     }
 
-    curve = cmsBuildTabulatedToneCurveFloat(ContextID, kNumPoints, y);
-    ok = TestCurve(ContextID, "Float Samples", curve, StraightLine);
-    cmsFreeToneCurve(ContextID, curve);
+    curve = cmsBuildTabulatedToneCurveFloat(kNumPoints, y);
+    ok = TestCurve("Float Samples", curve, StraightLine);
+    cmsFreeToneCurve(curve);
 
     return ok;
 }
@@ -7895,11 +7895,11 @@ cmsInt32Number CheckFloatSegments(cmsContext ContextID)
     Seg[2].Params[3] = 0.1f;
     Seg[2].Params[4] = 0.0f;
 
-    curve = cmsBuildSegmentedToneCurve(ContextID, 3, Seg);
+    curve = cmsBuildSegmentedToneCurve(3, Seg);
 
-    ok = TestCurve(ContextID, "Float Segmented Curve", curve, StraightLine);
+    ok = TestCurve("Float Segmented Curve", curve, StraightLine);
 
-    cmsFreeToneCurve(ContextID, curve);
+    cmsFreeToneCurve(curve);
 
     return ok;
 }
@@ -7912,14 +7912,14 @@ cmsInt32Number CheckReadRAW(cmsContext ContextID)
     cmsHPROFILE hProfile;
 
     SubTest("RAW read on on-disk");
-    hProfile = cmsOpenProfileFromFile(ContextID, "test1.icc", "r");
+    hProfile = cmsOpenProfileFromFile("test1.icc", "r");
 
     if (hProfile == NULL)
         return 0;
-	tag_size1 = cmsReadRawTag(ContextID, hProfile, cmsSigGamutTag, NULL, 0);
-	tag_size = cmsReadRawTag(ContextID, hProfile, cmsSigGamutTag, buffer, 37009);
+	tag_size1 = cmsReadRawTag(hProfile, cmsSigGamutTag, NULL, 0);
+	tag_size = cmsReadRawTag(hProfile, cmsSigGamutTag, buffer, 37009);
 
-    cmsCloseProfile(ContextID, hProfile);
+    cmsCloseProfile(hProfile);
 
     if (tag_size != 37009)
         return 0;
@@ -7929,10 +7929,10 @@ cmsInt32Number CheckReadRAW(cmsContext ContextID)
 
     SubTest("RAW read on in-memory created profiles");
     hProfile = cmsCreate_sRGBProfile(ContextID);
-	tag_size1 = cmsReadRawTag(ContextID, hProfile, cmsSigGreenColorantTag, NULL, 0);
-	tag_size = cmsReadRawTag(ContextID, hProfile, cmsSigGreenColorantTag, buffer, 20);
+	tag_size1 = cmsReadRawTag(hProfile, cmsSigGreenColorantTag, NULL, 0);
+	tag_size = cmsReadRawTag(hProfile, cmsSigGreenColorantTag, buffer, 20);
 
-    cmsCloseProfile(ContextID, hProfile);
+    cmsCloseProfile(hProfile);
 
     if (tag_size != 20)
         return 0;
@@ -7953,20 +7953,20 @@ cmsInt32Number CheckMeta(cmsContext ContextID)
     int rc;
 
     /* open file */
-    p = cmsOpenProfileFromFile(ContextID, "ibm-t61.icc", "r");
+    p = cmsOpenProfileFromFile("ibm-t61.icc", "r");
     if (p == NULL) return 0;
 
     /* read dictionary, but don't do anything with the value */
     //COMMENT OUT THE NEXT TWO LINES AND IT WORKS FINE!!!
-    dict = cmsReadTag(ContextID, p, cmsSigMetaTag);
+    dict = cmsReadTag(p, cmsSigMetaTag);
     if (dict == NULL) return 0;
 
     /* serialize profile to memory */
-    rc = cmsSaveProfileToMem(ContextID, p, NULL, &clen);
+    rc = cmsSaveProfileToMem(p, NULL, &clen);
     if (!rc) return 0;
 
     data = (char*) chknull(malloc(clen));
-    rc = cmsSaveProfileToMem(ContextID, p, data, &clen);
+    rc = cmsSaveProfileToMem(p, data, &clen);
     if (!rc) return 0;
 
     /* write the memory blob to a file */
@@ -7976,17 +7976,17 @@ cmsInt32Number CheckMeta(cmsContext ContextID)
     fclose(fp);
     free(data);
 
-    cmsCloseProfile(ContextID, p);
+    cmsCloseProfile(p);
 
     /* open newly created file and read metadata */
-    p = cmsOpenProfileFromFile(ContextID, "new.icc", "r");
+    p = cmsOpenProfileFromFile("new.icc", "r");
     //ERROR: Bad dictionary Name/Value
     //ERROR: Corrupted tag 'meta'
     //test: test.c:59: main: Assertion `dict' failed.
-    dict = cmsReadTag(ContextID, p, cmsSigMetaTag);
+    dict = cmsReadTag(p, cmsSigMetaTag);
    if (dict == NULL) return 0;
 
-   cmsCloseProfile(ContextID, p);
+   cmsCloseProfile(p);
     return 1;
 }
 
@@ -7999,16 +7999,16 @@ cmsInt32Number CheckFloatNULLxform(cmsContext ContextID)
     cmsFloat32Number in[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
     cmsFloat32Number out[10];
 
-    cmsHTRANSFORM xform = cmsCreateTransform(ContextID, NULL, TYPE_GRAY_FLT, NULL, TYPE_GRAY_FLT, INTENT_PERCEPTUAL, cmsFLAGS_NULLTRANSFORM);
+    cmsHTRANSFORM xform = cmsCreateTransform(NULL, TYPE_GRAY_FLT, NULL, TYPE_GRAY_FLT, INTENT_PERCEPTUAL, cmsFLAGS_NULLTRANSFORM);
 
     if (xform == NULL) {
         Fail("Unable to create float null transform");
         return 0;
     }
 
-    cmsDoTransform(ContextID, xform, in, out, 10);
+    cmsDoTransform(xform, in, out, 10);
 
-    cmsDeleteTransform(ContextID, xform);
+    cmsDeleteTransform(xform);
     for (i=0; i < 10; i++) {
 
         if (!IsGoodVal("float nullxform", in[i], out[i], 0.001)) {
@@ -8030,21 +8030,21 @@ cmsInt32Number CheckRemoveTag(cmsContext ContextID)
     p = cmsCreate_sRGBProfile(ContextID);
 
     /* set value */
-    mlu = cmsMLUalloc (ContextID, 1);
-    ret = cmsMLUsetASCII(ContextID, mlu, "en", "US", "bar");
+    mlu = cmsMLUalloc (1);
+    ret = cmsMLUsetASCII(mlu, "en", "US", "bar");
     if (!ret) return 0;
 
-    ret = cmsWriteTag(ContextID, p, cmsSigDeviceMfgDescTag, mlu);
+    ret = cmsWriteTag(p, cmsSigDeviceMfgDescTag, mlu);
     if (!ret) return 0;
 
-    cmsMLUfree(ContextID, mlu);
+    cmsMLUfree(mlu);
 
     /* remove the tag  */
-    ret = cmsWriteTag(ContextID, p, cmsSigDeviceMfgDescTag, NULL);
+    ret = cmsWriteTag(p, cmsSigDeviceMfgDescTag, NULL);
     if (!ret) return 0;
 
     /* THIS EXPLODES */
-    cmsCloseProfile(ContextID, p);
+    cmsCloseProfile(p);
     return 1;
 }
 
@@ -8060,15 +8060,15 @@ cmsInt32Number CheckMatrixSimplify(cmsContext ContextID)
 
 
        pIn = cmsCreate_sRGBProfile(ContextID);
-       pOut = cmsOpenProfileFromFile(ContextID, "ibm-t61.icc", "r");
+       pOut = cmsOpenProfileFromFile("ibm-t61.icc", "r");
        if (pIn == NULL || pOut == NULL)
               return 0;
 
-       t = cmsCreateTransform(ContextID, pIn, TYPE_RGB_8, pOut, TYPE_RGB_8, INTENT_PERCEPTUAL, 0);
-       cmsDoTransformStride(ContextID, t, buf, buf, 1, 1);
-       cmsDeleteTransform(ContextID, t);
-       cmsCloseProfile(ContextID, pIn);
-       cmsCloseProfile(ContextID, pOut);
+       t = cmsCreateTransform(pIn, TYPE_RGB_8, pOut, TYPE_RGB_8, INTENT_PERCEPTUAL, 0);
+       cmsDoTransformStride(t, buf, buf, 1, 1);
+       cmsDeleteTransform(t);
+       cmsCloseProfile(pIn);
+       cmsCloseProfile(pOut);
 
 
        return buf[0] == 144 && buf[1] == 0 && buf[2] == 69;
@@ -8110,49 +8110,49 @@ cmsInt32Number CheckTransformLineStride(cmsContext ContextID)
 
        memset(out, 0, sizeof(out));
        pIn = cmsCreate_sRGBProfile(ContextID);
-       pOut = cmsOpenProfileFromFile(ContextID,  "ibm-t61.icc", "r");
+       pOut = cmsOpenProfileFromFile( "ibm-t61.icc", "r");
        if (pIn == NULL || pOut == NULL)
               return 0;
 
-       t = cmsCreateTransform(ContextID, pIn, TYPE_RGB_8, pOut, TYPE_RGB_8, INTENT_PERCEPTUAL, cmsFLAGS_COPY_ALPHA);
+       t = cmsCreateTransform(pIn, TYPE_RGB_8, pOut, TYPE_RGB_8, INTENT_PERCEPTUAL, cmsFLAGS_COPY_ALPHA);
 
-       cmsDoTransformLineStride(ContextID, t, buf1, out, 2, 4, 7, 7, 0, 0);
-       cmsDeleteTransform(ContextID, t);
+       cmsDoTransformLineStride(t, buf1, out, 2, 4, 7, 7, 0, 0);
+       cmsDeleteTransform(t);
 
        if (memcmp(out, buf1, sizeof(buf1)) != 0) {
               Fail("Failed transform line stride on RGB8");
-              cmsCloseProfile(ContextID, pIn);
-              cmsCloseProfile(ContextID, pOut);
+              cmsCloseProfile(pIn);
+              cmsCloseProfile(pOut);
               return 0;
        }
 
        memset(out, 0, sizeof(out));
 
-       t = cmsCreateTransform(ContextID, pIn, TYPE_RGBA_8, pOut, TYPE_RGBA_8, INTENT_PERCEPTUAL, cmsFLAGS_COPY_ALPHA);
+       t = cmsCreateTransform(pIn, TYPE_RGBA_8, pOut, TYPE_RGBA_8, INTENT_PERCEPTUAL, cmsFLAGS_COPY_ALPHA);
 
-       cmsDoTransformLineStride(ContextID, t, buf2, out, 2, 4, 9, 9, 0, 0);
+       cmsDoTransformLineStride(t, buf2, out, 2, 4, 9, 9, 0, 0);
 
-       cmsDeleteTransform(ContextID, t);
+       cmsDeleteTransform(t);
 
 
        if (memcmp(out, buf2, sizeof(buf2)) != 0) {
-              cmsCloseProfile(ContextID, pIn);
-              cmsCloseProfile(ContextID, pOut);
+              cmsCloseProfile(pIn);
+              cmsCloseProfile(pOut);
               Fail("Failed transform line stride on RGBA8");
               return 0;
        }
 
        memset(out, 0, sizeof(out));
 
-       t = cmsCreateTransform(ContextID, pIn, TYPE_RGBA_16, pOut, TYPE_RGBA_16, INTENT_PERCEPTUAL, cmsFLAGS_COPY_ALPHA);
+       t = cmsCreateTransform(pIn, TYPE_RGBA_16, pOut, TYPE_RGBA_16, INTENT_PERCEPTUAL, cmsFLAGS_COPY_ALPHA);
 
-       cmsDoTransformLineStride(ContextID, t, buf3, out, 2, 4, 18, 18, 0, 0);
+       cmsDoTransformLineStride(t, buf3, out, 2, 4, 18, 18, 0, 0);
 
-       cmsDeleteTransform(ContextID, t);
+       cmsDeleteTransform(t);
 
        if (memcmp(out, buf3, sizeof(buf3)) != 0) {
-              cmsCloseProfile(ContextID, pIn);
-              cmsCloseProfile(ContextID, pOut);
+              cmsCloseProfile(pIn);
+              cmsCloseProfile(pOut);
               Fail("Failed transform line stride on RGBA16");
               return 0;
        }
@@ -8162,23 +8162,23 @@ cmsInt32Number CheckTransformLineStride(cmsContext ContextID)
 
 
        // From 8 to 16
-       t = cmsCreateTransform(ContextID, pIn, TYPE_RGBA_8, pOut, TYPE_RGBA_16, INTENT_PERCEPTUAL, cmsFLAGS_COPY_ALPHA);
+       t = cmsCreateTransform(pIn, TYPE_RGBA_8, pOut, TYPE_RGBA_16, INTENT_PERCEPTUAL, cmsFLAGS_COPY_ALPHA);
 
-       cmsDoTransformLineStride(ContextID, t, buf2, out, 2, 4, 9, 18, 0, 0);
+       cmsDoTransformLineStride(t, buf2, out, 2, 4, 9, 18, 0, 0);
 
-       cmsDeleteTransform(ContextID, t);
+       cmsDeleteTransform(t);
 
        if (memcmp(out, buf3, sizeof(buf3)) != 0) {
-              cmsCloseProfile(ContextID, pIn);
-              cmsCloseProfile(ContextID, pOut);
+              cmsCloseProfile(pIn);
+              cmsCloseProfile(pOut);
               Fail("Failed transform line stride on RGBA16");
               return 0;
        }
 
 
 
-       cmsCloseProfile(ContextID, pIn);
-       cmsCloseProfile(ContextID, pOut);
+       cmsCloseProfile(pIn);
+       cmsCloseProfile(pOut);
 
        return 1;
 }
@@ -8195,9 +8195,9 @@ int CheckPlanar8opt(cmsContext ContextID)
         aboveRGB, TYPE_RGB_8_PLANAR,
         INTENT_PERCEPTUAL, 0);
 
-    cmsDeleteTransform(ContextID, transform);
-    cmsCloseProfile(ContextID, aboveRGB);
-    cmsCloseProfile(ContextID, sRGB);
+    cmsDeleteTransform(transform);
+    cmsCloseProfile(aboveRGB);
+    cmsCloseProfile(sRGB);
 
     return 1;
 }
@@ -8211,15 +8211,15 @@ int CheckSE(cmsContext ContextID)
     cmsHPROFILE input_profile = Create_AboveRGB(ContextID);
     cmsHPROFILE output_profile = cmsCreate_sRGBProfile(ContextID);
 
-    cmsHTRANSFORM tr = cmsCreateTransform(ContextID, input_profile, TYPE_RGBA_8, output_profile, TYPE_RGBA_16_SE, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_COPY_ALPHA);
+    cmsHTRANSFORM tr = cmsCreateTransform(input_profile, TYPE_RGBA_8, output_profile, TYPE_RGBA_16_SE, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_COPY_ALPHA);
 
     cmsUInt8Number rgba[4] = { 40, 41, 41, 0xfa };
     cmsUInt16Number out[4];
 
-    cmsDoTransform(ContextID, tr, rgba, out, 1);
-    cmsCloseProfile(ContextID, input_profile);
-    cmsCloseProfile(ContextID, output_profile);
-    cmsDeleteTransform(ContextID, tr);
+    cmsDoTransform(tr, rgba, out, 1);
+    cmsCloseProfile(input_profile);
+    cmsCloseProfile(output_profile);
+    cmsDeleteTransform(tr);
 
     if (out[0] != 0xf622 || out[1] != 0x7f24 || out[2] != 0x7f24)
         return 0;
@@ -8244,18 +8244,18 @@ int CheckForgedMPE(cmsContext ContextID)
     cmsHTRANSFORM hTransform;
     cmsUInt8Number output[4];
 
-    srcProfile = cmsOpenProfileFromFile(ContextID, "bad_mpe.icc", "r");
+    srcProfile = cmsOpenProfileFromFile("bad_mpe.icc", "r");
     if (!srcProfile)
         return 0;
 
     dstProfile = cmsCreate_sRGBProfile(ContextID);
     if (!dstProfile) {
-        cmsCloseProfile(ContextID, srcProfile);
+        cmsCloseProfile(srcProfile);
         return 0;
     }
 
-    srcCS = cmsGetColorSpace(ContextID, srcProfile);
-    nSrcComponents = cmsChannelsOfColorSpace(ContextID, srcCS);
+    srcCS = cmsGetColorSpace(srcProfile);
+    nSrcComponents = cmsChannelsOfColorSpace(srcCS);
 
     if (srcCS == cmsSigLabData) {
         srcFormat =
@@ -8266,14 +8266,14 @@ int CheckForgedMPE(cmsContext ContextID)
             COLORSPACE_SH(PT_ANY) | CHANNELS_SH(nSrcComponents) | BYTES_SH(1);
     }
 
-    cmsSetLogErrorHandler(ContextID, ErrorReportingFunction);
+    cmsSetLogErrorHandler(ErrorReportingFunction);
 
-    hTransform = cmsCreateTransform(ContextID, srcProfile, srcFormat, dstProfile,
+    hTransform = cmsCreateTransform(srcProfile, srcFormat, dstProfile,
         TYPE_BGR_8, intent, flags);
-    cmsCloseProfile(ContextID, srcProfile);
-    cmsCloseProfile(ContextID, dstProfile);
+    cmsCloseProfile(srcProfile);
+    cmsCloseProfile(dstProfile);
 
-    cmsSetLogErrorHandler(ContextID, FatalErrorQuit);
+    cmsSetLogErrorHandler(FatalErrorQuit);
 
     // Should report error
     if (!TrappedError) return 0;
@@ -8288,15 +8288,15 @@ int CheckForgedMPE(cmsContext ContextID)
         double input[128];
         for (i = 0; i < nSrcComponents; i++)
             input[i] = 0.5f;
-        cmsDoTransform(ContextID, hTransform, input, output, 1);
+        cmsDoTransform(hTransform, input, output, 1);
     }
     else {
         cmsUInt8Number input[128];
         for (i = 0; i < nSrcComponents; i++)
             input[i] = 128;
-        cmsDoTransform(ContextID, hTransform, input, output, 1);
+        cmsDoTransform(hTransform, input, output, 1);
     }
-    cmsDeleteTransform(ContextID, hTransform);
+    cmsDeleteTransform(hTransform);
 
     return 0;
 }
@@ -8328,14 +8328,14 @@ int CheckProofingIntersection(cmsContext ContextID)
         cmsFLAGS_GAMUTCHECK |
         cmsFLAGS_SOFTPROOFING);
 
-    cmsCloseProfile(ContextID, hnd1);
-    cmsCloseProfile(ContextID, hnd2);
-    cmsCloseProfile(ContextID, profile_null);
+    cmsCloseProfile(hnd1);
+    cmsCloseProfile(hnd2);
+    cmsCloseProfile(profile_null);
 
     // Failed?
     if (transform == NULL) return 0;
 
-    cmsDeleteTransform(ContextID, transform);
+    cmsDeleteTransform(transform);
     return 1;
 }
 
@@ -8355,28 +8355,28 @@ int CheckEmptyMLUC(cmsContext ContextID)
     };
 
     cmsFloat64Number parameters[10] = { 2.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
-    cmsToneCurve* toneCurve = cmsBuildParametricToneCurve(ContextID, 1, parameters);
+    cmsToneCurve* toneCurve = cmsBuildParametricToneCurve(1, parameters);
     cmsToneCurve* toneCurves[3] = { toneCurve, toneCurve, toneCurve };
 
-    cmsHPROFILE profile = cmsCreateRGBProfile(ContextID, &white, &primaries, toneCurves);
+    cmsHPROFILE profile = cmsCreateRGBProfile(&white, &primaries, toneCurves);
 
-    cmsSetLogErrorHandler(ContextID, FatalErrorQuit);
+    cmsSetLogErrorHandler(FatalErrorQuit);
 
-    cmsFreeToneCurve(ContextID, toneCurve);
+    cmsFreeToneCurve(toneCurve);
 
     // Set an empty copyright tag. This should log an error.
-    cmsMLU* mlu = cmsMLUalloc(ContextID, 1);
+    cmsMLU* mlu = cmsMLUalloc(1);
 
-    cmsMLUsetASCII(ContextID, mlu, "en", "AU", "");
-    cmsMLUsetWide(ContextID, mlu,  "en", "EN", L"");
-    cmsWriteTag(ContextID, profile, cmsSigCopyrightTag, mlu);
-    cmsMLUfree(ContextID, mlu);
+    cmsMLUsetASCII(mlu, "en", "AU", "");
+    cmsMLUsetWide(mlu,  "en", "EN", L"");
+    cmsWriteTag(profile, cmsSigCopyrightTag, mlu);
+    cmsMLUfree(mlu);
 
     // This will cause a crash after setting an empty copyright tag.
-    cmsMD5computeID(ContextID, profile);
+    cmsMD5computeID(profile);
 
     // Cleanup
-    cmsCloseProfile(ContextID, profile);
+    cmsCloseProfile(profile);
     //DebugMemDontCheckThis(ContextID);
     cmsDeleteContext(ContextID);
 
@@ -8662,17 +8662,17 @@ int CheckIntToFloatTransform(cmsContext ContextID)
     cmsHPROFILE hAbove = Create_AboveRGB(ContextID);
     cmsHPROFILE hsRGB = cmsCreate_sRGBProfile(ContextID);
 
-    cmsHTRANSFORM xform = cmsCreateTransform(ContextID, hAbove, TYPE_RGB_8, hsRGB, TYPE_RGB_DBL, INTENT_PERCEPTUAL, 0);
+    cmsHTRANSFORM xform = cmsCreateTransform(hAbove, TYPE_RGB_8, hsRGB, TYPE_RGB_DBL, INTENT_PERCEPTUAL, 0);
 
     cmsUInt8Number rgb8[3] = { 12, 253, 21 };
     cmsFloat64Number rgbDBL[3] = { 0 };
 
-    cmsCloseProfile(ContextID, hAbove);
-	cmsCloseProfile(ContextID, hsRGB);
+    cmsCloseProfile(hAbove);
+	cmsCloseProfile(hsRGB);
 
-    cmsDoTransform(ContextID, xform, rgb8, rgbDBL, 1);
+    cmsDoTransform(xform, rgb8, rgbDBL, 1);
 
-    cmsDeleteTransform(ContextID, xform);
+    cmsDeleteTransform(xform);
 
     if (rgbDBL[0] < 0 && rgbDBL[2] < 0) return 1;
 
@@ -8712,7 +8712,7 @@ void PrintPerformance(cmsUInt32Number Bytes, cmsUInt32Number SizeOfPixel, cmsFlo
 
 
 static
-void SpeedTest32bits(cmsContext ContextID, const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
+void SpeedTest32bits(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
 {
     cmsInt32Number r, g, b, j;
     clock_t atime;
@@ -8726,10 +8726,10 @@ void SpeedTest32bits(cmsContext ContextID, const char * Title, cmsHPROFILE hlcms
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Die("Unable to open profiles");
 
-    hlcmsxform  = cmsCreateTransform(ContextID, hlcmsProfileIn, TYPE_RGBA_FLT,
+    hlcmsxform  = cmsCreateTransform(hlcmsProfileIn, TYPE_RGBA_FLT,
         hlcmsProfileOut, TYPE_RGBA_FLT, Intent, cmsFLAGS_NOCACHE);
-    cmsCloseProfile(ContextID, hlcmsProfileIn);
-    cmsCloseProfile(ContextID, hlcmsProfileOut);
+    cmsCloseProfile(hlcmsProfileIn);
+    cmsCloseProfile(hlcmsProfileOut);
 
     NumPixels = 256 / Interval * 256 / Interval * 256 / Interval;
     Mb = NumPixels * sizeof(Scanline_rgba32);
@@ -8754,19 +8754,19 @@ void SpeedTest32bits(cmsContext ContextID, const char * Title, cmsHPROFILE hlcms
 
     atime = clock();
 
-    cmsDoTransform(ContextID, hlcmsxform, In, In, NumPixels);
+    cmsDoTransform(hlcmsxform, In, In, NumPixels);
 
     diff = clock() - atime;
     free(In);
 
     PrintPerformance(Mb, sizeof(Scanline_rgba32), diff);
-    cmsDeleteTransform(ContextID, hlcmsxform);
+    cmsDeleteTransform(hlcmsxform);
 
 }
 
 
 static
-void SpeedTest16bits(cmsContext ContextID, const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
+void SpeedTest16bits(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
 {
     cmsInt32Number r, g, b, j;
     clock_t atime;
@@ -8778,10 +8778,10 @@ void SpeedTest16bits(cmsContext ContextID, const char * Title, cmsHPROFILE hlcms
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Die("Unable to open profiles");
 
-    hlcmsxform  = cmsCreateTransform(ContextID, hlcmsProfileIn, TYPE_RGB_16,
+    hlcmsxform  = cmsCreateTransform(hlcmsProfileIn, TYPE_RGB_16,
         hlcmsProfileOut, TYPE_RGB_16, Intent, cmsFLAGS_NOCACHE);
-    cmsCloseProfile(ContextID, hlcmsProfileIn);
-    cmsCloseProfile(ContextID, hlcmsProfileOut);
+    cmsCloseProfile(hlcmsProfileIn);
+    cmsCloseProfile(hlcmsProfileOut);
 
     Mb = 256*256*256 * sizeof(Scanline_rgb16);
 
@@ -8804,19 +8804,19 @@ void SpeedTest16bits(cmsContext ContextID, const char * Title, cmsHPROFILE hlcms
 
     atime = clock();
 
-    cmsDoTransform(ContextID, hlcmsxform, In, In, 256*256*256);
+    cmsDoTransform(hlcmsxform, In, In, 256*256*256);
 
     diff = clock() - atime;
     free(In);
 
     PrintPerformance(Mb, sizeof(Scanline_rgb16), diff);
-    cmsDeleteTransform(ContextID, hlcmsxform);
+    cmsDeleteTransform(hlcmsxform);
 
 }
 
 
 static
-void SpeedTest32bitsCMYK(cmsContext ContextID, const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut)
+void SpeedTest32bitsCMYK(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut)
 {
     cmsInt32Number r, g, b, j;
     clock_t atime;
@@ -8830,10 +8830,10 @@ void SpeedTest32bitsCMYK(cmsContext ContextID, const char * Title, cmsHPROFILE h
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Die("Unable to open profiles");
 
-    hlcmsxform  = cmsCreateTransform(ContextID, hlcmsProfileIn, TYPE_CMYK_FLT,
+    hlcmsxform  = cmsCreateTransform(hlcmsProfileIn, TYPE_CMYK_FLT,
         hlcmsProfileOut, TYPE_CMYK_FLT, INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE);
-    cmsCloseProfile(ContextID, hlcmsProfileIn);
-    cmsCloseProfile(ContextID, hlcmsProfileOut);
+    cmsCloseProfile(hlcmsProfileIn);
+    cmsCloseProfile(hlcmsProfileOut);
 
     NumPixels = 256 / Interval * 256 / Interval * 256 / Interval;
     Mb = NumPixels * sizeof(Scanline_rgba32);
@@ -8858,7 +8858,7 @@ void SpeedTest32bitsCMYK(cmsContext ContextID, const char * Title, cmsHPROFILE h
 
     atime = clock();
 
-    cmsDoTransform(ContextID, hlcmsxform, In, In, NumPixels);
+    cmsDoTransform(hlcmsxform, In, In, NumPixels);
 
     diff = clock() - atime;
 
@@ -8866,13 +8866,13 @@ void SpeedTest32bitsCMYK(cmsContext ContextID, const char * Title, cmsHPROFILE h
 
     PrintPerformance(Mb, sizeof(Scanline_rgba32), diff);
 
-    cmsDeleteTransform(ContextID, hlcmsxform);
+    cmsDeleteTransform(hlcmsxform);
 
 }
 
 
 static
-void SpeedTest16bitsCMYK(cmsContext ContextID, const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut)
+void SpeedTest16bitsCMYK(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut)
 {
     cmsInt32Number r, g, b, j;
     clock_t atime;
@@ -8884,10 +8884,10 @@ void SpeedTest16bitsCMYK(cmsContext ContextID, const char * Title, cmsHPROFILE h
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Die("Unable to open profiles");
 
-    hlcmsxform  = cmsCreateTransform(ContextID, hlcmsProfileIn, TYPE_CMYK_16,
+    hlcmsxform  = cmsCreateTransform(hlcmsProfileIn, TYPE_CMYK_16,
         hlcmsProfileOut, TYPE_CMYK_16, INTENT_PERCEPTUAL,  cmsFLAGS_NOCACHE);
-    cmsCloseProfile(ContextID, hlcmsProfileIn);
-    cmsCloseProfile(ContextID, hlcmsProfileOut);
+    cmsCloseProfile(hlcmsProfileIn);
+    cmsCloseProfile(hlcmsProfileOut);
 
     Mb = 256*256*256*sizeof(Scanline_rgba16);
 
@@ -8911,7 +8911,7 @@ void SpeedTest16bitsCMYK(cmsContext ContextID, const char * Title, cmsHPROFILE h
 
     atime = clock();
 
-    cmsDoTransform(ContextID, hlcmsxform, In, In, 256*256*256);
+    cmsDoTransform(hlcmsxform, In, In, 256*256*256);
 
     diff = clock() - atime;
 
@@ -8919,13 +8919,13 @@ void SpeedTest16bitsCMYK(cmsContext ContextID, const char * Title, cmsHPROFILE h
 
     PrintPerformance(Mb, sizeof(Scanline_rgba16), diff);
 
-    cmsDeleteTransform(ContextID, hlcmsxform);
+    cmsDeleteTransform(hlcmsxform);
 
 }
 
 
 static
-void SpeedTest8bits(cmsContext ContextID, const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
+void SpeedTest8bits(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
 {
     cmsInt32Number r, g, b, j;
     clock_t atime;
@@ -8937,10 +8937,10 @@ void SpeedTest8bits(cmsContext ContextID, const char * Title, cmsHPROFILE hlcmsP
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Die("Unable to open profiles");
 
-    hlcmsxform  = cmsCreateTransform(ContextID, hlcmsProfileIn, TYPE_RGB_8,
+    hlcmsxform  = cmsCreateTransform(hlcmsProfileIn, TYPE_RGB_8,
                             hlcmsProfileOut, TYPE_RGB_8, Intent, cmsFLAGS_NOCACHE);
-    cmsCloseProfile(ContextID, hlcmsProfileIn);
-    cmsCloseProfile(ContextID, hlcmsProfileOut);
+    cmsCloseProfile(hlcmsProfileIn);
+    cmsCloseProfile(hlcmsProfileOut);
 
     Mb = 256*256*256*sizeof(Scanline_rgb8);
 
@@ -8962,7 +8962,7 @@ void SpeedTest8bits(cmsContext ContextID, const char * Title, cmsHPROFILE hlcmsP
 
     atime = clock();
 
-    cmsDoTransform(ContextID, hlcmsxform, In, In, 256*256*256);
+    cmsDoTransform(hlcmsxform, In, In, 256*256*256);
 
     diff = clock() - atime;
 
@@ -8970,13 +8970,13 @@ void SpeedTest8bits(cmsContext ContextID, const char * Title, cmsHPROFILE hlcmsP
 
     PrintPerformance(Mb, sizeof(Scanline_rgb8), diff);
 
-    cmsDeleteTransform(ContextID, hlcmsxform);
+    cmsDeleteTransform(hlcmsxform);
 
 }
 
 
 static
-void SpeedTest8bitsCMYK(cmsContext ContextID, const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut)
+void SpeedTest8bitsCMYK(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut)
 {
     cmsInt32Number r, g, b, j;
     clock_t atime;
@@ -8988,10 +8988,10 @@ void SpeedTest8bitsCMYK(cmsContext ContextID, const char * Title, cmsHPROFILE hl
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Die("Unable to open profiles");
 
-    hlcmsxform  = cmsCreateTransform(ContextID, hlcmsProfileIn, TYPE_CMYK_8,
+    hlcmsxform  = cmsCreateTransform(hlcmsProfileIn, TYPE_CMYK_8,
                         hlcmsProfileOut, TYPE_CMYK_8, INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE);
-    cmsCloseProfile(ContextID, hlcmsProfileIn);
-    cmsCloseProfile(ContextID, hlcmsProfileOut);
+    cmsCloseProfile(hlcmsProfileIn);
+    cmsCloseProfile(hlcmsProfileOut);
 
     Mb = 256*256*256*sizeof(Scanline_rgba8);
 
@@ -9014,7 +9014,7 @@ void SpeedTest8bitsCMYK(cmsContext ContextID, const char * Title, cmsHPROFILE hl
 
     atime = clock();
 
-    cmsDoTransform(ContextID, hlcmsxform, In, In, 256*256*256);
+    cmsDoTransform(hlcmsxform, In, In, 256*256*256);
 
     diff = clock() - atime;
 
@@ -9023,13 +9023,13 @@ void SpeedTest8bitsCMYK(cmsContext ContextID, const char * Title, cmsHPROFILE hl
     PrintPerformance(Mb, sizeof(Scanline_rgba8), diff);
 
 
-    cmsDeleteTransform(ContextID, hlcmsxform);
+    cmsDeleteTransform(hlcmsxform);
 
 }
 
 
 static
-void SpeedTest32bitsGray(cmsContext ContextID, const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
+void SpeedTest32bitsGray(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
 {
     cmsInt32Number r, g, b, j;
     clock_t atime;
@@ -9043,10 +9043,10 @@ void SpeedTest32bitsGray(cmsContext ContextID, const char * Title, cmsHPROFILE h
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Die("Unable to open profiles");
 
-    hlcmsxform  = cmsCreateTransform(ContextID, hlcmsProfileIn,
+    hlcmsxform  = cmsCreateTransform(hlcmsProfileIn,
         TYPE_GRAY_FLT, hlcmsProfileOut, TYPE_GRAY_FLT, Intent, cmsFLAGS_NOCACHE);
-    cmsCloseProfile(ContextID, hlcmsProfileIn);
-    cmsCloseProfile(ContextID, hlcmsProfileOut);
+    cmsCloseProfile(hlcmsProfileIn);
+    cmsCloseProfile(hlcmsProfileOut);
 
     NumPixels = 256 / Interval * 256 / Interval * 256 / Interval;
     Mb = NumPixels * sizeof(cmsFloat32Number);
@@ -9067,18 +9067,18 @@ void SpeedTest32bitsGray(cmsContext ContextID, const char * Title, cmsHPROFILE h
 
     atime = clock();
 
-    cmsDoTransform(ContextID, hlcmsxform, In, In, NumPixels);
+    cmsDoTransform(hlcmsxform, In, In, NumPixels);
 
     diff = clock() - atime;
     free(In);
 
     PrintPerformance(Mb, sizeof(cmsFloat32Number), diff);
-    cmsDeleteTransform(ContextID, hlcmsxform);
+    cmsDeleteTransform(hlcmsxform);
 }
 
 
 static
-void SpeedTest16bitsGray(cmsContext ContextID, const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
+void SpeedTest16bitsGray(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
 {
     cmsInt32Number r, g, b, j;
     clock_t atime;
@@ -9090,10 +9090,10 @@ void SpeedTest16bitsGray(cmsContext ContextID, const char * Title, cmsHPROFILE h
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Die("Unable to open profiles");
 
-    hlcmsxform  = cmsCreateTransform(ContextID, hlcmsProfileIn,
+    hlcmsxform  = cmsCreateTransform(hlcmsProfileIn,
         TYPE_GRAY_16, hlcmsProfileOut, TYPE_GRAY_16, Intent, cmsFLAGS_NOCACHE);
-    cmsCloseProfile(ContextID, hlcmsProfileIn);
-    cmsCloseProfile(ContextID, hlcmsProfileOut);
+    cmsCloseProfile(hlcmsProfileIn);
+    cmsCloseProfile(hlcmsProfileOut);
     Mb = 256*256*256 * sizeof(cmsUInt16Number);
 
     In = (cmsUInt16Number *) chknull(malloc(Mb));
@@ -9112,18 +9112,18 @@ void SpeedTest16bitsGray(cmsContext ContextID, const char * Title, cmsHPROFILE h
 
     atime = clock();
 
-    cmsDoTransform(ContextID, hlcmsxform, In, In, 256*256*256);
+    cmsDoTransform(hlcmsxform, In, In, 256*256*256);
 
     diff = clock() - atime;
     free(In);
 
     PrintPerformance(Mb, sizeof(cmsUInt16Number), diff);
-    cmsDeleteTransform(ContextID, hlcmsxform);
+    cmsDeleteTransform(hlcmsxform);
 }
 
 
 static
-void SpeedTest8bitsGray(cmsContext ContextID, const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
+void SpeedTest8bitsGray(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
 {
     cmsInt32Number r, g, b, j;
     clock_t atime;
@@ -9136,10 +9136,10 @@ void SpeedTest8bitsGray(cmsContext ContextID, const char * Title, cmsHPROFILE hl
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Die("Unable to open profiles");
 
-    hlcmsxform  = cmsCreateTransform(ContextID, hlcmsProfileIn,
+    hlcmsxform  = cmsCreateTransform(hlcmsProfileIn,
         TYPE_GRAY_8, hlcmsProfileOut, TYPE_GRAY_8, Intent, cmsFLAGS_NOCACHE);
-    cmsCloseProfile(ContextID, hlcmsProfileIn);
-    cmsCloseProfile(ContextID, hlcmsProfileOut);
+    cmsCloseProfile(hlcmsProfileIn);
+    cmsCloseProfile(hlcmsProfileOut);
     Mb = 256*256*256;
 
     In = (cmsUInt8Number*) chknull(malloc(Mb));
@@ -9158,27 +9158,27 @@ void SpeedTest8bitsGray(cmsContext ContextID, const char * Title, cmsHPROFILE hl
 
     atime = clock();
 
-    cmsDoTransform(ContextID, hlcmsxform, In, In, 256*256*256);
+    cmsDoTransform(hlcmsxform, In, In, 256*256*256);
 
     diff = clock() - atime;
     free(In);
 
     PrintPerformance(Mb, sizeof(cmsUInt8Number), diff);
-    cmsDeleteTransform(ContextID, hlcmsxform);
+    cmsDeleteTransform(hlcmsxform);
 }
 
 
 static
 cmsHPROFILE CreateCurves(cmsContext ContextID)
 {
-    cmsToneCurve* Gamma = cmsBuildGamma(ContextID, 1.1);
+    cmsToneCurve* Gamma = cmsBuildGamma(1.1);
     cmsToneCurve* Transfer[3];
     cmsHPROFILE h;
 
     Transfer[0] = Transfer[1] = Transfer[2] = Gamma;
-    h = cmsCreateLinearizationDeviceLink(ContextID, cmsSigRgbData, Transfer);
+    h = cmsCreateLinearizationDeviceLink(cmsSigRgbData, Transfer);
 
-    cmsFreeToneCurve(ContextID, Gamma);
+    cmsFreeToneCurve(Gamma);
 
     return h;
 }
@@ -9191,91 +9191,91 @@ void SpeedTest(cmsContext ContextID)
     printf(    "=================================\n\n");
     fflush(stdout);
 
-    SpeedTest8bits(ContextID, "8 bits on CLUT profiles",
-        cmsOpenProfileFromFile(ContextID, "test5.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "test3.icc", "r"),
+    SpeedTest8bits("8 bits on CLUT profiles",
+        cmsOpenProfileFromFile("test5.icc", "r"),
+        cmsOpenProfileFromFile("test3.icc", "r"),
         INTENT_PERCEPTUAL);
 
-    SpeedTest16bits(ContextID, "16 bits on CLUT profiles",
-        cmsOpenProfileFromFile(ContextID, "test5.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "test3.icc", "r"), INTENT_PERCEPTUAL);
+    SpeedTest16bits("16 bits on CLUT profiles",
+        cmsOpenProfileFromFile("test5.icc", "r"),
+        cmsOpenProfileFromFile("test3.icc", "r"), INTENT_PERCEPTUAL);
 
-    SpeedTest32bits(ContextID, "32 bits on CLUT profiles",
-        cmsOpenProfileFromFile(ContextID, "test5.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "test3.icc", "r"), INTENT_PERCEPTUAL);
+    SpeedTest32bits("32 bits on CLUT profiles",
+        cmsOpenProfileFromFile("test5.icc", "r"),
+        cmsOpenProfileFromFile("test3.icc", "r"), INTENT_PERCEPTUAL);
 
     printf("\n");
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    SpeedTest8bits(ContextID, "8 bits on Matrix-Shaper profiles",
-        cmsOpenProfileFromFile(ContextID, "test5.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "aRGBlcms2.icc", "r"),
+    SpeedTest8bits("8 bits on Matrix-Shaper profiles",
+        cmsOpenProfileFromFile("test5.icc", "r"),
+        cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
         INTENT_PERCEPTUAL);
 
-    SpeedTest16bits(ContextID, "16 bits on Matrix-Shaper profiles",
-        cmsOpenProfileFromFile(ContextID, "test5.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "aRGBlcms2.icc", "r"),
+    SpeedTest16bits("16 bits on Matrix-Shaper profiles",
+        cmsOpenProfileFromFile("test5.icc", "r"),
+        cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
         INTENT_PERCEPTUAL);
 
-    SpeedTest32bits(ContextID, "32 bits on Matrix-Shaper profiles",
-        cmsOpenProfileFromFile(ContextID, "test5.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "aRGBlcms2.icc", "r"),
-        INTENT_PERCEPTUAL);
-
-    printf("\n");
-
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    SpeedTest8bits(ContextID, "8 bits on SAME Matrix-Shaper profiles",
-        cmsOpenProfileFromFile(ContextID, "test5.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "test5.icc", "r"),
-        INTENT_PERCEPTUAL);
-
-    SpeedTest16bits(ContextID, "16 bits on SAME Matrix-Shaper profiles",
-        cmsOpenProfileFromFile(ContextID, "aRGBlcms2.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "aRGBlcms2.icc", "r"),
-        INTENT_PERCEPTUAL);
-
-    SpeedTest32bits(ContextID, "32 bits on SAME Matrix-Shaper profiles",
-        cmsOpenProfileFromFile(ContextID, "aRGBlcms2.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "aRGBlcms2.icc", "r"),
+    SpeedTest32bits("32 bits on Matrix-Shaper profiles",
+        cmsOpenProfileFromFile("test5.icc", "r"),
+        cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
         INTENT_PERCEPTUAL);
 
     printf("\n");
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    SpeedTest8bits(ContextID, "8 bits on Matrix-Shaper profiles (AbsCol)",
-       cmsOpenProfileFromFile(ContextID, "test5.icc", "r"),
-       cmsOpenProfileFromFile(ContextID, "aRGBlcms2.icc", "r"),
+    SpeedTest8bits("8 bits on SAME Matrix-Shaper profiles",
+        cmsOpenProfileFromFile("test5.icc", "r"),
+        cmsOpenProfileFromFile("test5.icc", "r"),
+        INTENT_PERCEPTUAL);
+
+    SpeedTest16bits("16 bits on SAME Matrix-Shaper profiles",
+        cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
+        cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
+        INTENT_PERCEPTUAL);
+
+    SpeedTest32bits("32 bits on SAME Matrix-Shaper profiles",
+        cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
+        cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
+        INTENT_PERCEPTUAL);
+
+    printf("\n");
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    SpeedTest8bits("8 bits on Matrix-Shaper profiles (AbsCol)",
+       cmsOpenProfileFromFile("test5.icc", "r"),
+       cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
         INTENT_ABSOLUTE_COLORIMETRIC);
 
-    SpeedTest16bits(ContextID, "16 bits on Matrix-Shaper profiles (AbsCol)",
-       cmsOpenProfileFromFile(ContextID, "test5.icc", "r"),
-       cmsOpenProfileFromFile(ContextID, "aRGBlcms2.icc", "r"),
+    SpeedTest16bits("16 bits on Matrix-Shaper profiles (AbsCol)",
+       cmsOpenProfileFromFile("test5.icc", "r"),
+       cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
         INTENT_ABSOLUTE_COLORIMETRIC);
 
-    SpeedTest32bits(ContextID, "32 bits on Matrix-Shaper profiles (AbsCol)",
-       cmsOpenProfileFromFile(ContextID, "test5.icc", "r"),
-       cmsOpenProfileFromFile(ContextID, "aRGBlcms2.icc", "r"),
+    SpeedTest32bits("32 bits on Matrix-Shaper profiles (AbsCol)",
+       cmsOpenProfileFromFile("test5.icc", "r"),
+       cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
         INTENT_ABSOLUTE_COLORIMETRIC);
 
     printf("\n");
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    SpeedTest8bits(ContextID, "8 bits on curves",
+    SpeedTest8bits("8 bits on curves",
         CreateCurves(ContextID),
         CreateCurves(ContextID),
         INTENT_PERCEPTUAL);
 
-    SpeedTest16bits(ContextID, "16 bits on curves",
+    SpeedTest16bits("16 bits on curves",
         CreateCurves(ContextID),
         CreateCurves(ContextID),
         INTENT_PERCEPTUAL);
 
-    SpeedTest32bits(ContextID, "32 bits on curves",
+    SpeedTest32bits("32 bits on curves",
         CreateCurves(ContextID),
         CreateCurves(ContextID),
         INTENT_PERCEPTUAL);
@@ -9284,65 +9284,65 @@ void SpeedTest(cmsContext ContextID)
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    SpeedTest8bitsCMYK(ContextID, "8 bits on CMYK profiles",
-        cmsOpenProfileFromFile(ContextID, "test1.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "test2.icc", "r"));
+    SpeedTest8bitsCMYK("8 bits on CMYK profiles",
+        cmsOpenProfileFromFile("test1.icc", "r"),
+        cmsOpenProfileFromFile("test2.icc", "r"));
 
-    SpeedTest16bitsCMYK(ContextID, "16 bits on CMYK profiles",
-        cmsOpenProfileFromFile(ContextID, "test1.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "test2.icc", "r"));
+    SpeedTest16bitsCMYK("16 bits on CMYK profiles",
+        cmsOpenProfileFromFile("test1.icc", "r"),
+        cmsOpenProfileFromFile("test2.icc", "r"));
 
-    SpeedTest32bitsCMYK(ContextID, "32 bits on CMYK profiles",
-        cmsOpenProfileFromFile(ContextID, "test1.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "test2.icc", "r"));
-
-    printf("\n");
-
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    SpeedTest8bitsGray(ContextID, "8 bits on gray-to gray",
-        cmsOpenProfileFromFile(ContextID, "gray3lcms2.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "graylcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
-
-    SpeedTest16bitsGray(ContextID, "16 bits on gray-to gray",
-        cmsOpenProfileFromFile(ContextID, "gray3lcms2.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "graylcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
-
-    SpeedTest32bitsGray(ContextID, "32 bits on gray-to gray",
-        cmsOpenProfileFromFile(ContextID, "gray3lcms2.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "graylcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
+    SpeedTest32bitsCMYK("32 bits on CMYK profiles",
+        cmsOpenProfileFromFile("test1.icc", "r"),
+        cmsOpenProfileFromFile("test2.icc", "r"));
 
     printf("\n");
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    SpeedTest8bitsGray(ContextID, "8 bits on gray-to-lab gray",
-        cmsOpenProfileFromFile(ContextID, "graylcms2.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "glablcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
+    SpeedTest8bitsGray("8 bits on gray-to gray",
+        cmsOpenProfileFromFile("gray3lcms2.icc", "r"),
+        cmsOpenProfileFromFile("graylcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
 
-    SpeedTest16bitsGray(ContextID, "16 bits on gray-to-lab gray",
-        cmsOpenProfileFromFile(ContextID, "graylcms2.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "glablcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
+    SpeedTest16bitsGray("16 bits on gray-to gray",
+        cmsOpenProfileFromFile("gray3lcms2.icc", "r"),
+        cmsOpenProfileFromFile("graylcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
 
-    SpeedTest32bitsGray(ContextID, "32 bits on gray-to-lab gray",
-        cmsOpenProfileFromFile(ContextID, "graylcms2.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "glablcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
+    SpeedTest32bitsGray("32 bits on gray-to gray",
+        cmsOpenProfileFromFile("gray3lcms2.icc", "r"),
+        cmsOpenProfileFromFile("graylcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
 
     printf("\n");
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    SpeedTest8bitsGray(ContextID, "8 bits on SAME gray-to-gray",
-        cmsOpenProfileFromFile(ContextID, "graylcms2.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "graylcms2.icc", "r"), INTENT_PERCEPTUAL);
+    SpeedTest8bitsGray("8 bits on gray-to-lab gray",
+        cmsOpenProfileFromFile("graylcms2.icc", "r"),
+        cmsOpenProfileFromFile("glablcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
 
-    SpeedTest16bitsGray(ContextID, "16 bits on SAME gray-to-gray",
-        cmsOpenProfileFromFile(ContextID, "graylcms2.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "graylcms2.icc", "r"), INTENT_PERCEPTUAL);
+    SpeedTest16bitsGray("16 bits on gray-to-lab gray",
+        cmsOpenProfileFromFile("graylcms2.icc", "r"),
+        cmsOpenProfileFromFile("glablcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
 
-    SpeedTest32bitsGray(ContextID, "32 bits on SAME gray-to-gray",
-        cmsOpenProfileFromFile(ContextID, "graylcms2.icc", "r"),
-        cmsOpenProfileFromFile(ContextID, "graylcms2.icc", "r"), INTENT_PERCEPTUAL);
+    SpeedTest32bitsGray("32 bits on gray-to-lab gray",
+        cmsOpenProfileFromFile("graylcms2.icc", "r"),
+        cmsOpenProfileFromFile("glablcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
+
+    printf("\n");
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    SpeedTest8bitsGray("8 bits on SAME gray-to-gray",
+        cmsOpenProfileFromFile("graylcms2.icc", "r"),
+        cmsOpenProfileFromFile("graylcms2.icc", "r"), INTENT_PERCEPTUAL);
+
+    SpeedTest16bitsGray("16 bits on SAME gray-to-gray",
+        cmsOpenProfileFromFile("graylcms2.icc", "r"),
+        cmsOpenProfileFromFile("graylcms2.icc", "r"), INTENT_PERCEPTUAL);
+
+    SpeedTest32bitsGray("32 bits on SAME gray-to-gray",
+        cmsOpenProfileFromFile("graylcms2.icc", "r"),
+        cmsOpenProfileFromFile("graylcms2.icc", "r"), INTENT_PERCEPTUAL);
 
     printf("\n");
 }

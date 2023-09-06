@@ -40,49 +40,49 @@ static char ZOORawWrite[cmsMAX_PATH]  = "c:\\colormaps\\rawwrite\\";
 
 // Read all tags on a profile given by its handle
 static
-void ReadAllTags(cmsContext ContextID, cmsHPROFILE h)
+void ReadAllTags(cmsHPROFILE h)
 {
     cmsInt32Number i, n;
     cmsTagSignature sig;
 
-    n = cmsGetTagCount(ContextID, h);
+    n = cmsGetTagCount(h);
     for (i=0; i < n; i++) {
 
-        sig = cmsGetTagSignature(ContextID, h, i);
-        if (cmsReadTag(ContextID, h, sig) == NULL) return;
+        sig = cmsGetTagSignature(h, i);
+        if (cmsReadTag(h, sig) == NULL) return;
     }
 }
 
 
 // Read all tags on a profile given by its handle
 static
-void ReadAllRAWTags(cmsContext ContextID, cmsHPROFILE h)
+void ReadAllRAWTags(cmsHPROFILE h)
 {
     cmsInt32Number i, n;
     cmsTagSignature sig;
     cmsInt32Number len;
 
-    n = cmsGetTagCount(ContextID, h);
+    n = cmsGetTagCount(h);
     for (i=0; i < n; i++) {
 
-        sig = cmsGetTagSignature(ContextID, h, i);
-        len = cmsReadRawTag(ContextID, h, sig, NULL, 0);
+        sig = cmsGetTagSignature(h, i);
+        len = cmsReadRawTag(h, sig, NULL, 0);
     }
 }
 
 
 static
-void PrintInfo(cmsContext ContextID, cmsHPROFILE h, cmsInfoType Info)
+void PrintInfo(cmsHPROFILE h, cmsInfoType Info)
 {
     wchar_t* text;
     cmsInt32Number len;
     cmsContext id = 0;
 
-    len = cmsGetProfileInfo(ContextID, h, Info, "en", "US", NULL, 0);
+    len = cmsGetProfileInfo(h, Info, "en", "US", NULL, 0);
     if (len == 0) return;
 
     text = (wchar_t*) _cmsMalloc(id, len);
-    cmsGetProfileInfo(ContextID, h, Info, "en", "US", text, len);
+    cmsGetProfileInfo(h, Info, "en", "US", text, len);
 
     wprintf(L"%s\n", text);
     _cmsFree(id, text);
@@ -90,69 +90,69 @@ void PrintInfo(cmsContext ContextID, cmsHPROFILE h, cmsInfoType Info)
 
 
 static
-void PrintAllInfos(cmsContext ContextID, cmsHPROFILE h)
+void PrintAllInfos(cmsHPROFILE h)
 {
-     PrintInfo(ContextID, h, cmsInfoDescription);
-     PrintInfo(ContextID, h, cmsInfoManufacturer);
-     PrintInfo(ContextID, h, cmsInfoModel);
-     PrintInfo(ContextID, h, cmsInfoCopyright);
+     PrintInfo(h, cmsInfoDescription);
+     PrintInfo(h, cmsInfoManufacturer);
+     PrintInfo(h, cmsInfoModel);
+     PrintInfo(h, cmsInfoCopyright);
      printf("\n\n");
 }
 
 static
-void ReadAllLUTS(cmsContext ContextID, cmsHPROFILE h)
+void ReadAllLUTS(cmsHPROFILE h)
 {
     cmsPipeline* a;
     cmsCIEXYZ Black;
 
-    a = _cmsReadInputLUT(ContextID, h, INTENT_PERCEPTUAL, 0);
-    if (a) cmsPipelineFree(ContextID, a);
+    a = _cmsReadInputLUT(h, INTENT_PERCEPTUAL, 0);
+    if (a) cmsPipelineFree(a);
 
-    a = _cmsReadInputLUT(ContextID, h, INTENT_RELATIVE_COLORIMETRIC, 0);
-    if (a) cmsPipelineFree(ContextID, a);
+    a = _cmsReadInputLUT(h, INTENT_RELATIVE_COLORIMETRIC, 0);
+    if (a) cmsPipelineFree(a);
 
-    a = _cmsReadInputLUT(ContextID, h, INTENT_SATURATION, 0);
-    if (a) cmsPipelineFree(ContextID, a);
+    a = _cmsReadInputLUT(h, INTENT_SATURATION, 0);
+    if (a) cmsPipelineFree(a);
 
-    a = _cmsReadInputLUT(ContextID, h, INTENT_ABSOLUTE_COLORIMETRIC, 0);
-    if (a) cmsPipelineFree(ContextID, a);
+    a = _cmsReadInputLUT(h, INTENT_ABSOLUTE_COLORIMETRIC, 0);
+    if (a) cmsPipelineFree(a);
 
-    a = _cmsReadOutputLUT(ContextID, h, INTENT_PERCEPTUAL, 0);
-    if (a) cmsPipelineFree(ContextID, a);
+    a = _cmsReadOutputLUT(h, INTENT_PERCEPTUAL, 0);
+    if (a) cmsPipelineFree(a);
 
-    a = _cmsReadOutputLUT(ContextID, h, INTENT_RELATIVE_COLORIMETRIC, 0);
-    if (a) cmsPipelineFree(ContextID, a);
+    a = _cmsReadOutputLUT(h, INTENT_RELATIVE_COLORIMETRIC, 0);
+    if (a) cmsPipelineFree(a);
 
-    a = _cmsReadOutputLUT(ContextID, h, INTENT_SATURATION, 0);
-    if (a) cmsPipelineFree(ContextID, a);
+    a = _cmsReadOutputLUT(h, INTENT_SATURATION, 0);
+    if (a) cmsPipelineFree(a);
 
-    a = _cmsReadOutputLUT(ContextID, h, INTENT_ABSOLUTE_COLORIMETRIC, 0);
-    if (a) cmsPipelineFree(ContextID, a);
+    a = _cmsReadOutputLUT(h, INTENT_ABSOLUTE_COLORIMETRIC, 0);
+    if (a) cmsPipelineFree(a);
 
-    a = _cmsReadDevicelinkLUT(ContextID, h, INTENT_PERCEPTUAL);
-    if (a) cmsPipelineFree(ContextID, a);
+    a = _cmsReadDevicelinkLUT(h, INTENT_PERCEPTUAL);
+    if (a) cmsPipelineFree(a);
 
-    a = _cmsReadDevicelinkLUT(ContextID, h, INTENT_RELATIVE_COLORIMETRIC);
-    if (a) cmsPipelineFree(ContextID, a);
+    a = _cmsReadDevicelinkLUT(h, INTENT_RELATIVE_COLORIMETRIC);
+    if (a) cmsPipelineFree(a);
 
-    a = _cmsReadDevicelinkLUT(ContextID, h, INTENT_SATURATION);
-    if (a) cmsPipelineFree(ContextID, a);
+    a = _cmsReadDevicelinkLUT(h, INTENT_SATURATION);
+    if (a) cmsPipelineFree(a);
 
-    a = _cmsReadDevicelinkLUT(ContextID, h, INTENT_ABSOLUTE_COLORIMETRIC);
-    if (a) cmsPipelineFree(ContextID, a);
+    a = _cmsReadDevicelinkLUT(h, INTENT_ABSOLUTE_COLORIMETRIC);
+    if (a) cmsPipelineFree(a);
 
 
-    cmsDetectDestinationBlackPoint(ContextID, &Black, h, INTENT_PERCEPTUAL, 0);
-    cmsDetectDestinationBlackPoint(ContextID, &Black, h, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsDetectDestinationBlackPoint(ContextID, &Black, h, INTENT_SATURATION, 0);
-    cmsDetectDestinationBlackPoint(ContextID, &Black, h, INTENT_ABSOLUTE_COLORIMETRIC, 0);
-    cmsDetectTAC(ContextID, h);
+    cmsDetectDestinationBlackPoint(&Black, h, INTENT_PERCEPTUAL, 0);
+    cmsDetectDestinationBlackPoint(&Black, h, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsDetectDestinationBlackPoint(&Black, h, INTENT_SATURATION, 0);
+    cmsDetectDestinationBlackPoint(&Black, h, INTENT_ABSOLUTE_COLORIMETRIC, 0);
+    cmsDetectTAC(h);
 }
 
 // Check one specimen in the ZOO
 
 static
-cmsInt32Number CheckSingleSpecimen(cmsContext ContextID, const char* Profile)
+cmsInt32Number CheckSingleSpecimen(const char* Profile)
 {
     char BuffSrc[256];
     char BuffDst[256];
@@ -161,32 +161,32 @@ cmsInt32Number CheckSingleSpecimen(cmsContext ContextID, const char* Profile)
     sprintf(BuffSrc, "%s%s", ZOOfolder, Profile);
     sprintf(BuffDst, "%s%s", ZOOwrite,  Profile);
 
-    h = cmsOpenProfileFromFile(ContextID, BuffSrc, "r");
+    h = cmsOpenProfileFromFile(BuffSrc, "r");
     if (h == NULL) return 0;
 
     printf("%s\n", Profile);
 
-    PrintAllInfos(ContextID, h);
-    ReadAllTags(ContextID, h);
-    ReadAllLUTS(ContextID, h);
- // ReadAllRAWTags(ContextID, h);
+    PrintAllInfos(h);
+    ReadAllTags(h);
+    ReadAllLUTS(h);
+ // ReadAllRAWTags(h);
 
 
-    cmsSaveProfileToFile(ContextID, h, BuffDst);
-    cmsCloseProfile(ContextID, h);
+    cmsSaveProfileToFile(h, BuffDst);
+    cmsCloseProfile(h);
 
-    h = cmsOpenProfileFromFile(ContextID, BuffDst, "r");
+    h = cmsOpenProfileFromFile(BuffDst, "r");
     if (h == NULL) return 0;
-    ReadAllTags(ContextID, h);
+    ReadAllTags(h);
 
 
-    cmsCloseProfile(ContextID, h);
+    cmsCloseProfile(h);
 
     return 1;
 }
 
 static
-cmsInt32Number CheckRAWSpecimen(cmsContext ContextID, const char* Profile)
+cmsInt32Number CheckRAWSpecimen(const char* Profile)
 {
     char BuffSrc[256];
     char BuffDst[256];
@@ -195,18 +195,18 @@ cmsInt32Number CheckRAWSpecimen(cmsContext ContextID, const char* Profile)
     sprintf(BuffSrc, "%s%s", ZOOfolder, Profile);
     sprintf(BuffDst, "%s%s", ZOORawWrite,  Profile);
 
-    h = cmsOpenProfileFromFile(ContextID, BuffSrc, "r");
+    h = cmsOpenProfileFromFile(BuffSrc, "r");
     if (h == NULL) return 0;
 
-    ReadAllTags(ContextID, h);
-    ReadAllRAWTags(ContextID, h);
-    cmsSaveProfileToFile(ContextID, h, BuffDst);
-    cmsCloseProfile(ContextID, h);
+    ReadAllTags(h);
+    ReadAllRAWTags(h);
+    cmsSaveProfileToFile(h, BuffDst);
+    cmsCloseProfile(h);
 
-    h = cmsOpenProfileFromFile(ContextID, BuffDst, "r");
+    h = cmsOpenProfileFromFile(BuffDst, "r");
     if (h == NULL) return 0;
-    ReadAllTags(ContextID, h);
-    cmsCloseProfile(ContextID, h);
+    ReadAllTags(h);
+    cmsCloseProfile(h);
 
     return 1;
 }
@@ -228,7 +228,7 @@ static int rgb = 0,
 
 
 static
-int count_stats(cmsContext ContextID, const char* Profile)
+int count_stats(const char* Profile)
 {
     char BuffSrc[256];
     cmsHPROFILE h;
@@ -236,11 +236,11 @@ int count_stats(cmsContext ContextID, const char* Profile)
 
     sprintf(BuffSrc, "%s%s", ZOOfolder, Profile);
 
-    h = cmsOpenProfileFromFile(ContextID, BuffSrc, "r");
+    h = cmsOpenProfileFromFile(BuffSrc, "r");
     if (h == NULL) return 0;
 
 
-    switch (cmsGetDeviceClass(ContextID, h)) {
+    switch (cmsGetDeviceClass(h)) {
 
     case cmsSigInputClass        : input++; break;
     case cmsSigDisplayClass      : disp++; break;
@@ -252,7 +252,7 @@ int count_stats(cmsContext ContextID, const char* Profile)
     }
 
 
-    switch (cmsGetColorSpace(ContextID, h)) {
+    switch (cmsGetColorSpace(h)) {
 
     case cmsSigRgbData: rgb++; break;
     case cmsSigCmykData: cmyk++; break;
@@ -260,11 +260,11 @@ int count_stats(cmsContext ContextID, const char* Profile)
     default: other++;
     }
 
-    cmsDetectDestinationBlackPoint(ContextID, &Black, h, INTENT_PERCEPTUAL, 0);
-    cmsDetectDestinationBlackPoint(ContextID, &Black, h, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsDetectDestinationBlackPoint(ContextID, &Black, h, INTENT_SATURATION, 0);
+    cmsDetectDestinationBlackPoint(&Black, h, INTENT_PERCEPTUAL, 0);
+    cmsDetectDestinationBlackPoint(&Black, h, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsDetectDestinationBlackPoint(&Black, h, INTENT_SATURATION, 0);
 
-    cmsCloseProfile(ContextID, h);
+    cmsCloseProfile(h);
 
     return 1;
 }
@@ -276,7 +276,7 @@ void CheckProfileZOO(cmsContext ContextID)
     struct _finddata_t c_file;
     intptr_t hFile;
 
-    cmsSetLogErrorHandler(ContextID, NULL);
+    cmsSetLogErrorHandler(NULL);
 
     if ( (hFile = _findfirst("c:\\colormaps\\*.*", &c_file)) == -1L )
         printf("No files in current directory");
@@ -287,10 +287,10 @@ void CheckProfileZOO(cmsContext ContextID)
             if (strcmp(c_file.name, ".") != 0 &&
                 strcmp(c_file.name, "..") != 0) {
 
-                    CheckSingleSpecimen(ContextID, c_file.name);
-                    CheckRAWSpecimen(ContextID, c_file.name);
+                    CheckSingleSpecimen(c_file.name);
+                    CheckRAWSpecimen(c_file.name);
 
-                    count_stats(ContextID, c_file.name);
+                    count_stats(c_file.name);
 
                     TestMemoryLeaks(FALSE);
 

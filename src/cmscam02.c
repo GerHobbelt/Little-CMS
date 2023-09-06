@@ -353,13 +353,13 @@ CAM02COLOR CAT02toXYZ(CAM02COLOR clr)
 }
 
 
-cmsHANDLE  CMSEXPORT cmsCIECAM02Init(cmsContext ContextID, const cmsViewingConditions* pVC)
+cmsHANDLE  CMSEXPORT cmsCIECAM02Init(const cmsViewingConditions* pVC)
 {
     cmsCIECAM02* lpMod;
 
     _cmsAssert(pVC != NULL);
 
-    if((lpMod = (cmsCIECAM02*) _cmsMallocZero(ContextID, sizeof(cmsCIECAM02))) == NULL) {
+    if((lpMod = (cmsCIECAM02*) _cmsMallocZero(sizeof(cmsCIECAM02))) == NULL) {
         return NULL;
     }
 
@@ -420,19 +420,19 @@ cmsHANDLE  CMSEXPORT cmsCIECAM02Init(cmsContext ContextID, const cmsViewingCondi
 
 }
 
-void CMSEXPORT cmsCIECAM02Done(cmsContext ContextID, cmsHANDLE hModel)
+void CMSEXPORT cmsCIECAM02Done(cmsHANDLE hModel)
 {
     cmsCIECAM02* lpMod = (cmsCIECAM02*) hModel;
 
-    if (lpMod) _cmsFree(ContextID, lpMod);
+    if (lpMod) _cmsFree(lpMod);
 }
 
 
-void CMSEXPORT cmsCIECAM02Forward(cmsContext ContextID, cmsHANDLE hModel, const cmsCIEXYZ* pIn, cmsJCh* pOut)
+void CMSEXPORT cmsCIECAM02Forward(cmsHANDLE hModel, const cmsCIEXYZ* pIn, cmsJCh* pOut)
 {
     CAM02COLOR clr;
     cmsCIECAM02* lpMod = (cmsCIECAM02*) hModel;
-    cmsUNUSED_PARAMETER(ContextID);
+    
 
     _cmsAssert(lpMod != NULL);
     _cmsAssert(pIn != NULL);
@@ -455,11 +455,11 @@ void CMSEXPORT cmsCIECAM02Forward(cmsContext ContextID, cmsHANDLE hModel, const 
     pOut ->h = clr.h;
 }
 
-void CMSEXPORT cmsCIECAM02Reverse(cmsContext ContextID, cmsHANDLE hModel, const cmsJCh* pIn, cmsCIEXYZ* pOut)
+void CMSEXPORT cmsCIECAM02Reverse(cmsHANDLE hModel, const cmsJCh* pIn, cmsCIEXYZ* pOut)
 {
     CAM02COLOR clr;
     cmsCIECAM02* lpMod = (cmsCIECAM02*) hModel;
-    cmsUNUSED_PARAMETER(ContextID);
+    
 
     _cmsAssert(lpMod != NULL);
     _cmsAssert(pIn != NULL);

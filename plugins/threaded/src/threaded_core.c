@@ -52,7 +52,7 @@ DWORD WINAPI thread_adaptor(LPVOID p)
 
 // This function creates a thread and executes it. The thread calls the worker function
 // with the given parameters.
-cmsHANDLE _cmsThrCreateWorker(cmsContext ContextID, _cmsTransform2Fn worker, _cmsWorkSlice* param)
+cmsHANDLE _cmsThrCreateWorker(_cmsTransform2Fn worker, _cmsWorkSlice* param)
 {
     DWORD ThreadID;
     thread_adaptor_param* p;
@@ -67,18 +67,18 @@ cmsHANDLE _cmsThrCreateWorker(cmsContext ContextID, _cmsTransform2Fn worker, _cm
     handle  = CreateThread(NULL, 0, thread_adaptor, (LPVOID) p, 0, &ThreadID);
     if (handle == NULL)
     {
-        cmsSignalError(ContextID, cmsERROR_UNDEFINED, "Cannot create thread");
+        cmsSignalError(cmsERROR_UNDEFINED, "Cannot create thread");
     }
 
     return (cmsHANDLE)handle;
 }
 
 // Waits until given thread is ended
-void _cmsThrJoinWorker(cmsContext ContextID, cmsHANDLE hWorker)
+void _cmsThrJoinWorker(cmsHANDLE hWorker)
 {
     if (WaitForSingleObject((HANDLE)hWorker, INFINITE) != WAIT_OBJECT_0)
     {
-        cmsSignalError(ContextID, cmsERROR_UNDEFINED, "Cannot join thread");
+        cmsSignalError(cmsERROR_UNDEFINED, "Cannot join thread");
     }
 }
 
@@ -122,7 +122,7 @@ void* thread_adaptor(void* p)
 
 // This function creates a thread and executes it. The thread calls the worker function
 // with the given parameters.
-cmsHANDLE _cmsThrCreateWorker(cmsContext ContextID, _cmsTransform2Fn worker, _cmsWorkSlice* param)
+cmsHANDLE _cmsThrCreateWorker(_cmsTransform2Fn worker, _cmsWorkSlice* param)
 {
     pthread_t threadId;
     thread_adaptor_param* p;
@@ -136,7 +136,7 @@ cmsHANDLE _cmsThrCreateWorker(cmsContext ContextID, _cmsTransform2Fn worker, _cm
     int err = pthread_create(&threadId, NULL, thread_adaptor, p);
     if (err != 0)
     {
-        cmsSignalError(ContextID, cmsERROR_UNDEFINED, "Cannot create thread [pthread error %d]", err);
+        cmsSignalError(cmsERROR_UNDEFINED, "Cannot create thread [pthread error %d]", err);
         return NULL;
     }
     else
@@ -144,12 +144,12 @@ cmsHANDLE _cmsThrCreateWorker(cmsContext ContextID, _cmsTransform2Fn worker, _cm
 }
 
 // Waits until given thread is ended
-void _cmsThrJoinWorker(cmsContext ContextID, cmsHANDLE hWorker)
+void _cmsThrJoinWorker(cmsHANDLE hWorker)
 {
     int err = pthread_join((pthread_t)hWorker, NULL);
     if (err != 0)
     {
-        cmsSignalError(ContextID, cmsERROR_UNDEFINED, "Cannot join thread [pthread error %d]", err); 
+        cmsSignalError(cmsERROR_UNDEFINED, "Cannot join thread [pthread error %d]", err); 
     }
 }
 

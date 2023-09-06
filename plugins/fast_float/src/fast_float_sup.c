@@ -42,38 +42,38 @@ cmsBool Floating_Point_Transforms_Dispatcher(cmsContext ContextID,
     if (*dwFlags & cmsFLAGS_COPY_ALPHA && (T_EXTRA(*InputFormat) != T_EXTRA(*OutputFormat))) return FALSE;        
 
     // Try to optimize as a set of curves plus a matrix plus a set of curves
-    if (OptimizeMatrixShaper15(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
+    if (OptimizeMatrixShaper15(TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
 
     // Try to optimize by joining curves
-    if (Optimize8ByJoiningCurves(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
+    if (Optimize8ByJoiningCurves(TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
 
 #ifndef CMS_DONT_USE_SSE2
     // Try to use SSE2 to optimize as a set of curves plus a matrix plus a set of curves
-    if (Optimize8MatrixShaperSSE(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
+    if (Optimize8MatrixShaperSSE(TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
 #endif
     // Try to optimize as a set of curves plus a matrix plus a set of curves
-    if (Optimize8MatrixShaper(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
+    if (Optimize8MatrixShaper(TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
 
     // Try to optimize by joining curves
-    if (OptimizeFloatByJoiningCurves(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
+    if (OptimizeFloatByJoiningCurves(TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
 
     // Try to optimize as a set of curves plus a matrix plus a set of curves
-    if (OptimizeFloatMatrixShaper(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
+    if (OptimizeFloatMatrixShaper(TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
 
     // Try to optimize using prelinearization plus tetrahedral
-    if (Optimize8BitRGBTransform(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
+    if (Optimize8BitRGBTransform(TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
 
     // Try to optimize using prelinearization plus tetrahedral
-    if (Optimize16BitRGBTransform(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
+    if (Optimize16BitRGBTransform(TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
 
     // Try to optimize using prelinearization plus tetrahedral
-    if (OptimizeCLUTRGBTransform(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
+    if (OptimizeCLUTRGBTransform(TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
 
     // Try to optimize using prelinearization plus tetrahedral
-    if (OptimizeCLUTCMYKTransform(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
+    if (OptimizeCLUTCMYKTransform(TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
 
     // Try to optimize for Lab float as input
-    if (OptimizeCLUTLabTransform(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
+    if (OptimizeCLUTLabTransform(TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
 
     // Cannot optimize, use lcms normal process
     return FALSE;

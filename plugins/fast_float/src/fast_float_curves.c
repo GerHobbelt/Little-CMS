@@ -38,7 +38,7 @@ typedef struct {
 // reference to the real block is kept for later free
 static CurvesFloatData* malloc_aligned(cmsContext ContextID)
 {
-       cmsUInt8Number* real_ptr = (cmsUInt8Number*)_cmsMallocZero(ContextID, sizeof(CurvesFloatData) + 32);
+       cmsUInt8Number* real_ptr = (cmsUInt8Number*)_cmsMallocZero(sizeof(CurvesFloatData) + 32);
        cmsUInt8Number* aligned = (cmsUInt8Number*)(((uintptr_t)real_ptr + 16) & ~0xf);
        CurvesFloatData* p = (CurvesFloatData*)aligned;
 
@@ -48,11 +48,11 @@ static CurvesFloatData* malloc_aligned(cmsContext ContextID)
 }
 
 // Free the private data container
-static void free_aligned(cmsContext ContextID, void* Data)
+static void free_aligned(void* Data)
 {
        CurvesFloatData* p = (CurvesFloatData*)Data;
        if (p != NULL)
-              _cmsFree(ContextID, p->real_ptr);
+              _cmsFree(p->real_ptr);
 }
 
 // Evaluator for float curves. This are just 1D tables
@@ -81,8 +81,8 @@ static void FastEvaluateFloatRGBCurves(cmsContext ContextID,
     cmsUInt8Number* bout;
     cmsUInt8Number* aout = NULL;
 
-    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
-    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
+    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat((cmsHTRANSFORM) CMMcargo);
+    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat((cmsHTRANSFORM) CMMcargo);
 
     CurvesFloatData* Data = (CurvesFloatData*)  _cmsGetTransformUserData(CMMcargo);
 
@@ -164,8 +164,8 @@ static void FastFloatRGBIdentity(cmsContext ContextID,
     cmsUInt8Number* bout;
     cmsUInt8Number* aout = NULL;
 
-    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
-    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
+    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat((cmsHTRANSFORM) CMMcargo);
+    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat((cmsHTRANSFORM) CMMcargo);
 
     cmsUInt32Number nchans, nalpha;
     cmsUInt32Number strideIn, strideOut;
@@ -241,8 +241,8 @@ static void FastEvaluateFloatGrayCurves(cmsContext ContextID,
     const cmsUInt8Number* ain = NULL;
     cmsUInt8Number* kout;
     cmsUInt8Number* aout = NULL;
-    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
-    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
+    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat((cmsHTRANSFORM) CMMcargo);
+    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat((cmsHTRANSFORM) CMMcargo);
 
     CurvesFloatData* Data = (CurvesFloatData*)_cmsGetTransformUserData(CMMcargo);
 
@@ -307,8 +307,8 @@ static void FastFloatGrayIdentity(cmsContext ContextID,
     cmsUInt8Number* kout;
     cmsUInt8Number* aout = NULL;
 
-    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
-    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
+    cmsUInt32Number InputFormat  = cmsGetTransformInputFormat((cmsHTRANSFORM) CMMcargo);
+    cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat((cmsHTRANSFORM) CMMcargo);
 
     cmsUInt32Number nchans, nalpha;
     cmsUInt32Number strideIn, strideOut;
@@ -395,7 +395,7 @@ cmsBool KCurveIsLinear(CurvesFloatData* data)
 
 // Create linearization tables with a reasonable number of entries. Precision is about 32 bits.
 static
-CurvesFloatData* ComputeCompositeCurves(cmsContext ContextID, cmsUInt32Number nChan,  cmsPipeline* Src)
+CurvesFloatData* ComputeCompositeCurves(cmsUInt32Number nChan,  cmsPipeline* Src)
 {
     cmsUInt32Number i, j;
     cmsFloat32Number InFloat[3], OutFloat[3];
@@ -409,7 +409,7 @@ CurvesFloatData* ComputeCompositeCurves(cmsContext ContextID, cmsUInt32Number nC
         for (j=0; j <nChan; j++)
                InFloat[j] = (cmsFloat32Number)i /  (cmsFloat32Number)(MAX_NODES_IN_CURVE-1);
 
-        cmsPipelineEvalFloat(ContextID, InFloat, OutFloat, Src);
+        cmsPipelineEvalFloat(InFloat, OutFloat, Src);
 
         if (nChan == 1) {
 
@@ -458,14 +458,14 @@ cmsBool OptimizeFloatByJoiningCurves(cmsContext ContextID,
     if (nChans != 1 && nChans != 3) return FALSE;
 
     //  Only curves in this LUT?
-    for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, Src);
+    for (mpe = cmsPipelineGetPtrToFirstStage(Src);
         mpe != NULL;
-        mpe = cmsStageNext(ContextID, mpe)) {
+        mpe = cmsStageNext(mpe)) {
 
-            if (cmsStageType(ContextID, mpe) != cmsSigCurveSetElemType) return FALSE;
+            if (cmsStageType(mpe) != cmsSigCurveSetElemType) return FALSE;
     }
 
-    Data = ComputeCompositeCurves(ContextID, nChans, Src);
+    Data = ComputeCompositeCurves(nChans, Src);
 
     *dwFlags |= cmsFLAGS_NOCACHE;
     *dwFlags &= ~cmsFLAGS_CAN_CHANGE_FORMATTER;

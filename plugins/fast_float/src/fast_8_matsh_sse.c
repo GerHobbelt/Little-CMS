@@ -61,7 +61,7 @@ typedef struct {
 static
 XMatShaper8Data* malloc_aligned(cmsContext ContextID)
 {
-    cmsUInt8Number* real_ptr = (cmsUInt8Number*) _cmsMallocZero(ContextID, sizeof(XMatShaper8Data) + 32);
+    cmsUInt8Number* real_ptr = (cmsUInt8Number*) _cmsMallocZero(sizeof(XMatShaper8Data) + 32);
     cmsUInt8Number* aligned = (cmsUInt8Number*) (((uintptr_t)real_ptr + 16) & ~0xf);
     XMatShaper8Data* p = (XMatShaper8Data*) aligned;
 
@@ -70,25 +70,25 @@ XMatShaper8Data* malloc_aligned(cmsContext ContextID)
 }
 
 static
-void free_aligned(cmsContext ContextID, XMatShaper8Data* a)
+void free_aligned(XMatShaper8Data* a)
 {
-    _cmsFree(ContextID, a->real_ptr);
+    _cmsFree(a->real_ptr);
 }
 
 
 // Free the private data container
 static
-void FreeMatShaper(cmsContext ContextID, void* Data)
+void FreeMatShaper(void* Data)
 {
     UNUSED_PARAMETER(ContextID);
 
-    if (Data != NULL) free_aligned(ContextID, (XMatShaper8Data*) Data);
+    if (Data != NULL) free_aligned((XMatShaper8Data*) Data);
 }
 
 
 // This table converts from 8 bits to 1.14 after applying the curve
 static
-void FillFirstShaper(cmsContext ContextID, cmsFloat32Number* Table, cmsToneCurve* Curve)
+void FillFirstShaper(cmsFloat32Number* Table, cmsToneCurve* Curve)
 {
     cmsInt32Number i;
     cmsFloat32Number R;
@@ -96,14 +96,14 @@ void FillFirstShaper(cmsContext ContextID, cmsFloat32Number* Table, cmsToneCurve
     for (i = 0; i < 256; i++) {
 
         R = (cmsFloat32Number)(i / 255.0);
-        Table[i] = cmsEvalToneCurveFloat(ContextID, Curve, R);
+        Table[i] = cmsEvalToneCurveFloat(Curve, R);
     }
 }
 
 
 // This table converts form 1.14 (being 0x4000 the last entry) to 8 bits after applying the curve
 static
-void FillSecondShaper(cmsContext ContextID, cmsUInt8Number* Table, cmsToneCurve* Curve)
+void FillSecondShaper(cmsUInt8Number* Table, cmsToneCurve* Curve)
 {
     int i;
     cmsFloat32Number R, Val;
@@ -112,7 +112,7 @@ void FillSecondShaper(cmsContext ContextID, cmsUInt8Number* Table, cmsToneCurve*
     for (i=0; i < 0x4001; i++) {
 
         R   = (cmsFloat32Number) (i / 16384.0f);
-        Val = cmsEvalToneCurveFloat(ContextID, Curve, R);
+        Val = cmsEvalToneCurveFloat(Curve, R);
         w = (cmsInt32Number) (Val * 255.0f + 0.5f);
         if (w < 0) w = 0;
         if (w > 255) w = 255;
@@ -124,7 +124,7 @@ void FillSecondShaper(cmsContext ContextID, cmsUInt8Number* Table, cmsToneCurve*
 
 // Compute the matrix-shaper structure
 static
-XMatShaper8Data* SetMatShaper(cmsContext ContextID, cmsToneCurve* Curve1[3], cmsMAT3* Mat, cmsVEC3* Off, cmsToneCurve* Curve2[3])
+XMatShaper8Data* SetMatShaper(cmsToneCurve* Curve1[3], cmsMAT3* Mat, cmsVEC3* Off, cmsToneCurve* Curve2[3])
 {
     XMatShaper8Data* p;
     int i, j;
@@ -134,13 +134,13 @@ XMatShaper8Data* SetMatShaper(cmsContext ContextID, cmsToneCurve* Curve1[3], cms
     if (p == NULL) return FALSE;
 
     // Precompute tables
-    FillFirstShaper(ContextID, p ->Shaper1R, Curve1[0]);
-    FillFirstShaper(ContextID, p ->Shaper1G, Curve1[1]);
-    FillFirstShaper(ContextID, p ->Shaper1B, Curve1[2]);
+    FillFirstShaper(p ->Shaper1R, Curve1[0]);
+    FillFirstShaper(p ->Shaper1G, Curve1[1]);
+    FillFirstShaper(p ->Shaper1B, Curve1[2]);
 
-    FillSecondShaper(ContextID, p ->Shaper2R, Curve2[0]);
-    FillSecondShaper(ContextID, p ->Shaper2G, Curve2[1]);
-    FillSecondShaper(ContextID, p ->Shaper2B, Curve2[2]);
+    FillSecondShaper(p ->Shaper2R, Curve2[0]);
+    FillSecondShaper(p ->Shaper2G, Curve2[1]);
+    FillSecondShaper(p ->Shaper2B, Curve2[2]);
 
 
     // Convert matrix to float
@@ -210,8 +210,8 @@ void MatShaperXform8SSE(cmsContext ContextID,
     cmsUInt32Number* output_index = (cmsUInt32Number*)(((uintptr_t)buffer + 16) & ~0xf);
 
 
-    _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
-    _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
+    _cmsComputeComponentIncrements(cmsGetTransformInputFormat((cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
+    _cmsComputeComponentIncrements(cmsGetTransformOutputFormat((cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
 
     if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
         nalpha = 0;
@@ -350,54 +350,54 @@ cmsBool Optimize8MatrixShaperSSE(cmsContext ContextID,
     Src = *Lut;
 
     // Check for shaper-matrix-matrix-shaper structure, that is what this optimizer stands for
-    if (!cmsPipelineCheckAndRetreiveStages(ContextID, Src, 4,
+    if (!cmsPipelineCheckAndRetreiveStages(Src, 4,
         cmsSigCurveSetElemType, cmsSigMatrixElemType, cmsSigMatrixElemType, cmsSigCurveSetElemType,
         &Curve1, &Matrix1, &Matrix2, &Curve2)) return FALSE;
 
     nChans    = T_CHANNELS(*InputFormat);
 
     // Get both matrices, which are 3x3
-    Data1 = (_cmsStageMatrixData*) cmsStageData(ContextID, Matrix1);
-    Data2 = (_cmsStageMatrixData*) cmsStageData(ContextID, Matrix2);
+    Data1 = (_cmsStageMatrixData*) cmsStageData(Matrix1);
+    Data2 = (_cmsStageMatrixData*) cmsStageData(Matrix2);
 
     // Input offset should be zero
     if (Data1->Offset != NULL) return FALSE;
 
     // Multiply both matrices to get the result
-    _cmsMAT3per(ContextID, &res, (cmsMAT3*)Data2->Double, (cmsMAT3*)Data1->Double);
+    _cmsMAT3per(&res, (cmsMAT3*)Data2->Double, (cmsMAT3*)Data1->Double);
 
     // Now the result is in res + Data2 -> Offset. Maybe is a plain identity?
     IdentityMat = FALSE;
-    if (_cmsMAT3isIdentity(ContextID, &res) && Data2->Offset == NULL) {
+    if (_cmsMAT3isIdentity(&res) && Data2->Offset == NULL) {
 
         // We can get rid of full matrix
         IdentityMat = TRUE;
     }
 
     // Allocate an empty LUT
-    Dest =  cmsPipelineAlloc(ContextID, nChans, nChans);
+    Dest =  cmsPipelineAlloc(nChans, nChans);
     if (!Dest) return FALSE;
 
     // Assamble the new LUT
-    cmsPipelineInsertStage(ContextID, Dest, cmsAT_BEGIN, cmsStageDup(ContextID, Curve1));
+    cmsPipelineInsertStage(Dest, cmsAT_BEGIN, cmsStageDup(Curve1));
 
     if (!IdentityMat) {
 
-        cmsPipelineInsertStage(ContextID, Dest, cmsAT_END,
-                    cmsStageAllocMatrix(ContextID, 3, 3, (const cmsFloat64Number*) &res, Data2 ->Offset));
+        cmsPipelineInsertStage(Dest, cmsAT_END,
+                    cmsStageAllocMatrix(3, 3, (const cmsFloat64Number*) &res, Data2 ->Offset));
     }
 
 
-    cmsPipelineInsertStage(ContextID, Dest, cmsAT_END, cmsStageDup(ContextID, Curve2));
+    cmsPipelineInsertStage(Dest, cmsAT_END, cmsStageDup(Curve2));
 
     // If identity on matrix, we can further optimize the curves, so call the join curves routine
     if (IdentityMat) {
 
-      Optimize8ByJoiningCurves(ContextID, TransformFn, UserData, FreeUserData, &Dest, InputFormat, OutputFormat, dwFlags);
+      Optimize8ByJoiningCurves(TransformFn, UserData, FreeUserData, &Dest, InputFormat, OutputFormat, dwFlags);
     }
     else {
-        _cmsStageToneCurvesData* mpeC1 = (_cmsStageToneCurvesData*) cmsStageData(ContextID, Curve1);
-        _cmsStageToneCurvesData* mpeC2 = (_cmsStageToneCurvesData*) cmsStageData(ContextID, Curve2);
+        _cmsStageToneCurvesData* mpeC1 = (_cmsStageToneCurvesData*) cmsStageData(Curve1);
+        _cmsStageToneCurvesData* mpeC2 = (_cmsStageToneCurvesData*) cmsStageData(Curve2);
 
         // In this particular optimization, cache does not help as it takes more time to deal with
         // the cache that with the pixel handling
@@ -405,14 +405,14 @@ cmsBool Optimize8MatrixShaperSSE(cmsContext ContextID,
 
 
         // Setup the optimization routines
-        *UserData = SetMatShaper(ContextID, mpeC1 ->TheCurves, &res, (cmsVEC3*) Data2 ->Offset, mpeC2->TheCurves);
+        *UserData = SetMatShaper(mpeC1 ->TheCurves, &res, (cmsVEC3*) Data2 ->Offset, mpeC2->TheCurves);
         *FreeUserData = FreeMatShaper;
 
         *TransformFn = MatShaperXform8SSE;         
     }
 
     *dwFlags &= ~cmsFLAGS_CAN_CHANGE_FORMATTER;
-    cmsPipelineFree(ContextID, Src);
+    cmsPipelineFree(Src);
     *Lut = Dest;
     return TRUE;
 }

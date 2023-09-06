@@ -94,7 +94,7 @@ void trace(const char* frm, ...)
 
 // The callback function used by cmsSetLogErrorHandler()
 static
-void FatalErrorQuit(cmsContext ContextID, cmsUInt32Number ErrorCode, const char *Text)
+void FatalErrorQuit(cmsUInt32Number ErrorCode, const char *Text)
 {
        UNUSED_PARAMETER(ContextID);
        UNUSED_PARAMETER(ErrorCode);

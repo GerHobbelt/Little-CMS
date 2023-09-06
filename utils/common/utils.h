@@ -55,7 +55,7 @@
 
 // Init the utility functions
 
-void InitUtils(cmsContext ContextID, const char* PName);
+void InitUtils(const char* PName);
 
 // Fatal Error (print the message and exit(1))---------------------------------------------
 
@@ -72,11 +72,11 @@ int xgetopt(int argc, char *argv[], char *optionS);
 
 // The stock profile utility -------------------------------------------------------
 
-cmsHPROFILE OpenStockProfile(cmsContext ContextID, const char* File);
+cmsHPROFILE OpenStockProfile(const char* File);
 
 // The print info utility ----------------------------------------------------------
 
-void PrintProfileInformation(cmsContext ContextID, cmsHPROFILE h);
+void PrintProfileInformation(cmsHPROFILE h);
 
 // ---------------------------------------------------------------------------------
 

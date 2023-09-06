@@ -152,7 +152,7 @@ void cmsMD5_Transform(cmsUInt32Number buf[4], cmsUInt32Number in[16])
 
 cmsHANDLE CMSEXPORT cmsMD5alloc(cmsContext ContextID)
 {
-    _cmsMD5* ctx = (_cmsMD5*) _cmsMallocZero(ContextID, sizeof(_cmsMD5));
+    _cmsMD5* ctx = (_cmsMD5*) _cmsMallocZero(sizeof(_cmsMD5));
     if (ctx == NULL) return NULL;
 
     ctx->buf[0] = 0x67452301;
@@ -209,7 +209,7 @@ void CMSEXPORT cmsMD5add(cmsHANDLE Handle, const cmsUInt8Number* buf, cmsUInt32N
 }
 
 // Destroy the object and return the checksum
-void CMSEXPORT cmsMD5finish(cmsContext ContextID, cmsProfileID* ProfileID,  cmsHANDLE Handle)
+void CMSEXPORT cmsMD5finish(cmsProfileID* ProfileID,  cmsHANDLE Handle)
 {
     _cmsMD5* ctx = (_cmsMD5*) Handle;
     cmsUInt32Number count;
@@ -242,7 +242,7 @@ void CMSEXPORT cmsMD5finish(cmsContext ContextID, cmsProfileID* ProfileID,  cmsH
     byteReverse((cmsUInt8Number *) ctx->buf, 4);
     memmove(ProfileID ->ID8, ctx->buf, 16);
 
-    _cmsFree(ContextID, ctx);
+    _cmsFree(ctx);
 }
 
 
@@ -251,7 +251,7 @@ void CMSEXPORT cmsMD5finish(cmsContext ContextID, cmsProfileID* ProfileID,  cmsH
 // In the header, rendering intentent, attributes and ID should be set to zero
 // before computing MD5 checksum (per 6.1.13 in ICC spec)
 
-cmsBool CMSEXPORT cmsMD5computeID(cmsContext ContextID, cmsHPROFILE hProfile)
+cmsBool CMSEXPORT cmsMD5computeID(cmsHPROFILE hProfile)
 {
     cmsUInt32Number BytesNeeded;
     cmsUInt8Number* Mem = NULL;
@@ -270,14 +270,14 @@ cmsBool CMSEXPORT cmsMD5computeID(cmsContext ContextID, cmsHPROFILE hProfile)
     memset(&Icc ->ProfileID, 0, sizeof(Icc ->ProfileID));
 
     // Compute needed storage
-    if (!cmsSaveProfileToMem(ContextID, hProfile, NULL, &BytesNeeded)) goto Error;
+    if (!cmsSaveProfileToMem(hProfile, NULL, &BytesNeeded)) goto Error;
 
     // Allocate memory
-    Mem = (cmsUInt8Number*) _cmsMalloc(ContextID, BytesNeeded);
+    Mem = (cmsUInt8Number*) _cmsMalloc(BytesNeeded);
     if (Mem == NULL) goto Error;
 
     // Save to temporary storage
-    if (!cmsSaveProfileToMem(ContextID, hProfile, Mem, &BytesNeeded)) goto Error;
+    if (!cmsSaveProfileToMem(hProfile, Mem, &BytesNeeded)) goto Error;
 
     // Create MD5 object
     MD5 = cmsMD5alloc(ContextID);
@@ -287,20 +287,20 @@ cmsBool CMSEXPORT cmsMD5computeID(cmsContext ContextID, cmsHPROFILE hProfile)
     cmsMD5add(MD5, Mem, BytesNeeded);
 
     // Temp storage is no longer needed
-    _cmsFree(ContextID, Mem);
+    _cmsFree(Mem);
 
     // Restore header
     memmove(Icc, &Keep, sizeof(_cmsICCPROFILE));
 
     // And store the ID
-    cmsMD5finish(ContextID, &Icc ->ProfileID,  MD5);
+    cmsMD5finish(&Icc ->ProfileID,  MD5);
     return TRUE;
 
 Error:
 
     // Free resources as something went wrong
     // "MD5" cannot be other than NULL here, so no need to free it
-    if (Mem != NULL) _cmsFree(ContextID, Mem);
+    if (Mem != NULL) _cmsFree(Mem);
     memmove(Icc, &Keep, sizeof(_cmsICCPROFILE));
     return FALSE;
 }
