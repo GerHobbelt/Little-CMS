@@ -789,7 +789,7 @@ cmsPipeline*  BlackPreservingKOnlyIntents(cmsContext     ContextID,
 
     // Create a LUT holding normal ICC transform
     bp.cmyk2cmyk = DefaultICCintents(ContextID,
-        preservationProfilesCount,
+                                     preservationProfilesCount,
         ICCIntents,
         hProfiles,
         BPC,
@@ -801,7 +801,7 @@ cmsPipeline*  BlackPreservingKOnlyIntents(cmsContext     ContextID,
     // Now, compute the tone curve
     bp.KTone = _cmsBuildKToneCurve(ContextID,
         4096,
-        preservationProfilesCount,
+                                    preservationProfilesCount,
         ICCIntents,
         hProfiles,
         BPC,
@@ -1167,20 +1167,6 @@ cmsUInt32Number CMSEXPORT cmsGetSupportedIntents(cmsContext ContextID, cmsUInt32
     cmsIntentsList* pt;
     cmsUInt32Number nIntents;
 
-
-    for (nIntents=0, pt = ctx->Intents; pt != NULL; pt = pt -> Next)
-    {
-        if (nIntents < nMax) {
-            if (Codes != NULL)
-                Codes[nIntents] = pt ->Intent;
-
-            if (Descriptions != NULL)
-                Descriptions[nIntents] = pt ->Description;
-        }
-
-        nIntents++;
-    }
-
     for (nIntents=0, pt = DefaultIntents; pt != NULL; pt = pt -> Next)
     {
         if (nIntents < nMax) {
@@ -1193,6 +1179,20 @@ cmsUInt32Number CMSEXPORT cmsGetSupportedIntents(cmsContext ContextID, cmsUInt32
 
         nIntents++;
     }
+
+    for (pt = ctx->Intents; pt != NULL; pt = pt -> Next)
+    {
+        if (nIntents < nMax) {
+            if (Codes != NULL)
+                Codes[nIntents] = pt ->Intent;
+
+            if (Descriptions != NULL)
+                Descriptions[nIntents] = pt ->Description;
+        }
+
+        nIntents++;
+    }
+
     return nIntents;
 }
 
