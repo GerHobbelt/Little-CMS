@@ -300,6 +300,7 @@ cmsToneCurve* AllocateToneCurveStruct(cmsUInt32Number nEntries,
         return p;
 
 Error:
+    if (p -> SegInterp) _cmsFree(ContextID, p -> SegInterp);
     if (p -> Segments) _cmsFree(p -> Segments);
     if (p -> Evals) _cmsFree(p -> Evals);
     if (p ->Table16) _cmsFree(p ->Table16);
