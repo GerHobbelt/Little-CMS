@@ -911,7 +911,7 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
                         snprintf(buffer, sizeof(buffer), it8 ->DoubleFormatter, it8->dnum);
                     }
 
-                    StringClear(ContextID, it8->id);
+                    StringClear(it8->id);
                     StringCat(ContextID, it8->id, buffer);
 
                     do {
