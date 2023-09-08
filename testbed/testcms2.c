@@ -8643,7 +8643,7 @@ int CheckBadCGATS(cmsContext ContextID)
     
     cmsSetLogErrorHandler(NULL);
 
-    hIT8 = cmsIT8LoadFromMem(0, bad_it8, strlen(bad_it8));
+    hIT8 = cmsIT8LoadFromMem(0, bad_it8, (cmsUInt32Number) strlen(bad_it8));
     
     ResetFatalError();
 
