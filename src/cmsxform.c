@@ -2580,7 +2580,7 @@ cmsHTRANSFORM CMSEXPORT cmsCreateExtendedTransform(cmsContext ContextID,
         return NULL;
     }
 
-    // Check whatever the transform is 16 bits and involves linear RGB in first profile. If so, disable optimizations
+    // Check whether the transform is 16 bits and involves linear RGB in first profile. If so, disable optimizations
     if (EntryColorSpace == cmsSigRgbData && T_BYTES(InputFormat) == 2 && !(dwFlags & cmsFLAGS_NOOPTIMIZE))
     {
         cmsFloat64Number gamma = cmsDetectRGBProfileGamma(ContextID, hProfiles[0], 0.1);
