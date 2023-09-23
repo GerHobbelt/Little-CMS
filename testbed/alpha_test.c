@@ -287,8 +287,13 @@ void fromFixedDomain(void)
     }
 }
 
+
+#if defined(BUILD_MONOLITHIC)
+#define main      lcms2_alpha_test_main
+#endif
+
 // Check alpha
-int main()
+int main(void)
 {
     toFixedDomain();
     fromFixedDomain();

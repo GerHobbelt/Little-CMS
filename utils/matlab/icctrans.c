@@ -29,37 +29,37 @@
 
 // xgetopt() interface -----------------------------------------------------
 
-static int   xoptind;    
-static char *xoptarg; 
-static int   xopterr;  
-static char  *letP;
+static int   xoptind = 0;    
+static const char *xoptarg = NULL; 
+static int   xopterr = 0;  
+static const char  *letP = NULL;
 static char   SW = '-';
 
 // ------------------------------------------------------------------------
 
 
-static int  Verbose ;			// Print some statistics
-static char *cInProf;			// Input profile
-static char *cOutProf;			// Output profile
-static char *cProofing;			// Softproofing profile
+static int  Verbose = 0;            			// Print some statistics
+static const char *cInProf =  NULL;	    		// Input profile
+static const char *cOutProf =  NULL;			// Output profile
+static const char *cProofing = NULL;			// Softproofing profile
 
 
-static int  Intent;				// Rendering Intent
-static int  ProofingIntent;		// RI for proof
+static int  Intent = 0;				// Rendering Intent
+static int  ProofingIntent = 0;		// RI for proof
 
-static int  PrecalcMode;		// 0 = Not, 1=Normal, 2=Accurate, 3=Fast
+static int  PrecalcMode = 0;		// 0 = Not, 1=Normal, 2=Accurate, 3=Fast
 
-static cmsBool BlackPointCompensation;
-static cmsBool lIsDeviceLink;
-static cmsBool lMultiProfileChain;		// Multiple profile chain
+static cmsBool BlackPointCompensation = FALSE;
+static cmsBool lIsDeviceLink = FALSE;
+static cmsBool lMultiProfileChain = FALSE;		// Multiple profile chain
 
-static cmsHPROFILE hInput, hOutput, hProof;
-static cmsHTRANSFORM hColorTransform;
-static cmsHPROFILE hProfiles[255];
-static int nProfiles;
+static cmsHPROFILE hInput = { 0 }, hOutput = { 0 }, hProof = { 0 };
+static cmsHTRANSFORM hColorTransform = { 0 };
+static cmsHPROFILE hProfiles[255] = { 0 };
+static int nProfiles = 0;
 
-static cmsColorSpaceSignature InputColorSpace, OutputColorSpace;
-static int OutputChannels, InputChannels, nBytesDepth;
+static cmsColorSpaceSignature InputColorSpace = { 0 }, OutputColorSpace = { 0 };
+static int OutputChannels = 0, InputChannels = 0, nBytesDepth = 0;
 
 
 // Error. Print error message and abort
@@ -100,10 +100,10 @@ void xoptinit()
 
 
 static
-int xgetopt(int argc, char *argv[], char *optionS)
+int xgetopt(int argc, const char *argv[], const char *optionS)
 {
 	unsigned char ch;
-	char *optP;
+	const char *optP;
 
 	if (SW == 0) {
 		SW = '/';

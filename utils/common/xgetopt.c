@@ -32,18 +32,18 @@
 #include <string.h>
 #include <stdio.h>
 
-int     xoptind = 1;
-char   *xoptarg;
+int           xoptind = 1;
+const char   *xoptarg = NULL;
 
-static  char   *nextArg = NULL;
+static  const char  *nextArg = NULL;
 
 #define SW '-'
 
 
-int xgetopt(int argc, char* argv[], char* optionS)
+int xgetopt(int argc, const char* argv[], const char* optionS)
 {
     unsigned char ch;
-    char* optP;
+    const char* optP;
 
     if (argc > xoptind)
     {

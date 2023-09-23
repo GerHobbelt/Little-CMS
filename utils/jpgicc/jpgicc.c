@@ -1249,6 +1249,10 @@ void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
 }
 
 
+#if defined(BUILD_MONOLITHIC)
+#define main(cnt, arr)      lcms2_jpgicc_util_main(cnt, arr)
+#endif
+
 int main(int argc, const char** argv)
 {
     cmsContext ContextID = cmsCreateContext(NULL, NULL);

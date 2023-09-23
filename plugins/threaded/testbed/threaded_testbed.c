@@ -120,16 +120,16 @@ void Fail(const char* frm, ...)
 
 // Creates a fake profile that only has a curve. Used in several places
 static
-cmsHPROFILE CreateCurves(void)
+cmsHPROFILE CreateCurves(cmsContext ContextID)
 {
-       cmsToneCurve* Gamma = cmsBuildGamma(0, 1.1);
+       cmsToneCurve* Gamma = cmsBuildGamma(ContextID, 0, 1.1);
        cmsToneCurve* Transfer[3];
        cmsHPROFILE h;
 
        Transfer[0] = Transfer[1] = Transfer[2] = Gamma;
-       h = cmsCreateLinearizationDeviceLink(cmsSigRgbData, Transfer);
+       h = cmsCreateLinearizationDeviceLink(ContextID, cmsSigRgbData, Transfer);
 
-       cmsFreeToneCurve(Gamma);
+       cmsFreeToneCurve(ContextID, Gamma);
 
        return h;
 }
@@ -190,8 +190,8 @@ void TryAllValues8bits(cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, 
     int j;
     cmsUInt32Number npixels = 256 * 256 * 256;
 
-    cmsHTRANSFORM xformRaw = cmsCreateTransformTHR(Raw, hlcmsProfileIn, TYPE_RGBA_8, hlcmsProfileOut, TYPE_RGBA_8, Intent, FLAGS|cmsFLAGS_NOCACHE | cmsFLAGS_COPY_ALPHA);
-    cmsHTRANSFORM xformPlugin = cmsCreateTransformTHR(Plugin, hlcmsProfileIn, TYPE_RGBA_8, hlcmsProfileOut, TYPE_RGBA_8, Intent, FLAGS|cmsFLAGS_NOCACHE | cmsFLAGS_COPY_ALPHA);
+    cmsHTRANSFORM xformRaw = cmsCreateTransform(Raw, hlcmsProfileIn, TYPE_RGBA_8, hlcmsProfileOut, TYPE_RGBA_8, Intent, FLAGS|cmsFLAGS_NOCACHE | cmsFLAGS_COPY_ALPHA);
+    cmsHTRANSFORM xformPlugin = cmsCreateTransform(Plugin, hlcmsProfileIn, TYPE_RGBA_8, hlcmsProfileOut, TYPE_RGBA_8, Intent, FLAGS|cmsFLAGS_NOCACHE | cmsFLAGS_COPY_ALPHA);
 
     cmsCloseProfile(hlcmsProfileIn);
     cmsCloseProfile(hlcmsProfileOut);
@@ -278,8 +278,8 @@ void TryAllValues16bits(cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut,
     int j;
     cmsUInt32Number npixels = 256 * 256 * 256;
 
-    cmsHTRANSFORM xformRaw = cmsCreateTransformTHR(Raw, hlcmsProfileIn, TYPE_RGBA_16, hlcmsProfileOut, TYPE_RGBA_16, Intent, FLAGS|cmsFLAGS_NOCACHE | cmsFLAGS_COPY_ALPHA);
-    cmsHTRANSFORM xformPlugin = cmsCreateTransformTHR(Plugin, hlcmsProfileIn, TYPE_RGBA_16, hlcmsProfileOut, TYPE_RGBA_16, Intent, FLAGS|cmsFLAGS_NOCACHE | cmsFLAGS_COPY_ALPHA);
+    cmsHTRANSFORM xformRaw = cmsCreateTransform(Raw, hlcmsProfileIn, TYPE_RGBA_16, hlcmsProfileOut, TYPE_RGBA_16, Intent, FLAGS|cmsFLAGS_NOCACHE | cmsFLAGS_COPY_ALPHA);
+    cmsHTRANSFORM xformPlugin = cmsCreateTransform(Plugin, hlcmsProfileIn, TYPE_RGBA_16, hlcmsProfileOut, TYPE_RGBA_16, Intent, FLAGS|cmsFLAGS_NOCACHE | cmsFLAGS_COPY_ALPHA);
 
     cmsCloseProfile(hlcmsProfileIn);
     cmsCloseProfile(hlcmsProfileOut);
@@ -373,38 +373,38 @@ void PerformanceHeader(void)
 
 
 static
-cmsHPROFILE loadProfile(const char* name)
+cmsHPROFILE loadProfile(cmsContext ContextID, const char* name)
 {
     if (*name == '*')
     {
         if (strcmp(name, "*lab") == 0)
         {
-            return cmsCreateLab4Profile(NULL);
+            return cmsCreateLab4Profile(ContextID, NULL);
         }
         else
             if (strcmp(name, "*xyz") == 0)
             {
-                return cmsCreateXYZProfile();
+                return cmsCreateXYZProfile(ContextID);
             }
             else
                 if (strcmp(name, "*curves") == 0)
                 {
-                    return CreateCurves();
+                    return CreateCurves(ContextID);
                 }
                 else
                     Fail("Unknown builtin '%s'", name);
 
     }
 
-    return cmsOpenProfileFromFile(name, "r");
+    return cmsOpenProfileFromFile(ContextID, name, "r");
 }
 
 
 static
 cmsFloat64Number Performance(const char* Title, perf_fn fn, cmsContext ct, const char* inICC, const char* outICC, size_t sz, cmsFloat64Number prev)
 {
-    cmsHPROFILE hlcmsProfileIn = loadProfile(inICC);
-    cmsHPROFILE hlcmsProfileOut = loadProfile(outICC);
+    cmsHPROFILE hlcmsProfileIn = loadProfile(ct, inICC);
+    cmsHPROFILE hlcmsProfileOut = loadProfile(ct, outICC);
 
     cmsFloat64Number n = fn(ct, hlcmsProfileIn, hlcmsProfileOut);
 
@@ -430,27 +430,27 @@ void ComparativeCt(cmsContext ct1, cmsContext ct2, const char* Title, perf_fn fn
     cmsHPROFILE hlcmsProfileOut;
 
     if (inICC == NULL)
-        hlcmsProfileIn = CreateCurves();
+        hlcmsProfileIn = CreateCurves(ct1);
     else
-        hlcmsProfileIn = cmsOpenProfileFromFile(inICC, "r");
+        hlcmsProfileIn = cmsOpenProfileFromFile(ct1, inICC, "r");
 
     if (outICC == NULL)
-        hlcmsProfileOut = CreateCurves();
+        hlcmsProfileOut = CreateCurves(ct1);
     else
-        hlcmsProfileOut = cmsOpenProfileFromFile(outICC, "r");
+        hlcmsProfileOut = cmsOpenProfileFromFile(ct1, outICC, "r");
 
 
     cmsFloat64Number n1 = fn1(ct1, hlcmsProfileIn, hlcmsProfileOut);
 
     if (inICC == NULL)
-        hlcmsProfileIn = CreateCurves();
+        hlcmsProfileIn = CreateCurves(ct2);
     else
-        hlcmsProfileIn = cmsOpenProfileFromFile(inICC, "r");
+        hlcmsProfileIn = cmsOpenProfileFromFile(ct2, inICC, "r");
 
     if (outICC == NULL)
-        hlcmsProfileOut = CreateCurves();
+        hlcmsProfileOut = CreateCurves(ct2);
     else
-        hlcmsProfileOut = cmsOpenProfileFromFile(outICC, "r");
+        hlcmsProfileOut = cmsOpenProfileFromFile(ct2, outICC, "r");
 
     cmsFloat64Number n2 = fn2(ct2, hlcmsProfileIn, hlcmsProfileOut);
 
@@ -478,9 +478,9 @@ cmsFloat64Number SpeedTest8bitsRGB(cmsContext ct, cmsHPROFILE hlcmsProfileIn, cm
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Fail("Unable to open profiles");
 
-    hlcmsxform = cmsCreateTransformTHR(ct, hlcmsProfileIn, TYPE_RGB_8, hlcmsProfileOut, TYPE_RGB_8, INTENT_PERCEPTUAL, FLAGS|cmsFLAGS_NOCACHE);
-    cmsCloseProfile(hlcmsProfileIn);
-    cmsCloseProfile(hlcmsProfileOut);
+    hlcmsxform = cmsCreateTransform(ct, hlcmsProfileIn, TYPE_RGB_8, hlcmsProfileOut, TYPE_RGB_8, INTENT_PERCEPTUAL, FLAGS|cmsFLAGS_NOCACHE);
+    cmsCloseProfile(ct, hlcmsProfileIn);
+    cmsCloseProfile(ct, hlcmsProfileOut);
 
     Mb = 256 * 256 * 256 * sizeof(Scanline_rgb8bits);
     In = (Scanline_rgb8bits*)malloc(Mb);
@@ -499,12 +499,12 @@ cmsFloat64Number SpeedTest8bitsRGB(cmsContext ct, cmsHPROFILE hlcmsProfileIn, cm
 
     MeasureTimeStart();
 
-    cmsDoTransform(hlcmsxform, In, In, 256 * 256 * 256);
+    cmsDoTransform(ct, hlcmsxform, In, In, 256 * 256 * 256);
 
     diff = MeasureTimeStop();
     free(In);
 
-    cmsDeleteTransform(hlcmsxform);
+    cmsDeleteTransform(ct, hlcmsxform);
 
     return MPixSec(diff);
 }
@@ -521,9 +521,9 @@ cmsFloat64Number SpeedTest8bitsRGBA(cmsContext ct, cmsHPROFILE hlcmsProfileIn, c
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Fail("Unable to open profiles");
 
-    hlcmsxform = cmsCreateTransformTHR(ct, hlcmsProfileIn, TYPE_RGBA_8, hlcmsProfileOut, TYPE_RGBA_8, INTENT_PERCEPTUAL, FLAGS|cmsFLAGS_NOCACHE);
-    cmsCloseProfile(hlcmsProfileIn);
-    cmsCloseProfile(hlcmsProfileOut);
+    hlcmsxform = cmsCreateTransform(ct, hlcmsProfileIn, TYPE_RGBA_8, hlcmsProfileOut, TYPE_RGBA_8, INTENT_PERCEPTUAL, FLAGS|cmsFLAGS_NOCACHE);
+    cmsCloseProfile(ct, hlcmsProfileIn);
+    cmsCloseProfile(ct, hlcmsProfileOut);
 
     Mb = 256 * 256 * 256 * sizeof(Scanline_rgba8bits);
     In = (Scanline_rgba8bits*)malloc(Mb);
@@ -567,9 +567,9 @@ cmsFloat64Number SpeedTest16bitsRGB(cmsContext ct, cmsHPROFILE hlcmsProfileIn, c
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Fail("Unable to open profiles");
 
-    hlcmsxform = cmsCreateTransformTHR(ct, hlcmsProfileIn, TYPE_RGB_16, hlcmsProfileOut, TYPE_RGB_16, INTENT_PERCEPTUAL, FLAGS | cmsFLAGS_NOCACHE);
-    cmsCloseProfile(hlcmsProfileIn);
-    cmsCloseProfile(hlcmsProfileOut);
+    hlcmsxform = cmsCreateTransform(ct, hlcmsProfileIn, TYPE_RGB_16, hlcmsProfileOut, TYPE_RGB_16, INTENT_PERCEPTUAL, FLAGS | cmsFLAGS_NOCACHE);
+    cmsCloseProfile(ct, hlcmsProfileIn);
+    cmsCloseProfile(ct, hlcmsProfileOut);
 
     Mb = 256 * 256 * 256 * sizeof(Scanline_rgb16bits);
     In = (Scanline_rgb16bits*)malloc(Mb);
@@ -588,12 +588,12 @@ cmsFloat64Number SpeedTest16bitsRGB(cmsContext ct, cmsHPROFILE hlcmsProfileIn, c
 
     MeasureTimeStart();
 
-    cmsDoTransform(hlcmsxform, In, In, 256 * 256 * 256);
+    cmsDoTransform(ct, hlcmsxform, In, In, 256 * 256 * 256);
 
     diff = MeasureTimeStop();
     free(In);
 
-    cmsDeleteTransform(hlcmsxform);
+    cmsDeleteTransform(ct, hlcmsxform);
 
     return MPixSec(diff);
 }
@@ -611,9 +611,9 @@ cmsFloat64Number SpeedTest16bitsCMYK(cmsContext ct, cmsHPROFILE hlcmsProfileIn, 
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Fail("Unable to open profiles");
 
-    hlcmsxform = cmsCreateTransformTHR(ct, hlcmsProfileIn, TYPE_CMYK_16, hlcmsProfileOut, TYPE_CMYK_16, INTENT_PERCEPTUAL, FLAGS | cmsFLAGS_NOCACHE);
-    cmsCloseProfile(hlcmsProfileIn);
-    cmsCloseProfile(hlcmsProfileOut);
+    hlcmsxform = cmsCreateTransform(ct, hlcmsProfileIn, TYPE_CMYK_16, hlcmsProfileOut, TYPE_CMYK_16, INTENT_PERCEPTUAL, FLAGS | cmsFLAGS_NOCACHE);
+    cmsCloseProfile(ct, hlcmsProfileIn);
+    cmsCloseProfile(ct, hlcmsProfileOut);
 
     Mb = 256 * 256 * 256 * sizeof(Scanline_cmyk16bits);
     In = (Scanline_cmyk16bits*)malloc(Mb);
@@ -633,12 +633,12 @@ cmsFloat64Number SpeedTest16bitsCMYK(cmsContext ct, cmsHPROFILE hlcmsProfileIn, 
 
     MeasureTimeStart();
 
-    cmsDoTransform(hlcmsxform, In, In, 256 * 256 * 256);
+    cmsDoTransform(ct, hlcmsxform, In, In, 256 * 256 * 256);
 
     diff = MeasureTimeStop();
     free(In);
 
-    cmsDeleteTransform(hlcmsxform);
+    cmsDeleteTransform(ct, hlcmsxform);
     return MPixSec(diff);
 }
 
@@ -738,9 +738,9 @@ cmsFloat64Number SpeedTest8bitDoTransform(cmsContext ct, cmsHPROFILE hlcmsProfil
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Fail("Unable to open profiles");
 
-    hlcmsxform = cmsCreateTransformTHR(ct, hlcmsProfileIn, TYPE_RGBA_8, hlcmsProfileOut, TYPE_RGBA_8, INTENT_PERCEPTUAL, FLAGS | cmsFLAGS_NOCACHE);
-    cmsCloseProfile(hlcmsProfileIn);
-    cmsCloseProfile(hlcmsProfileOut);
+    hlcmsxform = cmsCreateTransform(ct, hlcmsProfileIn, TYPE_RGBA_8, hlcmsProfileOut, TYPE_RGBA_8, INTENT_PERCEPTUAL, FLAGS | cmsFLAGS_NOCACHE);
+    cmsCloseProfile(ct, hlcmsProfileIn);
+    cmsCloseProfile(ct, hlcmsProfileOut);
 
 
     // Our test bitmap is 256 x 256 padded lines
@@ -763,13 +763,13 @@ cmsFloat64Number SpeedTest8bitDoTransform(cmsContext ct, cmsHPROFILE hlcmsProfil
 
     for (j = 0; j < 256; j++) {
 
-        cmsDoTransform(hlcmsxform, In->line[j].pixels, Out->line[j].pixels, 256 * 256);
+        cmsDoTransform(ct, hlcmsxform, In->line[j].pixels, Out->line[j].pixels, 256 * 256);
     }
 
     diff = MeasureTimeStop();
     free(In); free(Out);
 
-    cmsDeleteTransform(hlcmsxform);
+    cmsDeleteTransform(ct, hlcmsxform);
     return MPixSec(diff);
 
 }
@@ -788,9 +788,9 @@ cmsFloat64Number SpeedTest8bitLineStride(cmsContext ct, cmsHPROFILE hlcmsProfile
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Fail("Unable to open profiles");
 
-    hlcmsxform = cmsCreateTransformTHR(ct, hlcmsProfileIn, TYPE_RGBA_8, hlcmsProfileOut, TYPE_RGBA_8, INTENT_PERCEPTUAL, FLAGS | cmsFLAGS_NOCACHE);
-    cmsCloseProfile(hlcmsProfileIn);
-    cmsCloseProfile(hlcmsProfileOut);
+    hlcmsxform = cmsCreateTransform(ct, hlcmsProfileIn, TYPE_RGBA_8, hlcmsProfileOut, TYPE_RGBA_8, INTENT_PERCEPTUAL, FLAGS | cmsFLAGS_NOCACHE);
+    cmsCloseProfile(ct, hlcmsProfileIn);
+    cmsCloseProfile(ct, hlcmsProfileOut);
 
 
     // Our test bitmap is 256 x 256 padded lines
@@ -811,12 +811,12 @@ cmsFloat64Number SpeedTest8bitLineStride(cmsContext ct, cmsHPROFILE hlcmsProfile
 
     MeasureTimeStart();
 
-    cmsDoTransformLineStride(hlcmsxform, In, Out, 256 * 256, 256, sizeof(padded_line), sizeof(padded_line), 0, 0);
+    cmsDoTransformLineStride(ct, hlcmsxform, In, Out, 256 * 256, 256, sizeof(padded_line), sizeof(padded_line), 0, 0);
 
     diff = MeasureTimeStop();
     free(In); free(Out);
 
-    cmsDeleteTransform(hlcmsxform);
+    cmsDeleteTransform(ct, hlcmsxform);
     return MPixSec(diff);
 
 }

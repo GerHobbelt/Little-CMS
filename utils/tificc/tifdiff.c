@@ -27,12 +27,14 @@
 #include "utils.h"
 #include "tiffio.h"
 
+#include <stdint.h>
+
 
 // ------------------------------------------------------------------------
 
-static TIFF *Tiff1, *Tiff2, *TiffDiff;
-static const char* TiffDiffFilename;
-static const char* CGATSout;
+static TIFF *Tiff1 = NULL, *Tiff2 = NULL, *TiffDiff = NULL;
+static const char* TiffDiffFilename = NULL;
+static const char* CGATSout = NULL;
 
 typedef struct {
                 double  n, x, x2;
@@ -41,13 +43,13 @@ typedef struct {
     } STAT, *LPSTAT;
 
 
-static STAT ColorantStat[4];
-static STAT EuclideanStat;
-static STAT ColorimetricStat;
+static STAT ColorantStat[4] = { { 0 } };
+static STAT EuclideanStat = { 0 };
+static STAT ColorimetricStat = { 0 };
 
-static uint16 Channels;
+static uint16_t Channels = 0;
 
-static cmsHPROFILE hLab;
+static cmsHPROFILE hLab = { 0 };
 
 
 static
@@ -112,7 +114,7 @@ void Help()
 // The toggles stuff
 
 static
-void HandleSwitches(int argc, char *argv[])
+void HandleSwitches(int argc, const char **argv)
 {
        int s;
 
@@ -187,8 +189,8 @@ double Mean(LPSTAT st)
 static
 cmsUInt32Number GetInputPixelType(TIFF *Bank)
 {
-     uint16 Photometric, bps, spp, extra, PlanarConfig, *info;
-     uint16 Compression, reverse = 0;
+     uint16_t Photometric, bps, spp, extra, PlanarConfig, *info;
+     uint16_t Compression, reverse = 0;
      int ColorChannels, IsPlanar = 0, pt = 0;
 
      TIFFGetField(Bank,           TIFFTAG_PHOTOMETRIC,   &Photometric);
@@ -253,7 +255,7 @@ cmsUInt32Number GetInputPixelType(TIFF *Bank)
      case PHOTOMETRIC_YCBCR:
            TIFFGetField(Bank, TIFFTAG_COMPRESSION, &Compression);
            {
-                  uint16 subx, suby;
+                  uint16_t subx, suby;
 
                   pt = PT_YCbCr;
                   TIFFGetFieldDefaulted(Bank, TIFFTAG_YCBCRSUBSAMPLING, &subx, &suby);
@@ -332,7 +334,7 @@ int CmpImages(cmsContext ContextID, TIFF* tiff1, TIFF* tiff2, TIFF* diff)
 {
     cmsUInt8Number* buf1, *buf2, *buf3=NULL;
     int row, cols, imagewidth = 0, imagelength = 0;
-    uint16   Photometric;
+    uint16_t   Photometric;
     double dE = 0;
     double dR, dG, dB, dC, dM, dY, dK;
     int rc = 0;
@@ -483,7 +485,7 @@ Error:
 static
 void AssureShortTagIs(TIFF* tif1, TIFF* tiff2, int tag, int Val, const char* Error)
 {
-        uint16 v1;
+        uint16_t v1;
 
 
         if (!TIFFGetField(tif1, tag, &v1)) goto Err;
@@ -501,7 +503,7 @@ Err:
 static
 int CmpShortTag(TIFF* tif1, TIFF* tif2, int tag)
 {
-        uint16 v1, v2;
+        uint16_t v1, v2;
 
         if (!TIFFGetField(tif1, tag, &v1)) return 0;
         if (!TIFFGetField(tif2, tag, &v2)) return 0;
@@ -623,7 +625,12 @@ void CreateCGATS(const char* TiffName1, const char* TiffName2)
     cmsIT8Free(NULL, hIT8);
 }
 
-int main(int argc, char* argv[])
+
+#if defined(BUILD_MONOLITHIC)
+#define main      lcms2_tiffdiff_util_main
+#endif
+
+int main(int argc, const char** argv)
 {
       int i;
 	  cmsContext ContextID = cmsCreateContext(NULL, NULL);

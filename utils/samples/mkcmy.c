@@ -26,7 +26,7 @@
 // Version 1.12
 
 
-#include "lcms.h"
+#include "lcms2mt.h"
 
 
 typedef struct {
@@ -35,7 +35,7 @@ typedef struct {
 				cmsHTRANSFORM Lab2RGB;
 				cmsHTRANSFORM RGB2Lab;
 
-				} CARGO, FAR* LPCARGO;
+				} CARGO, * LPCARGO;
 
 
 	 
@@ -117,9 +117,12 @@ void FreeCargo(LPCARGO Cargo)
 	cmsCloseProfile(Cargo ->hRGB);
 }
 
-	
-	
-	
+
+
+#if defined(BUILD_MONOLITHIC)
+#define main      lcms2_mkcmy_example_main
+#endif
+
 int main(void)
 {
 	LPLUT AToB0, BToA0;	

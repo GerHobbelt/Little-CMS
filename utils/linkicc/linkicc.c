@@ -27,10 +27,10 @@
 
 // ---------------------------------------------------------------------------------
 
-static char* Description = "Devicelink profile";
-static char* Copyright   = "No copyright, use freely";
+static const char* Description = "Devicelink profile";
+static const char* Copyright   = "No copyright, use freely";
 static int   Intent = INTENT_PERCEPTUAL;
-static char* cOutProf    = "devicelink.icc";
+static const char* cOutProf    = "devicelink.icc";
 static int   PrecalcMode  = 1;
 static int   NumOfGridPoints = 0;
 
@@ -104,7 +104,7 @@ int Help(cmsContext ContextID, int level)
 
 // The toggles stuff
 static
-void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
+void HandleSwitches(cmsContext ContextID, int argc, const char *argv[])
 {
     int s;
 
@@ -259,8 +259,11 @@ Error:
 }
 
 
+#if defined(BUILD_MONOLITHIC)
+#define main(cnt, arr)      lcms2_linkicc_util_main(cnt, arr)
+#endif
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
     int i, nargs, rc;
     cmsHPROFILE Profiles[257];

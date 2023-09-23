@@ -66,9 +66,9 @@ void FatalError(const char *frm, ...);
 // xgetopt() interface -------------------------------------------------------------
 
 extern int   xoptind;
-extern char *xoptarg;
+extern const char *xoptarg;
 
-int xgetopt(int argc, char *argv[], char *optionS);
+int xgetopt(int argc, const char *argv[], const char *optionS);
 
 // The stock profile utility -------------------------------------------------------
 

@@ -21,7 +21,7 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-#include "lcms.h"
+#include "lcms2mt.h"
 
 // This is a sample on how to build a profile for decoding ITU T.42/Fax JPEG
 // streams. The profile has an additional ability in the input direction of
@@ -65,7 +65,7 @@ void Lab2ITU(LPcmsCIELab Lab, WORD Out[3])
 #define GRID_POINTS 33
 
 static
-int InputDirection(register WORD In[], register WORD Out[], register LPVOID Cargo)
+int InputDirection(WORD In[], WORD Out[], LPVOID Cargo)
 {	   
     cmsCIELab Lab;
 
@@ -78,7 +78,7 @@ int InputDirection(register WORD In[], register WORD Out[], register LPVOID Carg
 
 
 static
-int OutputDirection(register WORD In[], register WORD Out[], register LPVOID Cargo)
+int OutputDirection(WORD In[], WORD Out[], LPVOID Cargo)
 {	
 
 	cmsCIELab Lab;
@@ -90,12 +90,14 @@ int OutputDirection(register WORD In[], register WORD Out[], register LPVOID Car
 }
 
 
+#if defined(BUILD_MONOLITHIC)
+#define main(cnt, arr)      lcms2_itufax_example_main(cnt, arr)
+#endif
+
 // The main entry point. Just create a profile an populate it with required tags.
 // note that cmsOpenProfileFromFile("itufax.icm", "w") will NOT delete the file
 // if already exists. This is for obvious safety reasons.
-
-	
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
 	LPLUT AToB0, BToA0;
 	cmsHPROFILE hProfile;

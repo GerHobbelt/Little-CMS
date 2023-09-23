@@ -54,11 +54,11 @@ static int PrecalcMode  = 0;
 
 // --------------------------------------------------------------
 
-static char *cInProf   = NULL;
-static char *cOutProf  = NULL;
-static char *cProofing = NULL;
+static const char *cInProf   = NULL;
+static const char *cOutProf  = NULL;
+static const char *cProofing = NULL;
 
-static char *IncludePart = NULL;
+static const char *IncludePart = NULL;
 
 static cmsHANDLE hIT8in = NULL;        // CGATS input
 static cmsHANDLE hIT8out = NULL;       // CGATS output
@@ -66,17 +66,17 @@ static cmsHANDLE hIT8out = NULL;       // CGATS output
 static char CGATSPatch[1024];   // Actual Patch Name
 static char CGATSoutFilename[cmsMAX_PATH];
 
-static int nMaxPatches;
+static int nMaxPatches = 0;
 
-static cmsHTRANSFORM hTrans, hTransXYZ, hTransLab;
+static cmsHTRANSFORM hTrans = 0, hTransXYZ = 0, hTransLab = 0;
 static cmsBool InputNamedColor = FALSE;
 
-static cmsColorSpaceSignature InputColorSpace, OutputColorSpace;
+static cmsColorSpaceSignature InputColorSpace = { 0 }, OutputColorSpace = { 0 };
 
 static cmsNAMEDCOLORLIST* InputColorant = NULL;
 static cmsNAMEDCOLORLIST* OutputColorant = NULL;
 
-static cmsFloat64Number InputRange, OutputRange;
+static cmsFloat64Number InputRange = 0, OutputRange = 0;
 
 
 // isatty replacement
@@ -1243,9 +1243,12 @@ void OpenCGATSFiles(cmsContext ContextID, int argc, char *argv[])
 }
 
 
+#if defined(BUILD_MONOLITHIC)
+#define main(cnt, arr)      lcms2_transicc_util_main(cnt, arr)
+#endif
 
 // The main sink
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
     cmsUInt16Number Output[cmsMAXCHANNELS];
     cmsFloat64Number OutputFloat[cmsMAXCHANNELS];

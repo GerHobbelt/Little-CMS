@@ -24,6 +24,14 @@
 #include <stdlib.h>
 #include <memory.h>
 
+// On Visual Studio, use debug CRT
+#if defined(_MSC_VER)
+#ifndef _CRTDBG_MAP_ALLOC
+#define _CRTDBG_MAP_ALLOC
+#endif
+#include <crtdbg.h>
+#endif
+
 static
 void Fail(const char* frm, ...)
 {
@@ -83,7 +91,7 @@ cmsFloat64Number MPixSec(cmsFloat64Number diff)
 
 
 static
-cmsFloat64Number speed_test(void)
+cmsFloat64Number speed_test(cmsContext ContextID)
 {
     clock_t atime;
     cmsFloat64Number diff;
@@ -95,15 +103,15 @@ cmsFloat64Number speed_test(void)
     cmsUInt32Number stride_rgb_x, stride_cmyk_x;
 
 
-    hProfileIn = cmsOpenProfileFromFile("sRGB Color Space Profile.icm", "r");
-    hProfileOut = cmsOpenProfileFromFile("USWebCoatedSWOP.icc", "r");
+    hProfileIn = cmsOpenProfileFromFile(ContextID, "sRGB Color Space Profile.icm", "r");
+    hProfileOut = cmsOpenProfileFromFile(ContextID, "USWebCoatedSWOP.icc", "r");
 
     if (hProfileIn == NULL || hProfileOut == NULL)
         Fail("Unable to open profiles");
 
-    xform = cmsCreateTransform(hProfileIn, TYPE_RGBA_8, hProfileOut, TYPE_CMYK_8, INTENT_PERCEPTUAL, 0);
-    cmsCloseProfile(hProfileIn);
-    cmsCloseProfile(hProfileOut);
+    xform = cmsCreateTransform(ContextID, hProfileIn, TYPE_RGBA_8, hProfileOut, TYPE_CMYK_8, INTENT_PERCEPTUAL, 0);
+    cmsCloseProfile(ContextID, hProfileIn);
+    cmsCloseProfile(ContextID, hProfileOut);
 
     
     image_in = make_image(SIZE_X, SIZE_Y, TRUE, &stride_rgb_x);
@@ -111,38 +119,48 @@ cmsFloat64Number speed_test(void)
 
     atime = clock();
 
-    cmsDoTransformLineStride(xform, image_in, image_out, SIZE_X, SIZE_Y, stride_rgb_x, stride_cmyk_x, 0, 0);
+    cmsDoTransformLineStride(ContextID, xform, image_in, image_out, SIZE_X, SIZE_Y, stride_rgb_x, stride_cmyk_x, 0, 0);
     
     diff = clock() - atime;
 
     free(image_in);
     free(image_out);
 
-    cmsDeleteTransform(xform);
+    cmsDeleteTransform(ContextID, xform);
     return MPixSec(diff);
 }
 
+
+#if defined(BUILD_MONOLITHIC)
+#define main      lcms2_demo_cmyk_main
+#endif
 
 int main(void)
 {
     cmsFloat64Number without_plugin;
     cmsFloat64Number with_plugin;
-    
+
+#ifdef _MSC_VER
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
+    cmsContext ContextID = cmsCreateContext(NULL, NULL);
+
     fprintf(stdout, "DEMO of littleCMS fast float plugin: RGBA -> CMYK in Megapixels per second\n");  fflush(stdout);
 
     // filling cache
     fprintf(stdout, "Wait CPU cache to stabilize: ");  fflush(stdout);
-    speed_test();
+    speed_test(ContextID);
     fprintf(stdout, "Ok\n");
 
     fprintf(stdout, "Without plugin: ");  fflush(stdout);
-    without_plugin = speed_test();
+    without_plugin = speed_test(ContextID);
     fprintf(stdout, "%.2f\n", without_plugin); fflush(stdout);
 
-    cmsPlugin(cmsFastFloatExtensions());
+    cmsPlugin(ContextID, cmsFastFloatExtensions());
 
     fprintf(stdout, "With plugin: ");  fflush(stdout);
-    with_plugin = speed_test();
+    with_plugin = speed_test(ContextID);
     fprintf(stdout, "%.2f\n", with_plugin); fflush(stdout);
     
     fprintf(stdout, "x %2.2f\n", (with_plugin/without_plugin)); fflush(stdout);

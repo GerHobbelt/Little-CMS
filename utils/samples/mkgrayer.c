@@ -21,12 +21,12 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-#include "lcms.h"
+#include "lcms2mt.h"
 
 
 
 static
-int Forward(register WORD In[], register WORD Out[], register LPVOID Cargo)
+int Forward(WORD In[], WORD Out[], LPVOID Cargo)
 {	
     cmsCIELab Lab;
 
@@ -53,8 +53,11 @@ int Forward(register WORD In[], register WORD Out[], register LPVOID Cargo)
 
 
 
-	
-int main(int argc, char *argv[])
+#if defined(BUILD_MONOLITHIC)
+#define main(cnt, arr)      lcms2_mkgrayer_example_main(cnt, arr)
+#endif
+
+int main(int argc, const char *argv[])
 {
 	LPLUT BToA0;
 	cmsHPROFILE hProfile;

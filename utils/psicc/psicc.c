@@ -27,10 +27,10 @@
 
 // ------------------------------------------------------------------------
 
-static char *cInProf = NULL;
-static char *cOutProf = NULL;
+static const char *cInProf = NULL;
+static const char *cOutProf = NULL;
 static int Intent = INTENT_PERCEPTUAL;
-static FILE* OutFile;
+static FILE* OutFile = NULL;
 static int BlackPointCompensation = FALSE;
 static int Undecorated = FALSE;
 static int PrecalcMode = 1;
@@ -207,7 +207,11 @@ void GenerateCRD(cmsContext ContextID)
 }
 
 
-int main(int argc, char *argv[])
+#if defined(BUILD_MONOLITHIC)
+#define main(cnt, arr)      lcms2_psicc_util_main(cnt, arr)
+#endif
+
+int main(int argc, const char *argv[])
 {
 	int nargs;
     cmsContext ContextID = NULL;

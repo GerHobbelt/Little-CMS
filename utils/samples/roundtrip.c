@@ -37,7 +37,11 @@ double VecDist(cmsUInt8Number bin[3], cmsUInt8Number bout[3])
 }
 
 
-int main(int  argc, char* argv[])
+#if defined(BUILD_MONOLITHIC)
+#define main(cnt, arr)      lcms2_roundtrip_example_main(cnt, arr)
+#endif
+
+int main(int  argc, const char* argv[])
 {
 
     int r, g, b;
