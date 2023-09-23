@@ -93,7 +93,7 @@ AC_CHECK_FUNCS(gmtime_r, [], [
                    return 0;
                  ]])],
                  [AC_MSG_RESULT([yes])
-                  AC_DEFINE([HAVE_GMTIME_S], [1], [gmtime_s can be used])], 
+                  AC_DEFINE([HAVE_GMTIME_S], [1], [gmtime_s can be used])],
                  [AC_MSG_RESULT([no])]
                )])
 

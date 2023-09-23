@@ -1993,7 +1993,7 @@ cmsBool  Type_LUT8_Write(cmsContext ContextID, struct _cms_typehandler_struct* s
     if (clut == NULL)
         clutPoints = 0;
     else {
-        // Lut8 only allows same CLUT points in all dimensions        
+        // Lut8 only allows same CLUT points in all dimensions
         clutPoints = clut->Params->nSamples[0];
         for (i = 1; i < cmsPipelineInputChannels(ContextID, NewLUT); i++) {
             if (clut->Params->nSamples[i] != clutPoints) {
@@ -2002,7 +2002,7 @@ cmsBool  Type_LUT8_Write(cmsContext ContextID, struct _cms_typehandler_struct* s
             }
         }
     }
-        
+
     if (!_cmsWriteUInt8Number(ContextID, io, (cmsUInt8Number)cmsPipelineInputChannels(ContextID, NewLUT))) return FALSE;
     if (!_cmsWriteUInt8Number(ContextID, io, (cmsUInt8Number)cmsPipelineOutputChannels(ContextID, NewLUT))) return FALSE;
     if (!_cmsWriteUInt8Number(ContextID, io, (cmsUInt8Number) clutPoints)) return FALSE;
@@ -2011,7 +2011,7 @@ cmsBool  Type_LUT8_Write(cmsContext ContextID, struct _cms_typehandler_struct* s
     if (MatMPE != NULL) {
         for (i = 0; i < 9; i++)
         {
-	        if (!_cmsWrite15Fixed16Number(ContextID, io, MatMPE -> Double[i])) return FALSE;
+            if (!_cmsWrite15Fixed16Number(ContextID, io, MatMPE->Double[i])) return FALSE;
         }
     }
     else {
@@ -2128,7 +2128,7 @@ cmsBool Write16bitTables(cmsContext ContextID, cmsIOHANDLER* io, _cmsStageToneCu
     cmsUInt32Number nEntries;
 
     _cmsAssert(Tables != NULL);
-   
+
     for (i=0; i < Tables ->nCurves; i++) {
 
         nEntries = Tables->TheCurves[i]->nEntries;
@@ -2285,7 +2285,7 @@ cmsBool Type_LUT16_Write(cmsContext ContextID, struct _cms_typehandler_struct* s
     if (clut == NULL)
         clutPoints = 0;
     else {
-        // Lut16 only allows same CLUT points in all dimensions        
+        // Lut16 only allows same CLUT points in all dimensions
         clutPoints = clut->Params->nSamples[0];
         for (i = 1; i < InputChannels; i++) {
             if (clut->Params->nSamples[i] != clutPoints) {
@@ -2303,9 +2303,9 @@ cmsBool Type_LUT16_Write(cmsContext ContextID, struct _cms_typehandler_struct* s
     if (MatMPE != NULL) {
         for (i = 0; i < 9; i++)
         {
-	        if (!_cmsWrite15Fixed16Number(ContextID, io, MatMPE -> Double[i])) return FALSE;
+            if (!_cmsWrite15Fixed16Number(ContextID, io, MatMPE->Double[i])) return FALSE;
         }
-      
+
     }
     else {
         if (!_cmsWrite15Fixed16Number(ContextID, io, 1)) return FALSE;
@@ -2660,20 +2660,20 @@ cmsBool  WriteMatrix(cmsContext ContextID, struct _cms_typehandler_struct* self,
     // Write the Matrix
     for (i = 0; i < n; i++)
     {
-		if (!_cmsWrite15Fixed16Number(ContextID, io, m->Double[i])) return FALSE;
+        if (!_cmsWrite15Fixed16Number(ContextID, io, m->Double[i])) return FALSE;
     }
 
     if (m->Offset != NULL) {
 
         for (i = 0; i < mpe->OutputChannels; i++)
         {
-			if (!_cmsWrite15Fixed16Number(ContextID, io, m->Offset[i])) return FALSE;
+            if (!_cmsWrite15Fixed16Number(ContextID, io, m->Offset[i])) return FALSE;
         }
     }
     else {
         for (i = 0; i < mpe->OutputChannels; i++)
         {
-			if (!_cmsWrite15Fixed16Number(ContextID, io, 0)) return FALSE;
+            if (!_cmsWrite15Fixed16Number(ContextID, io, 0)) return FALSE;
         }
     }
 
@@ -3650,7 +3650,7 @@ void *Type_UcrBg_Read(cmsContext ContextID, struct _cms_typehandler_struct* self
 
     if (SignedSizeOfTag < (cmsInt32Number)(CountUcr * sizeof(cmsUInt16Number))) goto error;
     if (!_cmsReadUInt16Array(ContextID, io, CountUcr, n ->Ucr->Table16)) goto error;
-  
+
     SignedSizeOfTag -= CountUcr * sizeof(cmsUInt16Number);
 
     // Second curve is Black generation
@@ -4124,8 +4124,8 @@ cmsToneCurve* ReadSegmentedCurve(cmsContext ContextID, struct _cms_typehandler_s
                cmsUInt16Number Type;
                cmsUInt32Number ParamsByType[] = { 4, 5, 5 };
 
-                if (!_cmsReadUInt16Number(ContextID, io, &Type)) goto Error;
-                if (!_cmsReadUInt16Number(ContextID, io, NULL)) goto Error;
+               if (!_cmsReadUInt16Number(ContextID, io, &Type)) goto Error;
+               if (!_cmsReadUInt16Number(ContextID, io, NULL)) goto Error;
 
                Segments[i].Type = Type + 6;
                if (Type > 2) goto Error;
@@ -4148,7 +4148,7 @@ cmsToneCurve* ReadSegmentedCurve(cmsContext ContextID, struct _cms_typehandler_s
                // The first point is implicit in the last stage, we allocate an extra note to be populated latter on
                Count++;
                Segments[i].nGridPoints = Count;
-               Segments[i].SampledPoints = (cmsFloat32Number*) _cmsCalloc(ContextID, Count, sizeof(cmsFloat32Number));
+               Segments[i].SampledPoints = (cmsFloat32Number*)_cmsCalloc(ContextID, Count, sizeof(cmsFloat32Number));
                if (Segments[i].SampledPoints == NULL) goto Error;
 
                Segments[i].SampledPoints[0] = 0;
@@ -4177,7 +4177,7 @@ cmsToneCurve* ReadSegmentedCurve(cmsContext ContextID, struct _cms_typehandler_s
      }
      _cmsFree(ContextID, Segments);
 
-     // Explore for missing implicit points 
+     // Explore for missing implicit points
      for (i = 0; i < nSegments; i++) {
 
          // If sampled curve, fix it
@@ -5107,7 +5107,7 @@ cmsBool ReadOneElem(cmsContext ContextID, cmsIOHANDLER* io,  _cmsDICelem* e, cms
 
 
 static
-cmsBool ReadOffsetArray(cmsContext ContextID, cmsIOHANDLER* io,  _cmsDICarray* a, 
+cmsBool ReadOffsetArray(cmsContext ContextID, cmsIOHANDLER* io,  _cmsDICarray* a,
                         cmsUInt32Number Count, cmsUInt32Number Length, cmsUInt32Number BaseOffset,
                         cmsInt32Number* SignedSizeOfTagPtr)
 {
@@ -5310,12 +5310,11 @@ void *Type_Dictionary_Read(cmsContext ContextID, struct _cms_typehandler_struct*
     SignedSizeOfTag -= sizeof(cmsUInt32Number);
     if (SignedSizeOfTag < 0) goto Error;
     if (!_cmsReadUInt32Number(ContextID, io, &Count)) return NULL;
-    
+
     // Get rec length
     SignedSizeOfTag -= sizeof(cmsUInt32Number);
     if (SignedSizeOfTag < 0) goto Error;
     if (!_cmsReadUInt32Number(ContextID, io, &Length)) return NULL;
-    
 
     // Check for valid lengths
     if (Length != 16 && Length != 24 && Length != 32) {
@@ -5476,7 +5475,7 @@ void* Type_VideoSignal_Read(cmsContext ContextID, struct _cms_typehandler_struct
 {
     cmsVideoSignalType* cicp = NULL;
 
-    if (SizeOfTag != 8) return NULL; 
+    if (SizeOfTag != 8) return NULL;
 
     if (!_cmsReadUInt32Number(ContextID, io, NULL)) return NULL;
 

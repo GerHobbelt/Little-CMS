@@ -2214,7 +2214,7 @@ _cmsTransform2Fn CMSEXPORT _cmsGetTransformWorker(struct _cmstransform_struct* C
     return CMMcargo->Worker;
 }
 
-// This field holds maximum number of workers or -1 to auto 
+// This field holds maximum number of workers or -1 to auto
 cmsInt32Number CMSEXPORT _cmsGetTransformMaxWorkers(struct _cmstransform_struct* CMMcargo)
 {
     _cmsAssert(CMMcargo != NULL);
@@ -2249,26 +2249,30 @@ void ParalellizeIfSuitable(cmsContext ContextID, _cmsTRANSFORM* p)
 * An empty unroll to avoid a check with NULL on cmsDoTransform()
 */
 static
-cmsUInt8Number* UnrollNothing(cmsContext ContextID, CMSREGISTER _cmsTRANSFORM* info,
+cmsUInt8Number* UnrollNothing(cmsContext ContextID,
+                              CMSREGISTER _cmsTRANSFORM* info,
                               CMSREGISTER cmsUInt16Number wIn[],
                               CMSREGISTER cmsUInt8Number* accum,
                               CMSREGISTER cmsUInt32Number Stride)
-{    
+{
     return accum;
 
+    cmsUNUSED_PARAMETER(ContextID);
     cmsUNUSED_PARAMETER(info);
     cmsUNUSED_PARAMETER(wIn);
     cmsUNUSED_PARAMETER(Stride);
 }
 
 static
-cmsUInt8Number* PackNothing(cmsContext ContextID, CMSREGISTER _cmsTRANSFORM* info,
+cmsUInt8Number* PackNothing(cmsContext ContextID,
+                           CMSREGISTER _cmsTRANSFORM* info,
                            CMSREGISTER cmsUInt16Number wOut[],
                            CMSREGISTER cmsUInt8Number* output,
                            CMSREGISTER cmsUInt32Number Stride)
 {
     return output;
 
+    cmsUNUSED_PARAMETER(ContextID);
     cmsUNUSED_PARAMETER(info);
     cmsUNUSED_PARAMETER(wOut);
     cmsUNUSED_PARAMETER(Stride);

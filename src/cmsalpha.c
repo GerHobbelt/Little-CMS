@@ -415,7 +415,7 @@ cmsBool ComputeIncrementsForChunky(cmsUInt32Number Format,
        cmsUInt32Number pixelSize = channelSize * total_chans;
 
        // Sanity check
-	   if (total_chans <= 0 || total_chans >= cmsMAXEXTRACHANNELS)
+       if (total_chans <= 0 || total_chans >= cmsMAXEXTRACHANNELS)
            return FALSE;
 
         memset(channels, 0, sizeof(channels));
@@ -533,6 +533,8 @@ cmsBool ComputeComponentIncrements(cmsUInt32Number Format,
        }
 
 }
+
+
 
 // Handles extra channels copying alpha if requested by the flags
 void _cmsHandleExtraChannels(cmsContext ContextID, _cmsTRANSFORM* p, const void* in,

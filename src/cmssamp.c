@@ -333,7 +333,7 @@ cmsFloat64Number RootOfLeastSquaresFitQuadraticCurve(cmsContext ContextID, int n
          else {
 
              double rt;
-             
+
              if (fabs(a) < 1.0E-10) return 0;
 
              rt = (-b + sqrt(d)) / (2.0 * a);

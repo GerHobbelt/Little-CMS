@@ -12,14 +12,10 @@ Checked on Apple Silicon M1 and M2
 Fixed a bug of fastfloat plug-in that affected Krita CMYK color selector
 
 -----------------------
-2.14 Featured release
+2.14.art Featured release
 ------------------------
-lcms2 now implements ICC specification 4.4
-New multi-threaded plug-in
-several fixes to keep fuzzers happy
-Remove check on DLL when CMS_NO_REGISTER_KEYWORD is used 
-Added more validation against broken profiles
-Add more help to several tools
+
+Merge 2.14 with 2.10.art.
 
 ------------------------
 2.10.art Featured release
@@ -48,11 +44,15 @@ Extend T_EXTRA etc to allow for 63 extra channels.
 	Vanilla LCMS2 Changelog:
 	~~~~~~~~~~~~~~~~~~~~~~~~
 
-------------------------
-2.9 Maintenance release
-------------------------
-
-No changelog provided.
+-----------------------
+2.14 Featured release
+-----------------------
+lcms2 now implements ICC specification 4.4
+New multi-threaded plug-in
+several fixes to keep fuzzers happy
+Remove check on DLL when CMS_NO_REGISTER_KEYWORD is used
+Added more validation against broken profiles
+Add more help to several tools
 
 -----------------------
 2.13.1 Hot fix
@@ -71,7 +71,7 @@ Travis CI discontinued, GitHub actions used instead
 Added a very preliminar meson build script (thanks to xclaesse)
 Added ARM64 target to visual studio 2019 (thanks to gaborkertesz-linaro)
 Added thread safe code to get time
-Added automatic linear space detection 
+Added automatic linear space detection
 Added cmsGetStageContextID function
 Added cmsDetectRGBProfileGamma function
 configure now accepts --without-fastfloat to turn plugin off

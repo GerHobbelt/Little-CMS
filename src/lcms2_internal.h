@@ -746,8 +746,8 @@ typedef struct {
 
     cmsInt32Number      MaxWorkers;       // Number of workers to do as maximum
     cmsInt32Number      WorkerFlags;      // reserved
-    _cmsTransform2Fn    SchedulerFn;      // callback to setup functions 
-    
+    _cmsTransform2Fn    SchedulerFn;      // callback to setup functions
+
 } _cmsParallelizationPluginChunkType;
 
 // The global Context0 storage for parallelization plug-in
@@ -1126,7 +1126,7 @@ typedef struct _cmstransform_struct {
 
     _cmsTRANSFORMCORE *core;
 	
-    // A one-worker transform entry for parallelization 
+    // A one-worker transform entry for parallelization
     _cmsTransform2Fn Worker;
     cmsInt32Number   MaxWorkers;
     cmsUInt32Number  WorkerFlags;

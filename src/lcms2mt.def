@@ -301,6 +301,7 @@ cmsDictNextEntry                         =   cmsDictNextEntry
 _cmsGetTransformUserData                 =   _cmsGetTransformUserData
 _cmsSetTransformUserData                 =   _cmsSetTransformUserData
 cmsGetHeaderCreator                      =   cmsGetHeaderCreator
+cmsPlugin                                =   cmsPlugin
 cmsGetTransformInputFormat               =   cmsGetTransformInputFormat
 cmsGetTransformOutputFormat              =   cmsGetTransformOutputFormat
 cmsCreateContext                         =   cmsCreateContext

@@ -379,7 +379,7 @@ cmsIOHANDLER* CMSEXPORT cmsOpenIOhandlerFromFile(cmsContext ContextID, const cha
 {
     cmsIOHANDLER* iohandler = NULL;
     FILE* fm = NULL;
-    cmsInt32Number fileLen;    
+    cmsInt32Number fileLen;
     char mode[4] = { 0,0,0,0 };
 
     _cmsAssert(FileName != NULL);
@@ -387,18 +387,18 @@ cmsIOHANDLER* CMSEXPORT cmsOpenIOhandlerFromFile(cmsContext ContextID, const cha
 
     iohandler = (cmsIOHANDLER*) _cmsMallocZero(ContextID, sizeof(cmsIOHANDLER));
     if (iohandler == NULL) return NULL;
-           
+
     // Validate access mode
     while (*AccessMode) {
 
         switch (*AccessMode)
-        {        
+        {
         case 'r':
         case 'w':
 
             if (mode[0] == 0) {
                 mode[0] = *AccessMode;
-                mode[1] = 'b';                
+                mode[1] = 'b';
             }
             else {
                 _cmsFree(ContextID, iohandler);
@@ -420,7 +420,7 @@ cmsIOHANDLER* CMSEXPORT cmsOpenIOhandlerFromFile(cmsContext ContextID, const cha
 
         AccessMode++;
     }
-        
+
     switch (mode[0]) {
 
     case 'r':
@@ -452,7 +452,7 @@ cmsIOHANDLER* CMSEXPORT cmsOpenIOhandlerFromFile(cmsContext ContextID, const cha
         break;
 
     default:
-        _cmsFree(ContextID, iohandler);   // Would never reach      
+        _cmsFree(ContextID, iohandler);   // Would never reach
         return NULL;
     }
 
@@ -749,13 +749,13 @@ cmsUInt32Number _validatedVersion(cmsUInt32Number DWord)
 }
 
 // Check device class
-static 
+static
 cmsBool validDeviceClass(cmsProfileClassSignature cl)
 {
     if ((int)cl == 0) return TRUE; // We allow zero because older lcms versions defaulted to that.
 
     switch (cl)
-    {    
+    {
     case cmsSigInputClass:
     case cmsSigDisplayClass:
     case cmsSigOutputClass:
@@ -861,11 +861,11 @@ cmsBool _cmsReadHeader(cmsContext ContextID, _cmsICCPROFILE* Icc)
 
        // Search for links
         for (j=0; j < Icc ->TagCount; j++) {
-           
+
             if ((Icc ->TagOffsets[j] == Tag.offset) &&
                 (Icc ->TagSizes[j]   == Tag.size)) {
 
-                // Check types. 
+                // Check types.
                 if (CompatibleTypes(_cmsGetTagDescriptor(ContextID, Icc->TagNames[j]),
                                     _cmsGetTagDescriptor(ContextID, Tag.sig))) {
 
@@ -1909,7 +1909,7 @@ cmsUInt32Number CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfi
     if (!_cmsLockMutex(ContextID, Icc ->UsrMutex)) return 0;
 
     // Search for given tag in ICC profile directory
-    
+
     i = _cmsSearchTag(ContextID, Icc, sig, TRUE);
     if (i < 0) goto Error;                 // Not found,
 
@@ -1921,7 +1921,7 @@ cmsUInt32Number CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfi
         TagSize  = Icc ->TagSizes[i];
 
         // read the data directly, don't keep copy
-        
+
         if (data != NULL) {
 
             if (BufferSize < TagSize)
@@ -1940,7 +1940,7 @@ cmsUInt32Number CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfi
 
     // The data has been already read, or written. But wait!, maybe the user choose to save as
     // raw data. In this case, return the raw data directly
-    
+
     if (Icc ->TagSaveAsRaw[i]) {
 
         if (data != NULL)  {

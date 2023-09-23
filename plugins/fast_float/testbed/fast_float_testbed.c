@@ -648,7 +648,7 @@ void CheckToEncodedLab(void)
 
     int r, g, b;
     cmsCIELab Lab1, Lab2;
-    cmsUInt8Number rgb[3], lab1[3], lab2[3];    
+    cmsUInt8Number rgb[3], lab1[3], lab2[3];
     double err;
 
     for (r=0; r < 256; r += 5)
@@ -659,15 +659,15 @@ void CheckToEncodedLab(void)
 
                 cmsDoTransform(Plugin, xform_plugin, rgb, lab1, 1);
                 cmsDoTransform(Raw, xform, rgb, lab2, 1);
-                
+
                 lab8toLab(Raw, lab1, &Lab1);
                 lab8toLab(Raw, lab2, &Lab2);
-                
+
                 err = cmsDeltaE(Raw, &Lab1, &Lab2);
                 if (err > 0.1)
                 {
                     trace("Error on lab encoded (%f, %f, %f) <> (% f, % f, % f)\n",
-                        Lab1.L, Lab1.a, Lab1.b, Lab2.L, Lab2.a, Lab2.b);                   
+                        Lab1.L, Lab1.a, Lab1.b, Lab2.L, Lab2.a, Lab2.b);
                 }
             }
 
@@ -705,7 +705,7 @@ void CheckToFloatLab(void)
 
                 cmsDoTransform(Plugin, xform_plugin, rgb, &Lab1, 1);
                 cmsDoTransform(Raw, xform, rgb, &Lab2, 1);
-                
+
                 err = cmsDeltaE(Raw, &Lab1, &Lab2);
                 if (err > 0.1)
                 {
@@ -2504,7 +2504,6 @@ int main()
 
        ComparativeFloatVs16bits(raw, plugin);
        ComparativeLineStride8bits(raw, plugin);
-
        // Test gray performance
        trace("\n\n");
        trace("F L O A T   G R A Y   conversions performance.\n");

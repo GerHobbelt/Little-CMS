@@ -129,10 +129,10 @@
     <TargetName>lcms2mt</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <TargetName>lcms2</TargetName>
+    <TargetName>lcms2mt</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <TargetName>lcms2</TargetName>
+    <TargetName>lcms2mt</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <TargetName>lcms2mt</TargetName>
@@ -179,7 +179,7 @@
       <StringPooling>false</StringPooling>
     </ClCompile>
     <Link>
-      <ModuleDefinitionFile>..\..\..\src\lcms2.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\..\src\lcms2mt.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
     </Link>
@@ -256,7 +256,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <ModuleDefinitionFile>..\..\..\src\lcms2.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\..\src\lcms2mt.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>

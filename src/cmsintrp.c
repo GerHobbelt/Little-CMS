@@ -281,7 +281,7 @@ void Eval1Input(cmsContext ContextID, CMSREGISTER const cmsUInt16Number Input[],
        if (Input[0] == 0xffff || p16->Domain[0] == 0) {
 
            cmsUInt32Number y0 = p16->Domain[0] * p16->opta[0];
-           
+
            for (OutChan = 0; OutChan < p16->nOutputs; OutChan++) {
                Output[OutChan] = LutTable[y0 + OutChan];
            }

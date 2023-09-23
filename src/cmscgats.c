@@ -133,7 +133,7 @@ typedef struct _FileContext {
         FILE*          Stream;                   // File stream or NULL if holded in memory
     } FILECTX;
 
-//Very simple string 
+//Very simple string
 typedef struct {
 
         struct struct_it8* it8;
@@ -771,7 +771,7 @@ void InStringSymbol(cmsContext ContextID, cmsIT8* it8)
         }
 
         it8->sy = SSTRING;
-        NextCh(it8);        
+        NextCh(it8);
     }
     else
         SynError(ContextID, it8, "String expected");
@@ -929,7 +929,7 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
             }
             else
                 switch ((int) it8->ch) {
-        
+
         // Eof stream markers
         case '\x1a':
         case 0:
@@ -1561,8 +1561,8 @@ cmsBool AllocateDataFormat(cmsContext ContextID, cmsIT8* it8)
     if (t -> nSamples <= 0) {
 
         SynError(ContextID, it8, "AllocateDataFormat: Unknown NUMBER_OF_FIELDS");
-        return FALSE;        
-        }
+        return FALSE;
+    }
 
     t -> DataFormat = (char**) AllocChunk(ContextID, it8, ((cmsUInt32Number) t->nSamples + 1) * sizeof(char *));
     if (t->DataFormat == NULL) {
@@ -2054,7 +2054,7 @@ cmsBool DataSection (cmsContext ContextID, cmsIT8* it8)
             {
 
             // To keep very long data
-            case SIDENT:  
+            case SIDENT:
                 if (!SetData(ContextID, it8, iSet, iField, StringPtr(it8->id)))
                     return FALSE;
                 break;

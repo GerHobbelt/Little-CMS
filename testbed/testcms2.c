@@ -5336,7 +5336,7 @@ cmsInt32Number Check_cicp(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE
         s.TransferCharacteristics = 13;
         s.MatrixCoefficients = 0;
         s.VideoFullRangeFlag = 1;
-        
+
         if (!cmsWriteTag(ContextID, hProfile, cmsSigcicpTag, &s)) return 0;
         return 1;
 
@@ -7984,9 +7984,9 @@ cmsInt32Number CheckMeta(cmsContext ContextID)
     //ERROR: Corrupted tag 'meta'
     //test: test.c:59: main: Assertion `dict' failed.
     dict = cmsReadTag(ContextID, p, cmsSigMetaTag);
-   if (dict == NULL) return 0;
+    if (dict == NULL) return 0;
 
-   cmsCloseProfile(ContextID, p);
+    cmsCloseProfile(ContextID, p);
     return 1;
 }
 
@@ -8671,6 +8671,7 @@ int CheckIntToFloatTransform(cmsContext ContextID)
 	cmsCloseProfile(ContextID, hsRGB);
 
     cmsDoTransform(ContextID, xform, rgb8, rgbDBL, 1);
+
 
     cmsDeleteTransform(ContextID, xform);
 

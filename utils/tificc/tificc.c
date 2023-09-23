@@ -127,8 +127,8 @@ void OutOfMem(cmsUInt32Number size)
 #define T_LABTIFF(m)            (((m)>>30)&1)
 
 // * 0xffff / 0xff00 = (255 * 257) / (255 * 256) = 257 / 256
-static 
-int FromLabV2ToLabV4(int x) 
+static
+int FromLabV2ToLabV4(int x)
 {
     int a;
 
@@ -138,8 +138,8 @@ int FromLabV2ToLabV4(int x)
 }
 
 // * 0xf00 / 0xffff = * 256 / 257
-static 
-int FromLabV4ToLabV2(int x) 
+static
+int FromLabV4ToLabV2(int x)
 {
     return ((x << 8) + 0x80) / 257;
 }
@@ -264,7 +264,7 @@ cmsUInt32Number GetInputPixelType(TIFF *Bank)
     int IsPremul = FALSE, IsPlanar = FALSE, IsFlt = FALSE, IsReverse = FALSE;
     int labTiffSpecial = FALSE;
     int pt = PT_ANY;
-    
+
     TIFFGetFieldDefaulted(Bank,  TIFFTAG_BITSPERSAMPLE, &bps);
 
     if (bps == 1)
@@ -273,7 +273,7 @@ cmsUInt32Number GetInputPixelType(TIFF *Bank)
     if (bps != 8 && bps != 16 && bps != 32)
         FatalError("Sorry, 8, 16 or 32 bits per sample only");
 
-   
+
     TIFFGetFieldDefaulted(Bank, TIFFTAG_PLANARCONFIG, &PlanarConfig);
 
     switch (PlanarConfig) {
@@ -302,7 +302,7 @@ cmsUInt32Number GetInputPixelType(TIFF *Bank)
     else
         ColorChannels = spp - extra;
 
-    // Is alpha premultiplied ? 
+    // Is alpha premultiplied ?
     IsPremul = ((extra == 1) && (info[0] == EXTRASAMPLE_ASSOCALPHA));
 
 
@@ -390,7 +390,7 @@ cmsUInt32Number ComputeOutputFormatDescriptor(cmsUInt32Number dwInput, int OutCo
     int labTiffSpecial = FALSE;
     int Extra = T_EXTRA(dwInput);
     int IsPremul = T_PREMUL(dwInput);
-    
+
     if (OutColorSpace == PT_Lab)
         labTiffSpecial = TRUE;
 
@@ -548,7 +548,6 @@ void WriteOutputTags(TIFF* out, int Colorspace, int BytesPerSample, int AlphaCha
     int BitsPerSample = (8 * BytesPerSample);
     int nChannels = ChanCountFromPixelType(Colorspace);
 
-   
     TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, BitsPerSample);
     TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, nChannels + AlphaChannels);
 
@@ -634,10 +633,10 @@ void WriteOutputTags(TIFF* out, int Colorspace, int BytesPerSample, int AlphaCha
     }
 
     if (PixelDepth == 32)
-        TIFFSetField(out, TIFFTAG_SAMPLEFORMAT, 
-                          SAMPLEFORMAT_IEEEFP, 
-                          SAMPLEFORMAT_IEEEFP, 
-                          SAMPLEFORMAT_IEEEFP, 
+        TIFFSetField(out, TIFFTAG_SAMPLEFORMAT,
+                          SAMPLEFORMAT_IEEEFP,
+                          SAMPLEFORMAT_IEEEFP,
+                          SAMPLEFORMAT_IEEEFP,
                           SAMPLEFORMAT_IEEEFP);
 }
 
@@ -669,11 +668,11 @@ void CopyOtherTags(TIFF* in, TIFF* out)
     CopyField(TIFFTAG_PLANARCONFIG, shortv);
     CopyField(TIFFTAG_COMPRESSION, compression);
 
-    // This is tricky, libtiff would access predictor in a wrong way 
+    // This is tricky, libtiff would access predictor in a wrong way
     // if the codec is none of those
     if (compression == COMPRESSION_LZW ||
         compression == 34925 /*COMPRESSION_LZMA*/ ||
-        compression == COMPRESSION_PIXARLOG || 
+        compression == COMPRESSION_PIXARLOG ||
         compression == COMPRESSION_DEFLATE ||
         compression == COMPRESSION_ADOBE_DEFLATE ||
         compression == 50000 /*COMPRESSION_ZSTD*/)
@@ -835,7 +834,7 @@ int TransformImage(cmsContext ContextID, TIFF* in, TIFF* out, const char *cDefIn
     cmsUInt32Number wInput, wOutput;
     int OutputColorSpace;
     int BytesPerSample = PixelDepth / 8;
-    cmsUInt32Number dwFlags;        
+    cmsUInt32Number dwFlags;
     int nPlanes;
 
     // Default options

@@ -1525,7 +1525,8 @@ void* DupMatShaper(cmsContext ContextID, const void* Data)
 // to accomplish some performance. Actually it takes 256x3 16 bits tables and 16385 x 3 tables of 8 bits,
 // in total about 50K, and the performance boost is huge!
 static CMS_NO_SANITIZE
-void MatShaperEval16(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[],
+void MatShaperEval16(cmsContext ContextID,
+                     CMSREGISTER const cmsUInt16Number In[],
                      CMSREGISTER cmsUInt16Number Out[],
                      CMSREGISTER const void* D)
 {

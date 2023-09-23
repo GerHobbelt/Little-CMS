@@ -81,7 +81,7 @@ extern "C" {
 #endif
 
 // Version/release
-// Vanilla LCMS2 uses values from 2000-2120. This is
+// Vanilla LCMS2 uses values from 2000-2160. This is
 // used as an unsigned number. We want any attempt to
 // use OUR numbers with a mainline LCMS to fail, so
 // we have to go under 2000-2100. Let's subtract
@@ -300,7 +300,7 @@ typedef int                  cmsBool;
 // Base ICC type definitions
 typedef enum {
     cmsSigChromaticityType                  = 0x6368726D,  // 'chrm'
-    cmsSigcicpType                          = 0x63696370,  // 'cicp' 
+    cmsSigcicpType                          = 0x63696370,  // 'cicp'
     cmsSigColorantOrderType                 = 0x636C726F,  // 'clro'
     cmsSigColorantTableType                 = 0x636C7274,  // 'clrt'
     cmsSigCrdInfoType                       = 0x63726469,  // 'crdi'

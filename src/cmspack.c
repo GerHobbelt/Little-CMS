@@ -107,11 +107,11 @@ cmsUInt8Number* UnrollChunkyBytes(cmsContext ContextID, CMSREGISTER _cmsTRANSFOR
 
     cmsUInt32Number ExtraFirst = DoSwap ^ SwapFirst;
     cmsUInt32Number v;
-    cmsUInt32Number i;  
+    cmsUInt32Number i;
     cmsUInt32Number alpha_factor = 1;
 
     if (ExtraFirst) {
-        
+
         if (Premul && Extra)
             alpha_factor = _cmsToFixedDomain(FROM_8_TO_16(accum[0]));
 
@@ -119,7 +119,7 @@ cmsUInt8Number* UnrollChunkyBytes(cmsContext ContextID, CMSREGISTER _cmsTRANSFOR
     }
     else
     {
-        if (Premul && Extra)        
+        if (Premul && Extra)
             alpha_factor = _cmsToFixedDomain(FROM_8_TO_16(accum[nChan]));
     }
 
@@ -179,7 +179,7 @@ cmsUInt8Number* UnrollPlanarBytes(cmsContext ContextID, CMSREGISTER _cmsTRANSFOR
 
     if (ExtraFirst) {
 
-        if (Premul && Extra)        
+        if (Premul && Extra)
             alpha_factor = _cmsToFixedDomain(FROM_8_TO_16(accum[0]));
 
 
@@ -195,7 +195,7 @@ cmsUInt8Number* UnrollPlanarBytes(cmsContext ContextID, CMSREGISTER _cmsTRANSFOR
 
         cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
         cmsUInt32Number v = FROM_8_TO_16(*accum);
-        
+
         v = Reverse ? REVERSE_FLAVOR_16(v) : v;
 
         if (Premul && alpha_factor > 0)
@@ -564,7 +564,8 @@ cmsUInt8Number* UnrollAnyWords(cmsContext ContextID, CMSREGISTER _cmsTRANSFORM* 
 
 
 static
-cmsUInt8Number* UnrollAnyWordsPremul(cmsContext ContextID, CMSREGISTER _cmsTRANSFORM* info,
+cmsUInt8Number* UnrollAnyWordsPremul(cmsContext ContextID,
+                                     CMSREGISTER _cmsTRANSFORM* info,
                                      CMSREGISTER cmsUInt16Number wIn[],
                                      CMSREGISTER cmsUInt8Number* accum,
                                      CMSREGISTER cmsUInt32Number Stride)
@@ -573,7 +574,7 @@ cmsUInt8Number* UnrollAnyWordsPremul(cmsContext ContextID, CMSREGISTER _cmsTRANS
    cmsUInt32Number SwapEndian  = T_ENDIAN16(info -> InputFormat);
    cmsUInt32Number DoSwap      = T_DOSWAP(info ->InputFormat);
    cmsUInt32Number Reverse     = T_FLAVOR(info ->InputFormat);
-   cmsUInt32Number SwapFirst   = T_SWAPFIRST(info -> InputFormat);   
+   cmsUInt32Number SwapFirst   = T_SWAPFIRST(info -> InputFormat);
    cmsUInt32Number ExtraFirst  = DoSwap ^ SwapFirst;
    cmsUInt32Number i;
 
@@ -648,7 +649,8 @@ cmsUInt8Number* UnrollPlanarWords(cmsContext ContextID, CMSREGISTER _cmsTRANSFOR
 }
 
 static
-cmsUInt8Number* UnrollPlanarWordsPremul(cmsContext ContextID, CMSREGISTER _cmsTRANSFORM* info,
+cmsUInt8Number* UnrollPlanarWordsPremul(cmsContext ContextID,
+                                        CMSREGISTER _cmsTRANSFORM* info,
                                         CMSREGISTER cmsUInt16Number wIn[],
                                         CMSREGISTER cmsUInt8Number* accum,
                                         CMSREGISTER cmsUInt32Number Stride)
@@ -1229,7 +1231,8 @@ cmsUInt8Number* UnrollDouble1Chan(cmsContext ContextID, CMSREGISTER _cmsTRANSFOR
 
 // For anything going from cmsUInt8Number
 static
-cmsUInt8Number* Unroll8ToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
+cmsUInt8Number* Unroll8ToFloat(cmsContext ContextID,
+                               _cmsTRANSFORM* info,
                                cmsFloat32Number wIn[],
                                cmsUInt8Number* accum,
                                cmsUInt32Number Stride)
@@ -1281,7 +1284,8 @@ cmsUInt8Number* Unroll8ToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
 
 // For anything going from cmsUInt16Number
 static
-cmsUInt8Number* Unroll16ToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
+cmsUInt8Number* Unroll16ToFloat(cmsContext ContextID,
+                                _cmsTRANSFORM* info,
                                 cmsFloat32Number wIn[],
                                 cmsUInt8Number* accum,
                                 cmsUInt32Number Stride)
@@ -1356,11 +1360,11 @@ cmsUInt8Number* UnrollFloatsToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
     Stride /= PixelSize(info->InputFormat);
 
     if (Premul && Extra)
-    {        
+    {
         if (Planar)
-            alpha_factor = (ExtraFirst ? ptr[0] : ptr[nChan * Stride]) / maximum;            
+            alpha_factor = (ExtraFirst ? ptr[0] : ptr[nChan * Stride]) / maximum;
         else
-            alpha_factor = (ExtraFirst ? ptr[0] : ptr[nChan]) / maximum;        
+            alpha_factor = (ExtraFirst ? ptr[0] : ptr[nChan]) / maximum;
     }
 
     if (ExtraFirst)
@@ -1429,7 +1433,7 @@ cmsUInt8Number* UnrollDoublesToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
         else
             alpha_factor = (ExtraFirst ? ptr[0] : ptr[nChan]) / maximum;
     }
-   
+
     if (ExtraFirst)
             start = Extra;
 
@@ -1600,7 +1604,8 @@ cmsINLINE void lab4toFloat(cmsFloat32Number wIn[], cmsUInt16Number lab4[3])
 }
 
 static
-cmsUInt8Number* UnrollLabV2_8ToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
+cmsUInt8Number* UnrollLabV2_8ToFloat(cmsContext ContextID,
+                                      _cmsTRANSFORM* info,
                                       cmsFloat32Number wIn[],
                                       cmsUInt8Number* accum,
                                       cmsUInt32Number Stride)
@@ -1620,7 +1625,8 @@ cmsUInt8Number* UnrollLabV2_8ToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
 }
 
 static
-cmsUInt8Number* UnrollALabV2_8ToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
+cmsUInt8Number* UnrollALabV2_8ToFloat(cmsContext ContextID,
+                                      _cmsTRANSFORM* info,
                                       cmsFloat32Number wIn[],
                                       cmsUInt8Number* accum,
                                       cmsUInt32Number Stride)
@@ -1641,7 +1647,8 @@ cmsUInt8Number* UnrollALabV2_8ToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
 }
 
 static
-cmsUInt8Number* UnrollLabV2_16ToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
+cmsUInt8Number* UnrollLabV2_16ToFloat(cmsContext ContextID,
+                                      _cmsTRANSFORM* info,
                                       cmsFloat32Number wIn[],
                                       cmsUInt8Number* accum,
                                       cmsUInt32Number Stride)
@@ -1666,7 +1673,8 @@ cmsUInt8Number* UnrollLabV2_16ToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
 
 // Generic chunky for byte
 static
-cmsUInt8Number* PackChunkyBytes(cmsContext ContextID, CMSREGISTER _cmsTRANSFORM* info,
+cmsUInt8Number* PackChunkyBytes(cmsContext ContextID,
+                                CMSREGISTER _cmsTRANSFORM* info,
                                 CMSREGISTER cmsUInt16Number wOut[],
                                 CMSREGISTER cmsUInt8Number* output,
                                 CMSREGISTER cmsUInt32Number Stride)
@@ -1686,7 +1694,7 @@ cmsUInt8Number* PackChunkyBytes(cmsContext ContextID, CMSREGISTER _cmsTRANSFORM*
     swap1 = output;
 
     if (ExtraFirst) {
-        
+
         if (Premul && Extra)
             alpha_factor = _cmsToFixedDomain(FROM_8_TO_16(output[0]));
 
@@ -1709,7 +1717,7 @@ cmsUInt8Number* PackChunkyBytes(cmsContext ContextID, CMSREGISTER _cmsTRANSFORM*
 
         if (Premul)
         {
-            v = (cmsUInt16Number)((cmsUInt32Number)((cmsUInt32Number)v * alpha_factor + 0x8000) >> 16);            
+            v = (cmsUInt16Number)((cmsUInt32Number)((cmsUInt32Number)v * alpha_factor + 0x8000) >> 16);
         }
 
         *output++ = FROM_16_TO_8(v);
@@ -1731,7 +1739,8 @@ cmsUInt8Number* PackChunkyBytes(cmsContext ContextID, CMSREGISTER _cmsTRANSFORM*
 }
 
 static
-cmsUInt8Number* PackChunkyWords(cmsContext ContextID, CMSREGISTER _cmsTRANSFORM* info,
+cmsUInt8Number* PackChunkyWords(cmsContext ContextID,
+                                CMSREGISTER _cmsTRANSFORM* info,
                                 CMSREGISTER cmsUInt16Number wOut[],
                                 CMSREGISTER cmsUInt8Number* output,
                                 CMSREGISTER cmsUInt32Number Stride)
@@ -1748,7 +1757,7 @@ cmsUInt8Number* PackChunkyWords(cmsContext ContextID, CMSREGISTER _cmsTRANSFORM*
     cmsUInt16Number v = 0;
     cmsUInt32Number i;
     cmsUInt32Number alpha_factor = 0;
-    
+
     swap1 = (cmsUInt16Number*) output;
 
     if (ExtraFirst) {
@@ -3605,7 +3614,7 @@ static const cmsFormatters16 OutputFormatters16[] = {
 
     { BYTES_SH(1)|PLANAR_SH(1),    ANYFLAVOR | ANYSWAPFIRST | ANYSWAP | ANYEXTRA |
                                               ANYCHANNELS | ANYSPACE | ANYPREMUL, PackPlanarBytes},
-        
+
 
     { CHANNELS_SH(1) | BYTES_SH(2),                                  ANYSPACE,  Pack1Word},
     { CHANNELS_SH(1) | BYTES_SH(2) | EXTRA_SH(1),                      ANYSPACE,  Pack1WordSkip1},
@@ -3634,7 +3643,7 @@ static const cmsFormatters16 OutputFormatters16[] = {
                                      ANYEXTRA | ANYCHANNELS | ANYSPACE | ANYPREMUL, PackChunkyWords},
     { BYTES_SH(2)|PLANAR_SH(1),     ANYFLAVOR | ANYENDIAN | ANYSWAP | ANYEXTRA|
                                      ANYCHANNELS | ANYSPACE | ANYPREMUL,          PackPlanarWords}
-    
+
 };
 
 

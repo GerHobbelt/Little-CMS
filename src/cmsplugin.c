@@ -633,11 +633,11 @@ static struct _cmsContext_struct globalContext = {
 
     NULL,                                // Not in the linked list
     NULL,                                // No suballocator
-    {                                    
-        NULL,                            //  UserPtr,            
+    {
+        NULL,                            //  UserPtr,
         &_cmsLogErrorChunk,              //  Logger,
         &_cmsAlarmCodesChunk,            //  AlarmCodes,
-        &_cmsAdaptationStateChunk,       //  AdaptationState, 
+        &_cmsAdaptationStateChunk,       //  AdaptationState,
         &_cmsMemPluginChunk,             //  MemPlugin,
         &_cmsInterpPluginChunk,          //  InterpPlugin,
         &_cmsCurvesPluginChunk,          //  CurvesPlugin,
