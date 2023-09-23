@@ -782,7 +782,7 @@ int EmitCIEBasedDEF(cmsContext ContextID, cmsIOHANDLER* m, cmsPipeline* Pipeline
     if (cmsStageType(ContextID, mpe) == cmsSigCurveSetElemType) {
 
         _cmsIOPrintf(ContextID, m, "/DecodeDEF [ ");
-        EmitNGamma(ContextID, m, cmsStageOutputChannels(mpe), _cmsStageGetPtrToCurveSet(mpe));
+        EmitNGamma(ContextID, m, cmsStageOutputChannels(ContextID, mpe), _cmsStageGetPtrToCurveSet(mpe));
         _cmsIOPrintf(ContextID, m, "]\n");
 
         mpe = mpe ->Next;
