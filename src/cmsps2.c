@@ -430,51 +430,46 @@ void EmitLab2XYZ(cmsContext ContextID, cmsIOHANDLER* m)
     _cmsIOPrintf(ContextID, m, "]\n");
 }
 
-static
-void EmitSafeGuardBegin(cmsContext ContextID, cmsIOHANDLER* m, const char* name)
-{
-    _cmsIOPrintf(ContextID, m, "%%LCMS2: Save previous definition of %s on the operand stack\n", name);
-    _cmsIOPrintf(ContextID, m, "currentdict /%s known { /%s load } { null } ifelse\n", name, name);
-}
 
-static
-void EmitSafeGuardEnd(cmsContext ContextID, cmsIOHANDLER* m, const char* name, int depth)
-{
-    _cmsIOPrintf(ContextID, m, "%%LCMS2: Restore previous definition of %s\n", name);
-    if (depth > 1) {
-        // cycle topmost items on the stack to bring the previous definition to the front
-        _cmsIOPrintf(ContextID, m, "%d -1 roll ", depth);
-    }
-    _cmsIOPrintf(ContextID, m, "dup null eq { pop currentdict /%s undef } { /%s exch def } ifelse\n", name, name);
-}
 
 // Outputs a table of words. It does use 16 bits
 
 static
-void Emit1Gamma(cmsContext ContextID, cmsIOHANDLER* m, cmsToneCurve* Table, const char* name)
+void Emit1Gamma(cmsContext ContextID, cmsIOHANDLER* m, cmsToneCurve* Table)
 {
     cmsUInt32Number i;
     cmsFloat64Number gamma;
 
-    if (Table == NULL) return; // Error
+    /**
+    * On error, empty tables or lienar assume gamma 1.0
+    */
+    if (Table == NULL ||
+        Table->nEntries <= 0 ||
+        cmsIsToneCurveLinear(ContextID, Table)) {
 
-    if (Table ->nEntries <= 0) return;  // Empty table
-
-    // Check for identity function
-    if (cmsIsToneCurveLinear(ContextID, Table)) {
-        _cmsIOPrintf(ContextID, m, "/%s {} def\n", name);
+        _cmsIOPrintf(ContextID, m, "{ 1 } bind ");
         return;
     }
+
 
     // Check if is really an exponential. If so, emit "exp"
     gamma = cmsEstimateGamma(ContextID, Table, 0.001);
      if (gamma > 0) {
-            _cmsIOPrintf(ContextID, m, "/%s { %g exp } bind def\n", name, gamma);
+            _cmsIOPrintf(ContextID, m, "{ %g exp } bind ", gamma);
             return;
      }
 
-    EmitSafeGuardBegin(ContextID, m, "lcms2gammatable");
-    _cmsIOPrintf(ContextID, m, "/lcms2gammatable [");
+    _cmsIOPrintf(ContextID, m, "{ ");
+
+    // Bounds check
+    EmitRangeCheck(ContextID, m);
+
+    // Emit intepolation code
+
+    // PostScript code                      Stack
+    // ===============                      ========================
+                                            // v
+    _cmsIOPrintf(ContextID, m, " [");
 
     for (i=0; i < Table->nEntries; i++) {
         if (i % 10 == 0)
@@ -482,20 +477,8 @@ void Emit1Gamma(cmsContext ContextID, cmsIOHANDLER* m, cmsToneCurve* Table, cons
         _cmsIOPrintf(ContextID, m, "%d ", Table->Table16[i]);
     }
 
-    _cmsIOPrintf(ContextID, m, "] def\n");
+    _cmsIOPrintf(ContextID, m, "] ");                        // v tab
 
-
-    // Emit interpolation code
-
-    // PostScript code                            Stack
-    // ===============                            ========================
-                                                  // v
-    _cmsIOPrintf(ContextID, m, "/%s {\n  ", name);
-
-    // Bounds check
-    EmitRangeCheck(ContextID, m);
-
-    _cmsIOPrintf(ContextID, m, "\n  //lcms2gammatable ");    // v tab
     _cmsIOPrintf(ContextID, m, "dup ");                      // v tab tab
     _cmsIOPrintf(ContextID, m, "length 1 sub ");             // v tab dom
     _cmsIOPrintf(ContextID, m, "3 -1 roll ");                // tab dom v
@@ -522,9 +505,7 @@ void Emit1Gamma(cmsContext ContextID, cmsIOHANDLER* m, cmsToneCurve* Table, cons
     _cmsIOPrintf(ContextID, m, "add ");                      // y
     _cmsIOPrintf(ContextID, m, "65535 div\n");               // result
 
-    _cmsIOPrintf(ContextID, m, "} bind def\n");
-
-    EmitSafeGuardEnd(ContextID, m, "lcms2gammatable", 1);
+    _cmsIOPrintf(ContextID, m, " } bind ");
 }
 
 
@@ -541,10 +522,10 @@ cmsBool GammaTableEquals(cmsUInt16Number* g1, cmsUInt16Number* g2, cmsUInt32Numb
 // Does write a set of gamma curves
 
 static
-void EmitNGamma(cmsContext ContextID, cmsIOHANDLER* m, cmsUInt32Number n, cmsToneCurve* g[], const char* nameprefix)
+void EmitNGamma(cmsContext ContextID, cmsIOHANDLER* m, cmsUInt32Number n, cmsToneCurve* g[])
 {
     cmsUInt32Number i;
-    static char buffer[2048];
+   
 
     for( i=0; i < n; i++ )
     {
@@ -555,9 +536,7 @@ void EmitNGamma(cmsContext ContextID, cmsIOHANDLER* m, cmsUInt32Number n, cmsTon
             _cmsIOPrintf(ContextID, m, "dup ");
         }
         else {
-            snprintf(buffer, sizeof(buffer), "%s%d", nameprefix, (int)i);
-            buffer[sizeof(buffer) - 1] = '\0';
-            Emit1Gamma(ContextID, m, g[i], buffer);
+            Emit1Gamma(ContextID, m, g[i]);
         }
     }
 
@@ -706,11 +685,11 @@ int EmitCIEBasedA(cmsContext ContextID, cmsIOHANDLER* m, cmsToneCurve* Curve, cm
     _cmsIOPrintf(ContextID, m, "[ /CIEBasedA\n");
     _cmsIOPrintf(ContextID, m, "  <<\n");
 
-    EmitSafeGuardBegin(ContextID, m, "lcms2gammaproc");
-    Emit1Gamma(ContextID, m, Curve, "lcms2gammaproc");
+    _cmsIOPrintf(ContextID, m, "/DecodeA ");
 
-    _cmsIOPrintf(ContextID, m, "/DecodeA /lcms2gammaproc load\n");
-    EmitSafeGuardEnd(ContextID, m, "lcms2gammaproc", 3);
+    Emit1Gamma(ContextID, m, Curve);
+
+    _cmsIOPrintf(ContextID, m, " \n");
 
     _cmsIOPrintf(ContextID, m, "/MatrixA [ 0.9642 1.0000 0.8249 ]\n");
     _cmsIOPrintf(ContextID, m, "/RangeLMN [ 0.0 0.9642 0.0 1.0000 0.0 0.8249 ]\n");
@@ -734,19 +713,11 @@ int EmitCIEBasedABC(cmsContext ContextID, cmsIOHANDLER* m, cmsFloat64Number* Mat
 
     _cmsIOPrintf(ContextID, m, "[ /CIEBasedABC\n");
     _cmsIOPrintf(ContextID, m, "<<\n");
+    _cmsIOPrintf(ContextID, m, "/DecodeABC [ ");
 
-    EmitSafeGuardBegin(ContextID, m, "lcms2gammaproc0");
-    EmitSafeGuardBegin(ContextID, m, "lcms2gammaproc1");
-    EmitSafeGuardBegin(ContextID, m, "lcms2gammaproc2");
-    EmitNGamma(ContextID, m, 3, CurveSet, "lcms2gammaproc");
-    _cmsIOPrintf(ContextID, m, "/DecodeABC [\n");
-    _cmsIOPrintf(ContextID, m, "   /lcms2gammaproc0 load\n");
-    _cmsIOPrintf(ContextID, m, "   /lcms2gammaproc1 load\n");
-    _cmsIOPrintf(ContextID, m, "   /lcms2gammaproc2 load\n");
+    EmitNGamma(ContextID, m, 3, CurveSet);
+
     _cmsIOPrintf(ContextID, m, "]\n");
-    EmitSafeGuardEnd(ContextID, m, "lcms2gammaproc2", 3);
-    EmitSafeGuardEnd(ContextID, m, "lcms2gammaproc1", 3);
-    EmitSafeGuardEnd(ContextID, m, "lcms2gammaproc0", 3);
 
     _cmsIOPrintf(ContextID, m, "/MatrixABC [ " );
 
@@ -778,9 +749,9 @@ int EmitCIEBasedDEF(cmsContext ContextID, cmsIOHANDLER* m, cmsPipeline* Pipeline
 {
     const char* PreMaj;
     const char* PostMaj;
-    const char* PreMin, * PostMin;
+    const char* PreMin, *PostMin;
     cmsStage* mpe;
-    int i, numchans;
+    
     static char buffer[2048];
 
     mpe = Pipeline->Elements;
@@ -810,27 +781,11 @@ int EmitCIEBasedDEF(cmsContext ContextID, cmsIOHANDLER* m, cmsPipeline* Pipeline
 
     if (cmsStageType(ContextID, mpe) == cmsSigCurveSetElemType) {
 
-        numchans = (int) cmsStageOutputChannels(ContextID, mpe);
-        for (i = 0; i < numchans; ++i) {
-            snprintf(buffer, sizeof(buffer), "lcms2gammaproc%d", i);
-            buffer[sizeof(buffer) - 1] = '\0';
-            EmitSafeGuardBegin(ContextID, m, buffer);
-        }
-        EmitNGamma(ContextID, m, cmsStageOutputChannels(ContextID, mpe), _cmsStageGetPtrToCurveSet(mpe), "lcms2gammaproc");
-        _cmsIOPrintf(ContextID, m, "/DecodeDEF [\n");
-        for (i = 0; i < numchans; ++i) {
-            snprintf(buffer, sizeof(buffer), "  /lcms2gammaproc%d load\n", i);
-            buffer[sizeof(buffer) - 1] = '\0';
-            _cmsIOPrintf(ContextID, m, buffer);
-        }
+        _cmsIOPrintf(ContextID, m, "/DecodeDEF [ ");
+        EmitNGamma(ContextID, m, cmsStageOutputChannels(mpe), _cmsStageGetPtrToCurveSet(mpe));
         _cmsIOPrintf(ContextID, m, "]\n");
-        for (i = numchans - 1; i >= 0; --i) {
-            snprintf(buffer, sizeof(buffer), "lcms2gammaproc%d", i);
-            buffer[sizeof(buffer) - 1] = '\0';
-            EmitSafeGuardEnd(ContextID, m, buffer, 3);
-        }
 
-        mpe = mpe->Next;
+        mpe = mpe ->Next;
     }
 
     if (cmsStageType(ContextID, mpe) == cmsSigCLutElemType) {
@@ -997,8 +952,8 @@ int WriteInputMatrixShaper(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hP
                     Mat.v[i].n[j] *= MAX_ENCODEABLE_XYZ;
 
             rc = EmitCIEBasedABC(ContextID, m, (cmsFloat64Number *) &Mat,
-                _cmsStageGetPtrToCurveSet(Shaper),
-                &BlackPointAdaptedToD50);
+                                _cmsStageGetPtrToCurveSet(Shaper),
+                                 &BlackPointAdaptedToD50);
         }
         else {
 
