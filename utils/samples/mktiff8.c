@@ -38,7 +38,7 @@ double DecodeAbTIFF(double ab)
 }
 
 static
-cmsToneCurve* CreateStep(void)
+cmsToneCurve* CreateStep(cmsContext ContextID)
 {
 	cmsToneCurve* Gamma;
 	cmsUInt16Number* Table;
@@ -57,7 +57,7 @@ cmsToneCurve* CreateStep(void)
 		Table[i] = (cmsUInt16Number) floor(a * 257. + 0.5);
 	}
 
-	Gamma = cmsBuildTabulatedToneCurve16(0, 4096, Table);
+	Gamma = cmsBuildTabulatedToneCurve16(ContextID, 4096, Table);
 	free(Table);
 
 	return Gamma;
@@ -65,41 +65,41 @@ cmsToneCurve* CreateStep(void)
 
 
 static
-cmsToneCurve* CreateLinear(void)
+cmsToneCurve* CreateLinear(cmsContext ContextID)
 {
 	cmsUInt16Number Linear[2] = { 0, 0xffff };
 
-	return cmsBuildTabulatedToneCurve16(0, 2, Linear);          
+	return cmsBuildTabulatedToneCurve16(ContextID, 2, Linear);          
 }
 
 
 
 // Set the copyright and description
 static
-cmsBool SetTextTags(cmsHPROFILE hProfile)
+cmsBool SetTextTags(cmsContext ContextID, cmsHPROFILE hProfile)
 {
     cmsMLU *DescriptionMLU, *CopyrightMLU;
     cmsBool  rc = FALSE;
   
-    DescriptionMLU  = cmsMLUalloc(0, 1);
-    CopyrightMLU    = cmsMLUalloc(0, 1);
+    DescriptionMLU  = cmsMLUalloc(ContextID, 1);
+    CopyrightMLU    = cmsMLUalloc(ContextID, 1);
 
     if (DescriptionMLU == NULL || CopyrightMLU == NULL) goto Error;
 
-    if (!cmsMLUsetASCII(DescriptionMLU,  "en", "US", "Little cms Tiff8 CIELab")) goto Error;
-    if (!cmsMLUsetASCII(CopyrightMLU,    "en", "US", "Copyright (c) Marti Maria, 2010. All rights reserved.")) goto Error;
+    if (!cmsMLUsetASCII(ContextID, DescriptionMLU,  "en", "US", "Little cms Tiff8 CIELab")) goto Error;
+    if (!cmsMLUsetASCII(ContextID, CopyrightMLU,    "en", "US", "Copyright (c) Marti Maria, 2010. All rights reserved.")) goto Error;
 
-    if (!cmsWriteTag(hProfile, cmsSigProfileDescriptionTag,  DescriptionMLU)) goto Error;
-    if (!cmsWriteTag(hProfile, cmsSigCopyrightTag,           CopyrightMLU)) goto Error;     
+    if (!cmsWriteTag(ContextID, hProfile, cmsSigProfileDescriptionTag,  DescriptionMLU)) goto Error;
+    if (!cmsWriteTag(ContextID, hProfile, cmsSigCopyrightTag,           CopyrightMLU)) goto Error;     
 
     rc = TRUE;
 
 Error:
 
     if (DescriptionMLU)
-        cmsMLUfree(DescriptionMLU);
+        cmsMLUfree(ContextID, DescriptionMLU);
     if (CopyrightMLU)
-        cmsMLUfree(CopyrightMLU);
+        cmsMLUfree(ContextID, CopyrightMLU);
     return rc;
 }
 
@@ -115,39 +115,43 @@ int main(int argc, const char *argv[])
 	cmsToneCurve* PreLinear[3];
 	cmsToneCurve *Lin, *Step;
 
+	cmsContext ContextID = cmsCreateContext(NULL, NULL);
+
 	fprintf(stderr, "Creating lcmstiff8.icm...");
     
     remove("lcmstiff8.icm");
-	hProfile = cmsOpenProfileFromFile("lcmstiff8.icm", "w");
+	hProfile = cmsOpenProfileFromFile(ContextID, "lcmstiff8.icm", "w");
 
 	// Create linearization
-	Lin  = CreateLinear();
-	Step = CreateStep();
+	Lin  = CreateLinear(ContextID);
+	Step = CreateStep(ContextID);
 
 	PreLinear[0] = Lin;
 	PreLinear[1] = Step;
 	PreLinear[2] = Step;
 
-    AToB0 = cmsPipelineAlloc(0, 3, 3);
+    AToB0 = cmsPipelineAlloc(ContextID, 3, 3);
 
-	cmsPipelineInsertStage(AToB0, 
-		cmsAT_BEGIN, cmsStageAllocToneCurves(0, 3, PreLinear));
+	cmsPipelineInsertStage(ContextID, AToB0, 
+		cmsAT_BEGIN, cmsStageAllocToneCurves(ContextID, 3, PreLinear));
 
-	cmsSetColorSpace(hProfile, cmsSigLabData);
-	cmsSetPCS(hProfile, cmsSigLabData);
-	cmsSetDeviceClass(hProfile, cmsSigLinkClass);
-	cmsSetProfileVersion(hProfile, 4.2);
+	cmsSetColorSpace(ContextID, hProfile, cmsSigLabData);
+	cmsSetPCS(ContextID, hProfile, cmsSigLabData);
+	cmsSetDeviceClass(ContextID, hProfile, cmsSigLinkClass);
+	cmsSetProfileVersion(ContextID, hProfile, 4.2);
 
-    cmsWriteTag(hProfile, cmsSigAToB0Tag, AToB0);
+    cmsWriteTag(ContextID, hProfile, cmsSigAToB0Tag, AToB0);
 	
-    SetTextTags(hProfile);
+    SetTextTags(ContextID, hProfile);
 
-	cmsCloseProfile(hProfile);
+	cmsCloseProfile(ContextID, hProfile);
 
-	cmsFreeToneCurve(Lin);
-	cmsFreeToneCurve(Step);
-	cmsPipelineFree(AToB0);
-		
+	cmsFreeToneCurve(ContextID, Lin);
+	cmsFreeToneCurve(ContextID, Step);
+	cmsPipelineFree(ContextID, AToB0);
+
+	cmsDeleteContext(ContextID);
+
 	fprintf(stderr, "Done.\n");
 
 	return 0;

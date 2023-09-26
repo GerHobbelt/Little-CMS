@@ -105,14 +105,14 @@ void FatalErrorQuit(cmsContext ContextID, cmsUInt32Number ErrorCode, const char 
 
 // Rise an error and exit
 static
-void Fail(const char* frm, ...)
+void Fail(cmsContext ContextID, const char* frm, ...)
 {
        char ReasonToFailBuffer[1024];
        va_list args;
 
        va_start(args, frm);
        vsprintf(ReasonToFailBuffer, frm, args);
-       FatalErrorQuit(0, 0, ReasonToFailBuffer);
+       FatalErrorQuit(ContextID, 0, ReasonToFailBuffer);
 
       // unreachable va_end(args);
 }
@@ -122,7 +122,7 @@ void Fail(const char* frm, ...)
 static
 cmsHPROFILE CreateCurves(cmsContext ContextID)
 {
-       cmsToneCurve* Gamma = cmsBuildGamma(ContextID, 0, 1.1);
+       cmsToneCurve* Gamma = cmsBuildGamma(ContextID, 1.1);
        cmsToneCurve* Transfer[3];
        cmsHPROFILE h;
 
@@ -143,7 +143,7 @@ cmsHPROFILE CreateCurves(cmsContext ContextID)
 
 // Check change format feature
 static
-void CheckChangeFormat(void)
+void CheckChangeFormat(cmsContext ContextID)
 {
     cmsHPROFILE hsRGB, hLab;
     cmsHTRANSFORM xform;
@@ -153,23 +153,46 @@ void CheckChangeFormat(void)
 
     trace("Checking change format feature...");
 
-    hsRGB = cmsCreate_sRGBProfile();
-    hLab = cmsCreateLab4Profile(NULL);
+    hsRGB = cmsCreate_sRGBProfile(ContextID);
+    hLab = cmsCreateLab4Profile(ContextID, NULL);
 
-    xform = cmsCreateTransform(hsRGB, TYPE_RGB_16, hLab, TYPE_Lab_16, INTENT_PERCEPTUAL, FLAGS);
+    xform = cmsCreateTransform(ContextID, hsRGB, TYPE_RGB_16, hLab, TYPE_Lab_16, INTENT_PERCEPTUAL, FLAGS);
 
-    cmsCloseProfile(hsRGB);
-    cmsCloseProfile(hLab);
+    cmsCloseProfile(ContextID, hsRGB);
+    cmsCloseProfile(ContextID, hLab);
 
-    cmsDoTransform(xform, rgb16, lab16_1, 1);
+    cmsDoTransform(ContextID, xform, rgb16, lab16_1, 1);
 
-    cmsChangeBuffersFormat(xform, TYPE_RGB_8, TYPE_Lab_16);
+    //cmsChangeBuffersFormat(ContextID, xform, TYPE_RGB_8, TYPE_Lab_16);
+    //cmsBool CMSEXPORT cmsChangeBuffersFormat(cmsHTRANSFORM hTransform, cmsUInt32Number InputFormat, cmsUInt32Number OutputFormat)
+    {
+        cmsFormatter16 FromInput, ToOutput;
 
-    cmsDoTransform(xform, rgb8, lab16_2, 1);
-    cmsDeleteTransform(xform);
+        // We only can afford to change formatters if previous transform is at least 16 bits
+        if (!(xform ->dwOriginalFlags & cmsFLAGS_CAN_CHANGE_FORMATTER)) {
+
+            Fail(ContextID, "cmsChangeBuffersFormat works only on transforms created originally with at least 16 bits of precision");
+            return FALSE;
+        }
+
+        FromInput = cmsGetFormatter(ContextID, TYPE_RGB_8,  cmsFormatterInput, CMS_PACK_FLAGS_16BITS).Fmt16;
+        ToOutput  = cmsGetFormatter(ContextID, TYPE_RGB_16, cmsFormatterOutput, CMS_PACK_FLAGS_16BITS).Fmt16;
+
+        if (FromInput == NULL || ToOutput == NULL) {
+            Fail(ContextID, "Unsupported raster format");
+        }
+
+        xform ->InputFormat  = InputFormat;
+        xform ->OutputFormat = OutputFormat;
+        xform ->FromInput    = FromInput;
+        xform ->ToOutput     = ToOutput;
+    }
+
+    cmsDoTransform(ContextID, xform, rgb8, lab16_2, 1);
+    cmsDeleteTransform(ContextID, xform);
 
     if (memcmp(lab16_1, lab16_2, sizeof(lab16_1)) != 0)
-        Fail("Change format failed!");
+        Fail(ContextID, "Change format failed!");
 
     trace("Ok\n");
 
@@ -177,7 +200,7 @@ void CheckChangeFormat(void)
 
 // Next test checks results of optimized 8 bits versus raw 8 bits. 
 static
-void TryAllValues8bits(cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
+void TryAllValues8bits(cmsContext ContextID, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
 {
     cmsContext Raw = cmsCreateContext(NULL, NULL);
     cmsContext Plugin = cmsCreateContext(cmsThreadedExtensions(CMS_THREADED_GUESS_MAX_THREADS, 0), NULL);
@@ -193,12 +216,12 @@ void TryAllValues8bits(cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, 
     cmsHTRANSFORM xformRaw = cmsCreateTransform(Raw, hlcmsProfileIn, TYPE_RGBA_8, hlcmsProfileOut, TYPE_RGBA_8, Intent, FLAGS|cmsFLAGS_NOCACHE | cmsFLAGS_COPY_ALPHA);
     cmsHTRANSFORM xformPlugin = cmsCreateTransform(Plugin, hlcmsProfileIn, TYPE_RGBA_8, hlcmsProfileOut, TYPE_RGBA_8, Intent, FLAGS|cmsFLAGS_NOCACHE | cmsFLAGS_COPY_ALPHA);
 
-    cmsCloseProfile(hlcmsProfileIn);
-    cmsCloseProfile(hlcmsProfileOut);
+    cmsCloseProfile(ContextID, hlcmsProfileIn);
+    cmsCloseProfile(ContextID, hlcmsProfileOut);
 
     if (xformRaw == NULL || xformPlugin == NULL) {
 
-        Fail("NULL transforms on check float conversions");
+        Fail(ContextID, "NULL transforms on check float conversions");
     }
 
     // Again, no checking on mem alloc because this is just a test
@@ -221,8 +244,8 @@ void TryAllValues8bits(cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, 
             }
 
     // Different transforms, different output buffers
-    cmsDoTransform(xformRaw, bufferIn, bufferRawOut, npixels);
-    cmsDoTransform(xformPlugin, bufferIn, bufferPluginOut, npixels);
+    cmsDoTransform(Raw, xformRaw, bufferIn, bufferRawOut, npixels);
+    cmsDoTransform(Plugin, xformPlugin, bufferIn, bufferPluginOut, npixels);
 
     // Lets compare results
     j = 0;
@@ -234,7 +257,7 @@ void TryAllValues8bits(cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, 
                     bufferRawOut[j].g != bufferPluginOut[j].g ||
                     bufferRawOut[j].b != bufferPluginOut[j].b ||
                     bufferRawOut[j].a != bufferPluginOut[j].a)
-                    Fail(
+                    Fail(ContextID, 
                         "Conversion failed at [%x %x %x %x] (%x %x %x %x) != (%x %x %x %x)",
                         bufferIn[j].r, bufferIn[j].g, bufferIn[j].b, bufferIn[j].a,
                         bufferRawOut[j].r, bufferRawOut[j].g, bufferRawOut[j].b, bufferRawOut[j].a,
@@ -246,26 +269,25 @@ void TryAllValues8bits(cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, 
     free(bufferIn); free(bufferRawOut);
     free(bufferPluginOut);
 
-    cmsDeleteTransform(xformRaw);
-    cmsDeleteTransform(xformPlugin);
+    cmsDeleteTransform(Raw, xformRaw);
+    cmsDeleteTransform(Plugin, xformPlugin);
 
     cmsDeleteContext(Plugin);
     cmsDeleteContext(Raw);
 }
 
 static
-void CheckAccuracy8Bits(void)
+void CheckAccuracy8Bits(cmsContext ContextID)
 {
-    
     trace("Checking accuracy of 8 bits CLUT...");
-    TryAllValues8bits(cmsOpenProfileFromFile(PROFILES_DIR "test5.icc", "r"), cmsOpenProfileFromFile(PROFILES_DIR "test3.icc", "r"), INTENT_PERCEPTUAL);
+    TryAllValues8bits(ContextID, cmsOpenProfileFromFile(ContextID, PROFILES_DIR "test5.icc", "r"), cmsOpenProfileFromFile(ContextID, PROFILES_DIR "test3.icc", "r"), INTENT_PERCEPTUAL);
     trace("OK\n");
 }
 
 
 // Next test checks results of optimized 16 bits versus raw 16 bits. 
 static
-void TryAllValues16bits(cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
+void TryAllValues16bits(cmsContext ContextID, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut, cmsInt32Number Intent)
 {
     cmsContext Raw = cmsCreateContext(NULL, NULL);
     cmsContext Plugin = cmsCreateContext(cmsThreadedExtensions(CMS_THREADED_GUESS_MAX_THREADS, 0), NULL);
@@ -281,12 +303,12 @@ void TryAllValues16bits(cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut,
     cmsHTRANSFORM xformRaw = cmsCreateTransform(Raw, hlcmsProfileIn, TYPE_RGBA_16, hlcmsProfileOut, TYPE_RGBA_16, Intent, FLAGS|cmsFLAGS_NOCACHE | cmsFLAGS_COPY_ALPHA);
     cmsHTRANSFORM xformPlugin = cmsCreateTransform(Plugin, hlcmsProfileIn, TYPE_RGBA_16, hlcmsProfileOut, TYPE_RGBA_16, Intent, FLAGS|cmsFLAGS_NOCACHE | cmsFLAGS_COPY_ALPHA);
 
-    cmsCloseProfile(hlcmsProfileIn);
-    cmsCloseProfile(hlcmsProfileOut);
+    cmsCloseProfile(ContextID, hlcmsProfileIn);
+    cmsCloseProfile(ContextID, hlcmsProfileOut);
 
     if (xformRaw == NULL || xformPlugin == NULL) {
 
-        Fail("NULL transforms on check float conversions");
+        Fail(ContextID, "NULL transforms on check float conversions");
     }
 
     // Again, no checking on mem alloc because this is just a test
@@ -309,8 +331,8 @@ void TryAllValues16bits(cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut,
             }
 
     // Different transforms, different output buffers
-    cmsDoTransform(xformRaw, bufferIn, bufferRawOut, npixels);
-    cmsDoTransform(xformPlugin, bufferIn, bufferPluginOut, npixels);
+    cmsDoTransform(Raw, xformRaw, bufferIn, bufferRawOut, npixels);
+    cmsDoTransform(Plugin, xformPlugin, bufferIn, bufferPluginOut, npixels);
 
     // Lets compare results
     j = 0;
@@ -322,7 +344,7 @@ void TryAllValues16bits(cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut,
                     bufferRawOut[j].g != bufferPluginOut[j].g ||
                     bufferRawOut[j].b != bufferPluginOut[j].b ||
                     bufferRawOut[j].a != bufferPluginOut[j].a)
-                    Fail(
+                    Fail(ContextID, 
                         "Conversion failed at [%x %x %x %x] (%x %x %x %x) != (%x %x %x %x)",
                         bufferIn[j].r, bufferIn[j].g, bufferIn[j].b, bufferIn[j].a,
                         bufferRawOut[j].r, bufferRawOut[j].g, bufferRawOut[j].b, bufferRawOut[j].a,
@@ -334,19 +356,19 @@ void TryAllValues16bits(cmsHPROFILE hlcmsProfileIn, cmsHPROFILE hlcmsProfileOut,
     free(bufferIn); free(bufferRawOut);
     free(bufferPluginOut);
 
-    cmsDeleteTransform(xformRaw);
-    cmsDeleteTransform(xformPlugin);
+    cmsDeleteTransform(Raw, xformRaw);
+    cmsDeleteTransform(Plugin, xformPlugin);
 
     cmsDeleteContext(Plugin);
     cmsDeleteContext(Raw);
 }
 
 static
-void CheckAccuracy16Bits(void)
+void CheckAccuracy16Bits(cmsContext ContextID)
 {
     // CLUT should be as 16 bits or better
     trace("Checking accuracy of 16 bits CLUT...");
-    TryAllValues16bits(cmsOpenProfileFromFile(PROFILES_DIR "test5.icc", "r"), cmsOpenProfileFromFile(PROFILES_DIR "test3.icc", "r"), INTENT_PERCEPTUAL);
+    TryAllValues16bits(ContextID, cmsOpenProfileFromFile(ContextID, PROFILES_DIR "test5.icc", "r"), cmsOpenProfileFromFile(ContextID, PROFILES_DIR "test3.icc", "r"), INTENT_PERCEPTUAL);
     trace("OK\n");
 }
 
@@ -392,7 +414,7 @@ cmsHPROFILE loadProfile(cmsContext ContextID, const char* name)
                     return CreateCurves(ContextID);
                 }
                 else
-                    Fail("Unknown builtin '%s'", name);
+                    Fail(ContextID, "Unknown builtin '%s'", name);
 
     }
 
@@ -459,11 +481,15 @@ void ComparativeCt(cmsContext ct1, cmsContext ct2, const char* Title, perf_fn fn
     trace("%-12.2f %-12.2f\n", n1, n2);
 }
 
+#if 0
+
 static
-void Comparative(const char* Title, perf_fn fn1, perf_fn fn2, const char* inICC, const char* outICC)
+void Comparative(cmsContext ct, const char* Title, perf_fn fn1, perf_fn fn2, const char* inICC, const char* outICC)
 {
-       ComparativeCt(0, 0, Title, fn1, fn2, inICC, outICC);
+       ComparativeCt(ct, ct, Title, fn1, fn2, inICC, outICC);
 }
+
+#endif
 
 // The worst case is used, no cache and all rgb combinations
 static
@@ -476,7 +502,7 @@ cmsFloat64Number SpeedTest8bitsRGB(cmsContext ct, cmsHPROFILE hlcmsProfileIn, cm
     cmsUInt32Number Mb;
 
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
-        Fail("Unable to open profiles");
+        Fail(ct, "Unable to open profiles");
 
     hlcmsxform = cmsCreateTransform(ct, hlcmsProfileIn, TYPE_RGB_8, hlcmsProfileOut, TYPE_RGB_8, INTENT_PERCEPTUAL, FLAGS|cmsFLAGS_NOCACHE);
     cmsCloseProfile(ct, hlcmsProfileIn);
@@ -519,7 +545,7 @@ cmsFloat64Number SpeedTest8bitsRGBA(cmsContext ct, cmsHPROFILE hlcmsProfileIn, c
     cmsUInt32Number Mb;
 
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
-        Fail("Unable to open profiles");
+        Fail(ct, "Unable to open profiles");
 
     hlcmsxform = cmsCreateTransform(ct, hlcmsProfileIn, TYPE_RGBA_8, hlcmsProfileOut, TYPE_RGBA_8, INTENT_PERCEPTUAL, FLAGS|cmsFLAGS_NOCACHE);
     cmsCloseProfile(ct, hlcmsProfileIn);
@@ -543,12 +569,12 @@ cmsFloat64Number SpeedTest8bitsRGBA(cmsContext ct, cmsHPROFILE hlcmsProfileIn, c
 
     MeasureTimeStart();
 
-    cmsDoTransform(hlcmsxform, In, In, 256 * 256 * 256);
+    cmsDoTransform(ct, hlcmsxform, In, In, 256 * 256 * 256);
 
     diff = MeasureTimeStop();
     free(In);
 
-    cmsDeleteTransform(hlcmsxform);
+    cmsDeleteTransform(ct, hlcmsxform);
     return MPixSec(diff);
 
 }
@@ -565,7 +591,7 @@ cmsFloat64Number SpeedTest16bitsRGB(cmsContext ct, cmsHPROFILE hlcmsProfileIn, c
     cmsUInt32Number Mb;
 
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
-        Fail("Unable to open profiles");
+        Fail(ct, "Unable to open profiles");
 
     hlcmsxform = cmsCreateTransform(ct, hlcmsProfileIn, TYPE_RGB_16, hlcmsProfileOut, TYPE_RGB_16, INTENT_PERCEPTUAL, FLAGS | cmsFLAGS_NOCACHE);
     cmsCloseProfile(ct, hlcmsProfileIn);
@@ -609,7 +635,7 @@ cmsFloat64Number SpeedTest16bitsCMYK(cmsContext ct, cmsHPROFILE hlcmsProfileIn, 
     cmsUInt32Number Mb;
 
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
-        Fail("Unable to open profiles");
+        Fail(ct, "Unable to open profiles");
 
     hlcmsxform = cmsCreateTransform(ct, hlcmsProfileIn, TYPE_CMYK_16, hlcmsProfileOut, TYPE_CMYK_16, INTENT_PERCEPTUAL, FLAGS | cmsFLAGS_NOCACHE);
     cmsCloseProfile(ct, hlcmsProfileIn);
@@ -646,7 +672,8 @@ cmsFloat64Number SpeedTest16bitsCMYK(cmsContext ct, cmsHPROFILE hlcmsProfileIn, 
 static
 void SpeedTest8(void)
 {
-    cmsContext noPlugin = cmsCreateContext(0, 0);
+    cmsContext NoPlugin = cmsCreateContext(NULL, NULL);
+    cmsContext Plugin = cmsCreateContext(cmsThreadedExtensions(CMS_THREADED_GUESS_MAX_THREADS, 0), NULL);
 
     cmsFloat64Number t[10];
 
@@ -656,10 +683,10 @@ void SpeedTest8(void)
     fflush(stdout);
 
     PerformanceHeader();
-    t[0] = Performance("8 bits on CLUT profiles  ", SpeedTest8bitsRGB, noPlugin, PROFILES_DIR "test5.icc", PROFILES_DIR "test3.icc", sizeof(Scanline_rgb8bits), 0);
-    t[1] = Performance("8 bits on Matrix-Shaper  ", SpeedTest8bitsRGB, noPlugin, PROFILES_DIR "test5.icc", PROFILES_DIR "test0.icc", sizeof(Scanline_rgb8bits), 0);
-    t[2] = Performance("8 bits on same MatrixSh  ", SpeedTest8bitsRGB, noPlugin, PROFILES_DIR "test0.icc", PROFILES_DIR "test0.icc", sizeof(Scanline_rgb8bits), 0);
-    t[3] = Performance("8 bits on curves         ", SpeedTest8bitsRGB, noPlugin, "*curves",   "*curves",   sizeof(Scanline_rgb8bits), 0);
+    t[0] = Performance("8 bits on CLUT profiles  ", SpeedTest8bitsRGB, NoPlugin, PROFILES_DIR "test5.icc", PROFILES_DIR "test3.icc", sizeof(Scanline_rgb8bits), 0);
+    t[1] = Performance("8 bits on Matrix-Shaper  ", SpeedTest8bitsRGB, NoPlugin, PROFILES_DIR "test5.icc", PROFILES_DIR "test0.icc", sizeof(Scanline_rgb8bits), 0);
+    t[2] = Performance("8 bits on same MatrixSh  ", SpeedTest8bitsRGB, NoPlugin, PROFILES_DIR "test0.icc", PROFILES_DIR "test0.icc", sizeof(Scanline_rgb8bits), 0);
+    t[3] = Performance("8 bits on curves         ", SpeedTest8bitsRGB, NoPlugin, "*curves",   "*curves",   sizeof(Scanline_rgb8bits), 0);
 
     // Note that context 0 has the plug-in installed
 
@@ -669,18 +696,20 @@ void SpeedTest8(void)
     fflush(stdout);
 
     PerformanceHeader();
-    Performance("8 bits on CLUT profiles  ", SpeedTest8bitsRGB, 0, PROFILES_DIR "test5.icc", PROFILES_DIR "test3.icc", sizeof(Scanline_rgb8bits), t[0]);
-    Performance("8 bits on Matrix-Shaper  ", SpeedTest8bitsRGB, 0, PROFILES_DIR "test5.icc", PROFILES_DIR "test0.icc", sizeof(Scanline_rgb8bits), t[1]);
-    Performance("8 bits on same MatrixSh  ", SpeedTest8bitsRGB, 0, PROFILES_DIR "test0.icc", PROFILES_DIR "test0.icc", sizeof(Scanline_rgb8bits), t[2]);
-    Performance("8 bits on curves         ", SpeedTest8bitsRGB, 0, "*curves",   "*curves",   sizeof(Scanline_rgb8bits), t[3]);
+    Performance("8 bits on CLUT profiles  ", SpeedTest8bitsRGB, Plugin, PROFILES_DIR "test5.icc", PROFILES_DIR "test3.icc", sizeof(Scanline_rgb8bits), t[0]);
+    Performance("8 bits on Matrix-Shaper  ", SpeedTest8bitsRGB, Plugin, PROFILES_DIR "test5.icc", PROFILES_DIR "test0.icc", sizeof(Scanline_rgb8bits), t[1]);
+    Performance("8 bits on same MatrixSh  ", SpeedTest8bitsRGB, Plugin, PROFILES_DIR "test0.icc", PROFILES_DIR "test0.icc", sizeof(Scanline_rgb8bits), t[2]);
+    Performance("8 bits on curves         ", SpeedTest8bitsRGB, Plugin, "*curves",   "*curves",   sizeof(Scanline_rgb8bits), t[3]);
 
-    cmsDeleteContext(noPlugin);
+    cmsDeleteContext(NoPlugin);
+    cmsDeleteContext(Plugin);
 }
 
 static
 void SpeedTest16(void)
 {
-    cmsContext noPlugin = cmsCreateContext(0, 0);
+    cmsContext NoPlugin = cmsCreateContext(NULL, NULL);
+    cmsContext Plugin = cmsCreateContext(cmsThreadedExtensions(CMS_THREADED_GUESS_MAX_THREADS, 0), NULL);
 
     cmsFloat64Number t[10];
 
@@ -689,24 +718,25 @@ void SpeedTest16(void)
     trace("=================================================================\n\n");
     
     PerformanceHeader();
-    t[0] = Performance("16 bits on CLUT profiles         ", SpeedTest16bitsRGB,  noPlugin, PROFILES_DIR "test5.icc", PROFILES_DIR "test3.icc",  sizeof(Scanline_rgb16bits), 0);
-    t[1] = Performance("16 bits on Matrix-Shaper profiles", SpeedTest16bitsRGB,  noPlugin, PROFILES_DIR "test5.icc", PROFILES_DIR "test0.icc",  sizeof(Scanline_rgb16bits), 0);
-    t[2] = Performance("16 bits on same Matrix-Shaper    ", SpeedTest16bitsRGB,  noPlugin, PROFILES_DIR "test0.icc", PROFILES_DIR "test0.icc",  sizeof(Scanline_rgb16bits), 0);
-    t[3] = Performance("16 bits on curves                ", SpeedTest16bitsRGB,  noPlugin, "*curves",                "*curves",                 sizeof(Scanline_rgb16bits), 0);
-    t[4] = Performance("16 bits on CMYK CLUT profiles    ", SpeedTest16bitsCMYK, noPlugin, PROFILES_DIR "test1.icc", PROFILES_DIR "test2.icc",  sizeof(Scanline_cmyk16bits), 0);
+    t[0] = Performance("16 bits on CLUT profiles         ", SpeedTest16bitsRGB,  NoPlugin, PROFILES_DIR "test5.icc", PROFILES_DIR "test3.icc",  sizeof(Scanline_rgb16bits), 0);
+    t[1] = Performance("16 bits on Matrix-Shaper profiles", SpeedTest16bitsRGB,  NoPlugin, PROFILES_DIR "test5.icc", PROFILES_DIR "test0.icc",  sizeof(Scanline_rgb16bits), 0);
+    t[2] = Performance("16 bits on same Matrix-Shaper    ", SpeedTest16bitsRGB,  NoPlugin, PROFILES_DIR "test0.icc", PROFILES_DIR "test0.icc",  sizeof(Scanline_rgb16bits), 0);
+    t[3] = Performance("16 bits on curves                ", SpeedTest16bitsRGB,  NoPlugin, "*curves",                "*curves",                 sizeof(Scanline_rgb16bits), 0);
+    t[4] = Performance("16 bits on CMYK CLUT profiles    ", SpeedTest16bitsCMYK, NoPlugin, PROFILES_DIR "test1.icc", PROFILES_DIR "test2.icc",  sizeof(Scanline_cmyk16bits), 0);
     
     trace("\n\n");
     trace("P E R F O R M A N C E   T E S T S   1 6  B I T S  (P L U G I N)\n");
     trace("===============================================================\n\n");
 
     PerformanceHeader();
-    Performance("16 bits on CLUT profiles         ", SpeedTest16bitsRGB,  0, PROFILES_DIR "test5.icc", PROFILES_DIR "test3.icc", sizeof(Scanline_rgb16bits), t[0]);
-    Performance("16 bits on Matrix-Shaper profiles", SpeedTest16bitsRGB,  0, PROFILES_DIR "test5.icc", PROFILES_DIR "test0.icc", sizeof(Scanline_rgb16bits), t[1]);
-    Performance("16 bits on same Matrix-Shaper    ", SpeedTest16bitsRGB,  0, PROFILES_DIR "test0.icc", PROFILES_DIR "test0.icc", sizeof(Scanline_rgb16bits), t[2]);
-    Performance("16 bits on curves                ", SpeedTest16bitsRGB,  0, "*curves",                "*curves",                sizeof(Scanline_rgb16bits), t[3]);
-    Performance("16 bits on CMYK CLUT profiles    ", SpeedTest16bitsCMYK, 0, PROFILES_DIR "test1.icc", PROFILES_DIR "test2.icc", sizeof(Scanline_cmyk16bits), t[4]);
+    Performance("16 bits on CLUT profiles         ", SpeedTest16bitsRGB,  Plugin, PROFILES_DIR "test5.icc", PROFILES_DIR "test3.icc", sizeof(Scanline_rgb16bits), t[0]);
+    Performance("16 bits on Matrix-Shaper profiles", SpeedTest16bitsRGB,  Plugin, PROFILES_DIR "test5.icc", PROFILES_DIR "test0.icc", sizeof(Scanline_rgb16bits), t[1]);
+    Performance("16 bits on same Matrix-Shaper    ", SpeedTest16bitsRGB,  Plugin, PROFILES_DIR "test0.icc", PROFILES_DIR "test0.icc", sizeof(Scanline_rgb16bits), t[2]);
+    Performance("16 bits on curves                ", SpeedTest16bitsRGB,  Plugin, "*curves",                "*curves",                sizeof(Scanline_rgb16bits), t[3]);
+    Performance("16 bits on CMYK CLUT profiles    ", SpeedTest16bitsCMYK, Plugin, PROFILES_DIR "test1.icc", PROFILES_DIR "test2.icc", sizeof(Scanline_cmyk16bits), t[4]);
 
-    cmsDeleteContext(noPlugin);
+    cmsDeleteContext(NoPlugin);
+    cmsDeleteContext(Plugin);
 }
 
 
@@ -736,7 +766,7 @@ cmsFloat64Number SpeedTest8bitDoTransform(cmsContext ct, cmsHPROFILE hlcmsProfil
     cmsUInt32Number Mb;
 
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
-        Fail("Unable to open profiles");
+        Fail(ct, "Unable to open profiles");
 
     hlcmsxform = cmsCreateTransform(ct, hlcmsProfileIn, TYPE_RGBA_8, hlcmsProfileOut, TYPE_RGBA_8, INTENT_PERCEPTUAL, FLAGS | cmsFLAGS_NOCACHE);
     cmsCloseProfile(ct, hlcmsProfileIn);
@@ -786,7 +816,7 @@ cmsFloat64Number SpeedTest8bitLineStride(cmsContext ct, cmsHPROFILE hlcmsProfile
     cmsUInt32Number Mb;
 
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
-        Fail("Unable to open profiles");
+        Fail(ct, "Unable to open profiles");
 
     hlcmsxform = cmsCreateTransform(ct, hlcmsProfileIn, TYPE_RGBA_8, hlcmsProfileOut, TYPE_RGBA_8, INTENT_PERCEPTUAL, FLAGS | cmsFLAGS_NOCACHE);
     cmsCloseProfile(ct, hlcmsProfileIn);
@@ -860,30 +890,34 @@ int main()
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
+    cmsContext ContextID = cmsCreateContext(NULL, NULL);
+
     trace("Multithreaded extensions testbed - 1.1\n");
     trace("Copyright (c) 1998-2023 Marti Maria Saguer, all rights reserved\n");
 
     trace("\nInstalling error logger ... ");
-    cmsSetLogErrorHandler(FatalErrorQuit);
+    cmsSetLogErrorHandler(ContextID, FatalErrorQuit);
     trace("done.\n");
 
     trace("Installing plug-in ... ");
-    cmsPlugin(cmsThreadedExtensions(CMS_THREADED_GUESS_MAX_THREADS, 0));
+    cmsPlugin(ContextID, cmsThreadedExtensions(CMS_THREADED_GUESS_MAX_THREADS, 0));
     trace("done.\n\n");
 
     // Change format
-    CheckChangeFormat();
+    CheckChangeFormat(ContextID);
 
     // Accuracy
-    CheckAccuracy8Bits();
-    CheckAccuracy16Bits();
+    CheckAccuracy8Bits(ContextID);
+    CheckAccuracy16Bits(ContextID);
 
     // Check speed
     SpeedTest8();
     SpeedTest16();
     ComparativeLineStride8bits();
 
-    cmsUnregisterPlugins();
+    cmsUnregisterPlugins(ContextID);
+
+    cmsDeleteContext(ContextID);
 
     trace("\nAll tests passed OK\n");
     return 0;

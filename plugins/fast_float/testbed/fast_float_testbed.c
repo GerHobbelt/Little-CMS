@@ -1779,7 +1779,7 @@ cmsFloat64Number SpeedTest16bitsCMYK(cmsContext ContextID, cmsHPROFILE hlcmsProf
 
 
 static
-void SpeedTest8(void)
+void SpeedTest8(cmsContext ct)
 {
     cmsContext noPlugin = cmsCreateContext(0, 0);
 
@@ -1804,10 +1804,10 @@ void SpeedTest8(void)
     fflush(stdout);
 
     PerformanceHeader();
-    Performance("8 bits on CLUT profiles  ", SpeedTest8bitsRGB, 0, PROFILES_DIR "test5.icc", PROFILES_DIR "test3.icc", sizeof(Scanline_rgb8bits), t[0]);
-    Performance("8 bits on Matrix-Shaper  ", SpeedTest8bitsRGB, 0, PROFILES_DIR "test5.icc", PROFILES_DIR "test0.icc", sizeof(Scanline_rgb8bits), t[1]);
-    Performance("8 bits on same MatrixSh  ", SpeedTest8bitsRGB, 0, PROFILES_DIR "test0.icc", PROFILES_DIR "test0.icc", sizeof(Scanline_rgb8bits), t[2]);
-    Performance("8 bits on curves         ", SpeedTest8bitsRGB, 0, "*curves",   "*curves",   sizeof(Scanline_rgb8bits), t[3]);
+    Performance("8 bits on CLUT profiles  ", SpeedTest8bitsRGB, ct, PROFILES_DIR "test5.icc", PROFILES_DIR "test3.icc", sizeof(Scanline_rgb8bits), t[0]);
+    Performance("8 bits on Matrix-Shaper  ", SpeedTest8bitsRGB, ct, PROFILES_DIR "test5.icc", PROFILES_DIR "test0.icc", sizeof(Scanline_rgb8bits), t[1]);
+    Performance("8 bits on same MatrixSh  ", SpeedTest8bitsRGB, ct, PROFILES_DIR "test0.icc", PROFILES_DIR "test0.icc", sizeof(Scanline_rgb8bits), t[2]);
+    Performance("8 bits on curves         ", SpeedTest8bitsRGB, ct, "*curves",   "*curves",   sizeof(Scanline_rgb8bits), t[3]);
 
     cmsDeleteContext(noPlugin);
 }
@@ -2081,8 +2081,6 @@ cmsFloat64Number SpeedTestFloatLab(cmsContext ct, cmsHPROFILE hlcmsProfileIn, cm
 static
 void SpeedTestFloat(cmsContext noPlugin, cmsContext plugin)
 {
-       cmsContext noPlugin = cmsCreateContext(0, 0);
-
        cmsFloat64Number t[10] = { 0 };
 
        trace("\n\n");
@@ -2117,8 +2115,6 @@ void SpeedTestFloat(cmsContext noPlugin, cmsContext plugin)
        Performance("Floating point on RGB->XYZ       ", SpeedTestFloatRGB,  plugin, PROFILES_DIR "test3.icc", "*xyz",      sizeof(Scanline_rgbFloat), t[5]);
        Performance("Floating point on CMYK->CMYK     ", SpeedTestFloatCMYK, plugin, PROFILES_DIR "test1.icc", PROFILES_DIR "test2.icc", sizeof(Scanline_cmykFloat), t[6]);
        Performance("Floating point on Lab->RGB       ", SpeedTestFloatLab,  plugin, "*lab",                   PROFILES_DIR "test3.icc", sizeof(Scanline_LabFloat), t[7]);
-
-       cmsDeleteContext(noPlugin);
 }
 
 

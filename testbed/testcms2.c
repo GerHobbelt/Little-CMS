@@ -968,9 +968,9 @@ cmsInt32Number CheckD50Roundtrip(cmsContext ContextID)
         return 0;
     }
 
-    xe = _cmsDoubleTo15Fixed16(ContextID, cmsD50X_2);
-    ye = _cmsDoubleTo15Fixed16(ContextID, cmsD50Y_2);
-    ze = _cmsDoubleTo15Fixed16(ContextID, cmsD50Z_2);
+    xe = _cmsDoubleTo15Fixed16(cmsD50X_2);
+    ye = _cmsDoubleTo15Fixed16(cmsD50Y_2);
+    ze = _cmsDoubleTo15Fixed16(cmsD50Z_2);
 
     x =  _cms15Fixed16toDouble(xe);
     y =  _cms15Fixed16toDouble(ye);
@@ -5405,14 +5405,14 @@ cmsInt32Number Check_MHC2(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE
         s.MinLuminance = 0.1;
         s.PeakLuminance = 100.0;
         
-        if (!cmsWriteTag(hProfile, cmsSigMHC2Tag, &s)) return 0;
+        if (!cmsWriteTag(ContextID, hProfile, cmsSigMHC2Tag, &s)) return 0;
         return 1;
 
     case 2:
-        v = (cmsMHC2Type*)cmsReadTag(hProfile, cmsSigMHC2Tag);
+        v = (cmsMHC2Type*)cmsReadTag(ContextID, hProfile, cmsSigMHC2Tag);
         if (v == NULL) return 0;
 
-        if (!IsOriginalMHC2Matrix(v->XYZ2XYZmatrix)) return 0;
+        if (!IsOriginalMHC2Matrix(ContextID, v->XYZ2XYZmatrix)) return 0;
         if (v->CurveEntries != 3) return 0;
         return 1;
 
@@ -5572,7 +5572,7 @@ cmsInt32Number CheckProfileCreation(cmsContext ContextID)
         if (!Check_cicp(ContextID, Pass, h)) goto Error;
 
         SubTest("Microsoft MHC2 tag");
-        if (!Check_MHC2(Pass, h)) goto Error;
+        if (!Check_MHC2(ContextID, Pass, h)) goto Error;
 
 
         if (Pass == 1) {
@@ -8453,42 +8453,42 @@ int Check_sRGB_Rountrips(cmsContext contextID)
 static
 int Check_OkLab(cmsContext ContextID)
 {
-    cmsHPROFILE hOkLab = cmsCreate_OkLabProfile(NULL);
-    cmsHPROFILE hXYZ = cmsCreateXYZProfile();
+    cmsHPROFILE hOkLab = cmsCreate_OkLabProfile(ContextID);
+    cmsHPROFILE hXYZ = cmsCreateXYZProfile(ContextID);
     cmsCIEXYZ xyz, xyz2;
     cmsCIELab okLab;
 
 #define TYPE_OKLAB_DBL          (FLOAT_SH(1)|COLORSPACE_SH(PT_MCH3)|CHANNELS_SH(3)|BYTES_SH(0))
 
-    cmsHTRANSFORM xform  = cmsCreateTransform(hXYZ, TYPE_XYZ_DBL,  hOkLab, TYPE_OKLAB_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsHTRANSFORM xform2 = cmsCreateTransform(hOkLab, TYPE_OKLAB_DBL, hXYZ, TYPE_XYZ_DBL,  INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsHTRANSFORM xform  = cmsCreateTransform(ContextID, hXYZ, TYPE_XYZ_DBL,  hOkLab, TYPE_OKLAB_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsHTRANSFORM xform2 = cmsCreateTransform(ContextID, hOkLab, TYPE_OKLAB_DBL, hXYZ, TYPE_XYZ_DBL,  INTENT_RELATIVE_COLORIMETRIC, 0);
 
     /**
     * D50 should be converted to white by PCS definition
     */
     xyz.X = 0.9642; xyz.Y = 1.0000; xyz.Z = 0.8249;
-    cmsDoTransform(xform, &xyz, &okLab, 1);
-    cmsDoTransform(xform2, &okLab, &xyz2, 1);
+    cmsDoTransform(ContextID, xform, &xyz, &okLab, 1);
+    cmsDoTransform(ContextID, xform2, &okLab, &xyz2, 1);
 
 
     xyz.X = 1.0; xyz.Y = 0.0; xyz.Z = 0.0;
-    cmsDoTransform(xform, &xyz, &okLab, 1);
-    cmsDoTransform(xform2, &okLab, &xyz2, 1);
+    cmsDoTransform(ContextID, xform, &xyz, &okLab, 1);
+    cmsDoTransform(ContextID, xform2, &okLab, &xyz2, 1);
 
 
     xyz.X = 0.0; xyz.Y = 1.0; xyz.Z = 0.0;
-    cmsDoTransform(xform, &xyz, &okLab, 1);
-    cmsDoTransform(xform2, &okLab, &xyz2, 1);
+    cmsDoTransform(ContextID, xform, &xyz, &okLab, 1);
+    cmsDoTransform(ContextID, xform2, &okLab, &xyz2, 1);
 
     xyz.X = 0.0; xyz.Y = 0.0; xyz.Z = 1.0;
-    cmsDoTransform(xform, &xyz, &okLab, 1);
-    cmsDoTransform(xform2, &okLab, &xyz2, 1);
+    cmsDoTransform(ContextID, xform, &xyz, &okLab, 1);
+    cmsDoTransform(ContextID, xform2, &okLab, &xyz2, 1);
 
 
-    cmsDeleteTransform(xform);
-    cmsDeleteTransform(xform2);
-    cmsCloseProfile(hOkLab);
-    cmsCloseProfile(hXYZ);
+    cmsDeleteTransform(ContextID, xform);
+    cmsDeleteTransform(ContextID, xform2);
+    cmsCloseProfile(ContextID, hOkLab);
+    cmsCloseProfile(ContextID, hXYZ);
 
     return 1;
 }
@@ -8641,16 +8641,16 @@ int CheckBadCGATS(cmsContext ContextID)
 
     cmsHANDLE hIT8;
     
-    cmsSetLogErrorHandler(NULL);
+    cmsSetLogErrorHandler(ContextID, NULL);
 
-    hIT8 = cmsIT8LoadFromMem(0, bad_it8, (cmsUInt32Number) strlen(bad_it8));
+    hIT8 = cmsIT8LoadFromMem(ContextID, bad_it8, (cmsUInt32Number) strlen(bad_it8));
     
-    ResetFatalError();
+    ResetFatalError(ContextID);
 
     if (hIT8 != NULL)
     {
         Fail("Wrong IT8 accepted as ok");
-        cmsIT8Free(hIT8);
+        cmsIT8Free(ContextID, hIT8);
     }
 
     return 1;

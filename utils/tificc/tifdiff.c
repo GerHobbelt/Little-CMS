@@ -514,7 +514,7 @@ int CmpShortTag(TIFF* tif1, TIFF* tif2, int tag)
 static
 int CmpLongTag(TIFF* tif1, TIFF* tif2, int tag)
 {
-        uint32 v1, v2;
+        uint32_t v1, v2;
 
         if (!TIFFGetField(tif1, tag, &v1)) return 0;
         if (!TIFFGetField(tif2, tag, &v2)) return 0;

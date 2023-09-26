@@ -51,15 +51,15 @@ static int jpegQuality             = 75;
 static cmsFloat64Number ObserverAdaptationState = 0;
 
 
-static char *cInpProf  = NULL;
-static char *cOutProf  = NULL;
-static char *cProofing = NULL;
+static const char *cInpProf  = NULL;
+static const char *cOutProf  = NULL;
+static const char *cProofing = NULL;
 
-static FILE * InFile;
-static FILE * OutFile;
+static FILE * InFile = NULL;
+static FILE * OutFile = NULL;
 
-static struct jpeg_decompress_struct Decompressor;
-static struct jpeg_compress_struct   Compressor;
+static struct jpeg_decompress_struct Decompressor = { 0 };
+static struct jpeg_compress_struct   Compressor = { 0 };
 
 
 static struct my_error_mgr {
@@ -67,7 +67,7 @@ static struct my_error_mgr {
     struct  jpeg_error_mgr pub;   // "public" fields
     void*   Cargo;                // "private" fields
 
-} ErrorHandler;
+} ErrorHandler = { {0} };
 
 
 cmsUInt16Number Alarm[cmsMAXCHANNELS] = {128,128,128,0};
@@ -914,7 +914,7 @@ int DoTransform(cmsContext ContextID, cmsHTRANSFORM hXForm, int OutputColorSpace
 // Transform one image
 
 static
-int TransformImage(cmsContext ContextID, char *cDefInpProf, char *cOutputProf)
+int TransformImage(cmsContext ContextID, const char *cDefInpProf, const char *cOutputProf)
 {
        cmsHPROFILE hIn, hOut, hProof;
        cmsHTRANSFORM xform;
