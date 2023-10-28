@@ -751,9 +751,7 @@ int EmitCIEBasedDEF(cmsContext ContextID, cmsIOHANDLER* m, cmsPipeline* Pipeline
     const char* PostMaj;
     const char* PreMin, *PostMin;
     cmsStage* mpe;
-    
-    static char buffer[2048];
-
+        
     mpe = Pipeline->Elements;
 
     switch (cmsStageInputChannels(ContextID, mpe)) {
