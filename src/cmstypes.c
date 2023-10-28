@@ -2701,8 +2701,8 @@ cmsBool WriteSetOfCurves(cmsContext ContextID, struct _cms_typehandler_struct* s
         // If this is a table-based curve, use curve type even on V4
         CurrentType = Type;
 
-        if ((Curves[i] ->nSegments == 0)||
-            ((Curves[i]->nSegments == 2) && (Curves[i] ->Segments[1].Type == 0)) )
+        if ((Curves[i] ->nSegments == 0) ||                                         // 16 bits tabulated
+            ((Curves[i]->nSegments == 3) && (Curves[i] ->Segments[1].Type == 0)) )  // Floating-point tabulated
             CurrentType = cmsSigCurveType;
         else
         if (Curves[i] ->Segments[0].Type < 0)
