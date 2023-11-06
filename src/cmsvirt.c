@@ -1158,6 +1158,9 @@ cmsHPROFILE CMSEXPORT cmsTransform2DeviceLink(cmsContext ContextID, cmsHTRANSFOR
 
     _cmsAssert(hTransform != NULL);
 
+    // Check if the pipeline holding is valid
+    if (xform -> Lut == NULL) return NULL;
+
     // Get the first mpe to check for named color
     mpe = cmsPipelineGetPtrToFirstStage(ContextID, xform ->core->Lut);
 
