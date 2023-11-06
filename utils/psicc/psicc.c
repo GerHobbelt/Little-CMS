@@ -25,6 +25,9 @@
 
 #include "utils.h"
 
+#include "monolithic_examples.h"
+
+
 // ------------------------------------------------------------------------
 
 static const char *cInProf = NULL;

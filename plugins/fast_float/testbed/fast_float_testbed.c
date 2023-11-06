@@ -29,6 +29,9 @@
 #    include "crtdbg.h"
 #endif
 
+#include "monolithic_examples.h"
+
+
 #ifndef PROFILES_DIR
 #define PROFILES_DIR "../../test_profiles/"
 #endif
@@ -2449,7 +2452,7 @@ void TestGrayTransformPerformance1(cmsContext ct)
 #endif
 
 // The harness test
-int main()
+int main(void)
 {
 
 #ifdef _MSC_VER

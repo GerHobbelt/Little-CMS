@@ -23,6 +23,9 @@
 
 #include "lcms2mt.h"
 
+#include "monolithic_examples.h"
+
+
 // This is a sample on how to build a profile for decoding ITU T.42/Fax JPEG
 // streams. The profile has an additional ability in the input direction of
 // gamut compress values between 85 < a < -85 and -75 < b < 125. This conforms

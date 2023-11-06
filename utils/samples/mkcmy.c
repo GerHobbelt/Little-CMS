@@ -28,6 +28,9 @@
 
 #include "lcms2mt.h"
 
+#include "monolithic_examples.h"
+
+
 
 typedef struct {
 				cmsHPROFILE   hLab;
@@ -89,18 +92,18 @@ int Reverse(cmsContext ContextID, cmsUInt16Number In[], cmsUInt16Number Out[], v
 static
 void InitCargo(cmsContext ContextID, LPCARGO Cargo)
 {
-	Cargo -> hLab = cmsCreateLabProfile(ContextID, NULL);
+	Cargo -> hLab = cmsCreateLab4Profile(ContextID, NULL);
 	Cargo -> hRGB = cmsCreate_sRGBProfile(ContextID);  
 	
 	Cargo->Lab2RGB = cmsCreateTransform(ContextID, Cargo->hLab, TYPE_Lab_16, 
 									    Cargo ->hRGB, TYPE_RGB_16,
 										INTENT_RELATIVE_COLORIMETRIC, 
-										cmsFLAGS_NOTPRECALC);
+										0);
 
 	Cargo->RGB2Lab = cmsCreateTransform(ContextID, Cargo ->hRGB, TYPE_RGB_16, 
 										Cargo ->hLab, TYPE_Lab_16, 
 										INTENT_RELATIVE_COLORIMETRIC, 
-										cmsFLAGS_NOTPRECALC);
+										0);
 }
 
 
@@ -131,9 +134,9 @@ int main(void)
 
 	fprintf(stderr, "Creating lcmscmy.icm...");	
 	
-	InitCargo(&Cargo);
+	InitCargo(ContextID, &Cargo);
 
-	hProfile = cmsCreateLabProfile(ContextID, NULL);
+	hProfile = cmsCreateLab4Profile(ContextID, NULL);
 	
 
     AToB0 = cmsAllocLUT(ContextID);
@@ -158,7 +161,7 @@ int main(void)
     cmsAddTag(ContextID, hProfile, cmsSigDeviceMfgDescTag,      "Little cms");    
     cmsAddTag(ContextID, hProfile, cmsSigDeviceModelDescTag,    "CMY space");
 
-	cmsSaveProfile(ContextID, hProfile, "lcmscmy.icm");
+	cmsSaveProfileToFile(ContextID, hProfile, "lcmscmy.icm");
 	
 	
 	cmsFreeLUT(ContextID, AToB0);

@@ -26,6 +26,9 @@
 
 #include "testcms2.h"
 
+#include "monolithic_examples.h"
+
+
 // A single check. Returns 1 if success, 0 if failed
 typedef cmsInt32Number (*TestFn)(cmsContext);
 
@@ -8696,7 +8699,7 @@ int CheckSaveLinearizationDevicelink(cmsContext ContextID)
 	int rc = 1;
     const cmsFloat32Number table[] = { 0, 0.5f, 1.0f };
 
-    cmsToneCurve* tone = cmsBuildTabulatedToneCurveFloat(ContextID, NULL, 3, table);
+    cmsToneCurve* tone = cmsBuildTabulatedToneCurveFloat(ContextID, 3, table);
 
     cmsToneCurve* rgb_curves[3] = { tone, tone, tone };
 

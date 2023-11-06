@@ -22,6 +22,7 @@
 #include "lcms2mt.h"
 #include <math.h>
 
+#include "monolithic_examples.h"
 
 
 static

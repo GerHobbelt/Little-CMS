@@ -26,6 +26,9 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "monolithic_examples.h"
+
+
 static
 double DecodeAbTIFF(double ab)
 {

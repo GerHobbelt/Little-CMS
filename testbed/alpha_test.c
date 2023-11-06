@@ -6,6 +6,9 @@
 
 #include "lcms2_internal.h"
 
+#include "monolithic_examples.h"
+
+
 /**
 * Premultiplied alpha. This conversion generates irreversible information loss.
 * 

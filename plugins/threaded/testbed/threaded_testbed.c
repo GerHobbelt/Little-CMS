@@ -31,6 +31,9 @@
 #define HAVE_TIMESPEC_GET 1
 #endif
 
+#include "monolithic_examples.h"
+
+
 #ifndef PROFILES_DIR
 #define PROFILES_DIR "../../test_profiles/"
 #endif
@@ -860,7 +863,7 @@ void ComparativeLineStride8bits(void)
 #endif
 
 // The harness test
-int main()
+int main(void)
 {
 #ifdef _MSC_VER
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);

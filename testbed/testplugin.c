@@ -26,6 +26,9 @@
 
 #include "testcms2.h"
 
+#include "monolithic_examples.h"
+
+
 // --------------------------------------------------------------------------------------------------
 // Auxiliary, duplicate a context and mark the block as non-debug because in this case the allocator
 // and deallocator have different context owners

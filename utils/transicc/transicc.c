@@ -34,6 +34,9 @@
 #    include <io.h>
 #endif
 
+#include "monolithic_examples.h"
+
+
 #define MAX_INPUT_BUFFER 4096
 
 // Global options

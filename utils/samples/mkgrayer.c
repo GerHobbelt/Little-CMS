@@ -23,6 +23,7 @@
 
 #include "lcms2mt.h"
 
+#include "monolithic_examples.h"
 
 
 static

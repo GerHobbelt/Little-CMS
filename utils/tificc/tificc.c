@@ -29,6 +29,9 @@
 #include "tiffio.h"
 #include "utils.h"
 
+#include "monolithic_examples.h"
+
+
 // Fix broken libtiff 4.3.0, thanks to Bob Friesenhahn for uncovering this
 
 #if defined(HAVE_STDINT_H) && (TIFFLIB_VERSION >= 20201219)

@@ -2,6 +2,9 @@
 #include <windows.h>
 #include "lcms2mt_plugin.h"
 
+#include "monolithic_examples.h"
+
+
 static cmsContext ctx;
 static cmsHPROFILE prof_cmyk, prof_rgb;
 static volatile int rc = 0;

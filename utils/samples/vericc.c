@@ -28,6 +28,9 @@
 #include <string.h>
 #include <math.h>
 
+#include "monolithic_examples.h"
+
+
 static
 int PrintUsage(void)
 {
@@ -70,6 +73,4 @@ int main(int argc, const char *argv[])
 	   cmsDeleteContext(ContextID);
 
 	   return 0;
-
-
 }

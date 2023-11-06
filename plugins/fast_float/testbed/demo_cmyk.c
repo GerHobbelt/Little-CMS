@@ -32,6 +32,9 @@
 #include <crtdbg.h>
 #endif
 
+#include "monolithic_examples.h"
+
+
 static
 void Fail(const char* frm, ...)
 {

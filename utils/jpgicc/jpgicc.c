@@ -30,6 +30,9 @@
 #include "jpeglib.h"
 #include "iccjpeg.h"
 
+#include "monolithic_examples.h"
+
+
 // Flags
 static cmsBool BlackPointCompensation = FALSE;
 static cmsBool IgnoreEmbedded         = FALSE;
