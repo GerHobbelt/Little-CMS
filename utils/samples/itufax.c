@@ -37,7 +37,7 @@
 // These functions does convert the encoding of ITUFAX to floating point
 
 static
-void ITU2Lab(WORD In[3], LPcmsCIELab Lab)
+void ITU2Lab(cmsUInt16Number In[3], cmsCIELab *Lab)
 {
    Lab -> L = (double) In[0] / 655.35;
    Lab -> a = (double) 170.* (In[1] - 32768.) / 65535.;
@@ -46,11 +46,11 @@ void ITU2Lab(WORD In[3], LPcmsCIELab Lab)
 
 
 static
-void Lab2ITU(LPcmsCIELab Lab, WORD Out[3])
+void Lab2ITU(cmsCIELab *Lab, cmsUInt16Number Out[3])
 {
-	Out[0] = (WORD) floor((double) (Lab -> L / 100.)* 65535. + 0.5);
-    Out[1] = (WORD) floor((double) (Lab -> a / 170.)* 65535. + 32768. + 0.5);
-    Out[2] = (WORD) floor((double) (Lab -> b / 200.)* 65535. + 24576. + 0.5);
+	Out[0] = (cmsUInt16Number) floor((double) (Lab -> L / 100.)* 65535. + 0.5);
+    Out[1] = (cmsUInt16Number) floor((double) (Lab -> a / 170.)* 65535. + 32768. + 0.5);
+    Out[2] = (cmsUInt16Number) floor((double) (Lab -> b / 200.)* 65535. + 24576. + 0.5);
 }
 
 
@@ -65,12 +65,12 @@ void Lab2ITU(LPcmsCIELab Lab, WORD Out[3])
 #define GRID_POINTS 33
 
 static
-int InputDirection(WORD In[], WORD Out[], LPVOID Cargo)
+int InputDirection(cmsContext ContextID, cmsUInt16Number In[], cmsUInt16Number Out[], void * Cargo)
 {	   
     cmsCIELab Lab;
 
-    cmsLabEncoded2Float(&Lab, In);    
-    cmsClampLab(&Lab, 85, -85, 125, -75);    // This function does the necessary gamut remapping  
+    cmsLabEncoded2Float(ContextID, &Lab, In);    
+    cmsClampLab(ContextID, &Lab, 85, -85, 125, -75);    // This function does the necessary gamut remapping  
     Lab2ITU(&Lab, Out);
 
 	return TRUE;
@@ -78,13 +78,13 @@ int InputDirection(WORD In[], WORD Out[], LPVOID Cargo)
 
 
 static
-int OutputDirection(WORD In[], WORD Out[], LPVOID Cargo)
+int OutputDirection(cmsContext ContextID, cmsUInt16Number In[], cmsUInt16Number Out[], void * Cargo)
 {	
 
 	cmsCIELab Lab;
 
     ITU2Lab(In, &Lab);
-    cmsFloat2LabEncoded(Out, &Lab);    
+    cmsFloat2LabEncoded(ContextID, Out, &Lab);    
 
 	return TRUE;
 }
@@ -99,40 +99,42 @@ int OutputDirection(WORD In[], WORD Out[], LPVOID Cargo)
 // if already exists. This is for obvious safety reasons.
 int main(int argc, const char *argv[])
 {
-	LPLUT AToB0, BToA0;
+	LUT *AToB0;
+	LUT *BToA0;
 	cmsHPROFILE hProfile;
+	cmsContext ContextID = cmsCreateContext(NULL, NULL);
 
 	fprintf(stderr, "Creating itufax.icm...");
 
 	unlink("itufax.icm");
-	hProfile = cmsOpenProfileFromFile("itufax.icm", "w");
+	hProfile = cmsOpenProfileFromFile(ContextID, "itufax.icm", "w");
 	
-    AToB0 = cmsAllocLUT();
-	BToA0 = cmsAllocLUT(); 
+    AToB0 = cmsAllocLUT(ContextID);
+	BToA0 = cmsAllocLUT(ContextID); 
 
-	cmsAlloc3DGrid(AToB0, GRID_POINTS, 3, 3);
-	cmsAlloc3DGrid(BToA0, GRID_POINTS, 3, 3);
+	cmsAlloc3DGrid(ContextID, AToB0, GRID_POINTS, 3, 3);
+	cmsAlloc3DGrid(ContextID, BToA0, GRID_POINTS, 3, 3);
     
-	cmsSample3DGrid(AToB0, InputDirection, NULL, 0);
-	cmsSample3DGrid(BToA0, OutputDirection, NULL, 0);
+	cmsSample3DGrid(ContextID, AToB0, InputDirection, NULL, 0);
+	cmsSample3DGrid(ContextID, BToA0, OutputDirection, NULL, 0);
 		
-    cmsAddTag(hProfile, icSigAToB0Tag, AToB0);
-	cmsAddTag(hProfile, icSigBToA0Tag, BToA0);
+    cmsAddTag(ContextID, hProfile, cmsSigAToB0Tag, AToB0);
+	cmsAddTag(ContextID, hProfile, cmsSigBToA0Tag, BToA0);
 
                                 
-	cmsSetColorSpace(hProfile, icSigLabData);
-    cmsSetPCS(hProfile, icSigLabData);
-    cmsSetDeviceClass(hProfile, icSigColorSpaceClass);
+	cmsSetColorSpace(ContextID, hProfile, cmsSigLabData);
+    cmsSetPCS(ContextID, hProfile, cmsSigLabData);
+    cmsSetDeviceClass(ContextID, hProfile, cmsSigColorSpaceClass);
 
-	cmsAddTag(hProfile, icSigProfileDescriptionTag, "ITU T.42/Fax JPEG CIEL*a*b*");
-    cmsAddTag(hProfile, icSigCopyrightTag,          "No Copyright, use freely.");
-    cmsAddTag(hProfile, icSigDeviceMfgDescTag,      "Little cms");    
-    cmsAddTag(hProfile, icSigDeviceModelDescTag,    "ITU T.42/Fax JPEG CIEL*a*b*");
+	cmsAddTag(ContextID, hProfile, cmsSigProfileDescriptionTag, "ITU T.42/Fax JPEG CIEL*a*b*");
+    cmsAddTag(ContextID, hProfile, cmsSigCopyrightTag,          "No Copyright, use freely.");
+    cmsAddTag(ContextID, hProfile, cmsSigDeviceMfgDescTag,      "Little cms");    
+    cmsAddTag(ContextID, hProfile, cmsSigDeviceModelDescTag,    "ITU T.42/Fax JPEG CIEL*a*b*");
 	
-	cmsCloseProfile(hProfile);
+	cmsCloseProfile(ContextID, hProfile);
     
-	cmsFreeLUT(AToB0);
-	cmsFreeLUT(BToA0);
+	cmsFreeLUT(ContextID, AToB0);
+	cmsFreeLUT(ContextID, BToA0);
 
 	fprintf(stderr, "Done.\n");
 

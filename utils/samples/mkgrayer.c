@@ -26,20 +26,20 @@
 
 
 static
-int Forward(WORD In[], WORD Out[], LPVOID Cargo)
+int Forward(cmsContext ContextID, cmsUInt16Number In[], cmsUInt16Number Out[], void * Cargo)
 {	
     cmsCIELab Lab;
 
 
-    cmsLabEncoded2Float(&Lab, In);
+    cmsLabEncoded2Float(ContextID, &Lab, In);
 
 	if (fabs(Lab.a) < 3 && fabs(Lab.b) < 3) {
 		
 		double L_01 = Lab.L / 100.0;
-	    WORD K;
+		cmsUInt16Number K;
 
 		if (L_01 > 1) L_01 = 1;
-		K = (WORD) floor(L_01* 65535.0 + 0.5);
+		K = (cmsUInt16Number) floor(L_01* 65535.0 + 0.5);
 
 		Out[0] = Out[1] = Out[2] = K; 
 	}
@@ -59,36 +59,37 @@ int Forward(WORD In[], WORD Out[], LPVOID Cargo)
 
 int main(int argc, const char *argv[])
 {
-	LPLUT BToA0;
+	LUT *BToA0;
 	cmsHPROFILE hProfile;
+	cmsContext ContextID = cmsCreateContext(NULL, NULL);
 
 	fprintf(stderr, "Creating interpol2.icc...");
 
 	unlink("interpol2.icc");
-	hProfile = cmsOpenProfileFromFile("interpol2.icc", "w8");
+	hProfile = cmsOpenProfileFromFile(ContextID, "interpol2.icc", "w8");
 
 
-    BToA0 = cmsAllocLUT();
+    BToA0 = cmsAllocLUT(ContextID);
 
-	cmsAlloc3DGrid(BToA0, 17, 3, 3);
+	cmsAlloc3DGrid(ContextID, BToA0, 17, 3, 3);
 	    
-	cmsSample3DGrid(BToA0, Forward, NULL, 0);
+	cmsSample3DGrid(ContextID, BToA0, Forward, NULL, 0);
 			
-    cmsAddTag(hProfile, icSigBToA0Tag, BToA0);
+    cmsAddTag(ContextID, hProfile, cmsSigBToA0Tag, BToA0);
 	                                
-	cmsSetColorSpace(hProfile, icSigRgbData);
-    cmsSetPCS(hProfile, icSigLabData);
-    cmsSetDeviceClass(hProfile, icSigOutputClass);
+	cmsSetColorSpace(ContextID, hProfile, cmsSigRgbData);
+    cmsSetPCS(ContextID, hProfile, cmsSigLabData);
+    cmsSetDeviceClass(ContextID, hProfile, cmsSigOutputClass);
 
-	cmsAddTag(hProfile, icSigProfileDescriptionTag, "Interpolation test");
-    cmsAddTag(hProfile, icSigCopyrightTag,          "Copyright (c) HP 2007. All rights reserved.");
-    cmsAddTag(hProfile, icSigDeviceMfgDescTag,      "Little cms");    
-    cmsAddTag(hProfile, icSigDeviceModelDescTag,    "Interpolation test profile");
+	cmsAddTag(ContextID, hProfile, cmsSigProfileDescriptionTag, "Interpolation test");
+    cmsAddTag(ContextID, hProfile, cmsSigCopyrightTag,          "Copyright (c) HP 2007. All rights reserved.");
+    cmsAddTag(ContextID, hProfile, cmsSigDeviceMfgDescTag,      "Little cms");    
+    cmsAddTag(ContextID, hProfile, cmsSigDeviceModelDescTag,    "Interpolation test profile");
 
 	
-	cmsCloseProfile(hProfile);
+	cmsCloseProfile(ContextID, hProfile);
     
-	cmsFreeLUT(BToA0);
+	cmsFreeLUT(ContextID, BToA0);
 	
 	fprintf(stderr, "Done.\n");
 

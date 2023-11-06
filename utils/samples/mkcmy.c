@@ -44,17 +44,17 @@ typedef struct {
 // Our space will be CIE primaries plus a gamma of 4.5
 
 static
-int Forward(WORD In[], WORD Out[], LPVOID Cargo)
+int Forward(cmsContext ContextID, cmsUInt16Number In[], cmsUInt16Number Out[], void *Cargo)
 {	
 	LPCARGO C = (LPCARGO) Cargo;	
-	WORD RGB[3];
+	cmsUInt16Number RGB[3];
     cmsCIELab Lab;
 
-    cmsLabEncoded2Float(&Lab, In);
+    cmsLabEncoded2Float(ContextID, &Lab, In);
 
 	printf("%g %g %g\n", Lab.L, Lab.a, Lab.b);
 
-	cmsDoTransform(C ->Lab2RGB, In, &RGB, 1);
+	cmsDoTransform(ContextID, C ->Lab2RGB, In, &RGB, 1);
 
 
 	Out[0] = 0xFFFF - RGB[0]; // Our CMY is negative of RGB
@@ -68,17 +68,17 @@ int Forward(WORD In[], WORD Out[], LPVOID Cargo)
 
 
 static
-int Reverse(WORD In[], WORD Out[], LPVOID Cargo)
+int Reverse(cmsContext ContextID, cmsUInt16Number In[], cmsUInt16Number Out[], void *Cargo)
 {	
 
 	LPCARGO C = (LPCARGO) Cargo;	
-	WORD RGB[3];
+	cmsUInt16Number RGB[3];
   
 	RGB[0] = 0xFFFF - In[0];
 	RGB[1] = 0xFFFF - In[1];
 	RGB[2] = 0xFFFF - In[2];
 
-	cmsDoTransform(C ->RGB2Lab, &RGB, Out, 1);
+	cmsDoTransform(ContextID, C ->RGB2Lab, &RGB, Out, 1);
 	
 	return TRUE;
 
@@ -87,19 +87,17 @@ int Reverse(WORD In[], WORD Out[], LPVOID Cargo)
 
 
 static
-void InitCargo(LPCARGO Cargo)
+void InitCargo(cmsContext ContextID, LPCARGO Cargo)
 {
+	Cargo -> hLab = cmsCreateLabProfile(ContextID, NULL);
+	Cargo -> hRGB = cmsCreate_sRGBProfile(ContextID);  
 	
-
-	Cargo -> hLab = cmsCreateLabProfile(NULL);
-	Cargo -> hRGB = cmsCreate_sRGBProfile();  
-	
-	Cargo->Lab2RGB = cmsCreateTransform(Cargo->hLab, TYPE_Lab_16, 
+	Cargo->Lab2RGB = cmsCreateTransform(ContextID, Cargo->hLab, TYPE_Lab_16, 
 									    Cargo ->hRGB, TYPE_RGB_16,
 										INTENT_RELATIVE_COLORIMETRIC, 
 										cmsFLAGS_NOTPRECALC);
 
-	Cargo->RGB2Lab = cmsCreateTransform(Cargo ->hRGB, TYPE_RGB_16, 
+	Cargo->RGB2Lab = cmsCreateTransform(ContextID, Cargo ->hRGB, TYPE_RGB_16, 
 										Cargo ->hLab, TYPE_Lab_16, 
 										INTENT_RELATIVE_COLORIMETRIC, 
 										cmsFLAGS_NOTPRECALC);
@@ -109,12 +107,12 @@ void InitCargo(LPCARGO Cargo)
 
 
 static
-void FreeCargo(LPCARGO Cargo)
+void FreeCargo(cmsContext ContextID, LPCARGO Cargo)
 {
-	cmsDeleteTransform(Cargo ->Lab2RGB);
-	cmsDeleteTransform(Cargo ->RGB2Lab);
-	cmsCloseProfile(Cargo ->hLab);
-	cmsCloseProfile(Cargo ->hRGB);
+	cmsDeleteTransform(ContextID, Cargo ->Lab2RGB);
+	cmsDeleteTransform(ContextID, Cargo ->RGB2Lab);
+	cmsCloseProfile(ContextID, Cargo ->hLab);
+	cmsCloseProfile(ContextID, Cargo ->hRGB);
 }
 
 
@@ -125,46 +123,49 @@ void FreeCargo(LPCARGO Cargo)
 
 int main(void)
 {
-	LPLUT AToB0, BToA0;	
+	LUT *AToB0;
+	LUT *BToA0;	
 	CARGO Cargo;
 	cmsHPROFILE hProfile;
-	
+	cmsContext ContextID = cmsCreateContext(NULL, NULL);
+
 	fprintf(stderr, "Creating lcmscmy.icm...");	
 	
 	InitCargo(&Cargo);
 
-	hProfile = cmsCreateLabProfile(NULL);
+	hProfile = cmsCreateLabProfile(ContextID, NULL);
 	
 
-    AToB0 = cmsAllocLUT();
-	BToA0 = cmsAllocLUT();
+    AToB0 = cmsAllocLUT(ContextID);
+	BToA0 = cmsAllocLUT(ContextID);
 
-	cmsAlloc3DGrid(AToB0, 25, 3, 3);
-	cmsAlloc3DGrid(BToA0, 25, 3, 3);
+	cmsAlloc3DGrid(ContextID, AToB0, 25, 3, 3);
+	cmsAlloc3DGrid(ContextID, BToA0, 25, 3, 3);
 	
 	
-	cmsSample3DGrid(AToB0, Reverse, &Cargo, 0);
-	cmsSample3DGrid(BToA0, Forward, &Cargo, 0);
+	cmsSample3DGrid(ContextID, AToB0, Reverse, &Cargo, 0);
+	cmsSample3DGrid(ContextID, BToA0, Forward, &Cargo, 0);
 	
 	
-    cmsAddTag(hProfile, icSigAToB0Tag, AToB0);
-	cmsAddTag(hProfile, icSigBToA0Tag, BToA0);
+    cmsAddTag(ContextID, hProfile, cmsSigAToB0Tag, AToB0);
+	cmsAddTag(ContextID, hProfile, cmsSigBToA0Tag, BToA0);
 
-	cmsSetColorSpace(hProfile, icSigCmyData);
-	cmsSetDeviceClass(hProfile, icSigOutputClass);
+	cmsSetColorSpace(ContextID, hProfile, cmsSigCmyData);
+	cmsSetDeviceClass(ContextID, hProfile, cmsSigOutputClass);
 
-	cmsAddTag(hProfile, icSigProfileDescriptionTag, "CMY ");
-    cmsAddTag(hProfile, icSigCopyrightTag,          "Copyright (c) HP, 2007. All rights reserved.");
-    cmsAddTag(hProfile, icSigDeviceMfgDescTag,      "Little cms");    
-    cmsAddTag(hProfile, icSigDeviceModelDescTag,    "CMY space");
+	cmsAddTag(ContextID, hProfile, cmsSigProfileDescriptionTag, "CMY ");
+    cmsAddTag(ContextID, hProfile, cmsSigCopyrightTag,          "Copyright (c) HP, 2007. All rights reserved.");
+    cmsAddTag(ContextID, hProfile, cmsSigDeviceMfgDescTag,      "Little cms");    
+    cmsAddTag(ContextID, hProfile, cmsSigDeviceModelDescTag,    "CMY space");
 
-	_cmsSaveProfile(hProfile, "lcmscmy.icm");
+	cmsSaveProfile(ContextID, hProfile, "lcmscmy.icm");
 	
 	
-	cmsFreeLUT(AToB0);
-	cmsFreeLUT(BToA0);
-	cmsCloseProfile(hProfile);	
-	FreeCargo(&Cargo);
+	cmsFreeLUT(ContextID, AToB0);
+	cmsFreeLUT(ContextID, BToA0);
+	cmsCloseProfile(ContextID, hProfile);	
+	FreeCargo(ContextID, &Cargo);
+
 	fprintf(stderr, "Done.\n");
 
 
