@@ -1171,6 +1171,7 @@ CMSAPI cmsFloat64Number  CMSEXPORT cmsCIE94DeltaE(cmsContext ContextID, const cm
 CMSAPI cmsFloat64Number  CMSEXPORT cmsBFDdeltaE(cmsContext ContextID, const cmsCIELab* Lab1, const cmsCIELab* Lab2);
 CMSAPI cmsFloat64Number  CMSEXPORT cmsCMCdeltaE(cmsContext ContextID, const cmsCIELab* Lab1, const cmsCIELab* Lab2, cmsFloat64Number l, cmsFloat64Number c);
 CMSAPI cmsFloat64Number  CMSEXPORT cmsCIE2000DeltaE(cmsContext ContextID, const cmsCIELab* Lab1, const cmsCIELab* Lab2, cmsFloat64Number Kl, cmsFloat64Number Kc, cmsFloat64Number Kh);
+CMSAPI cmsFloat64Number  CMSEXPORT cmsXYZDeltaE(cmsContext ContextID, const cmsCIEXYZ* xyz1, const cmsCIEXYZ* xyz2);
 
 // Temperature <-> Chromaticity (Black body)
 CMSAPI cmsBool           CMSEXPORT cmsWhitePointFromTemp(cmsContext ContextID, cmsCIExyY* WhitePoint, cmsFloat64Number  TempK);

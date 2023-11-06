@@ -443,6 +443,20 @@ void CMSEXPORT cmsXYZEncoded2Float(cmsContext ContextID, cmsCIEXYZ* fXYZ, const 
 }
 
 
+// Returns dE on two XYZ values
+cmsFloat64Number CMSEXPORT cmsXYZDeltaE(cmsContext ContextID, const cmsCIEXYZ* xyz1, const cmsCIEXYZ* xyz2)
+{
+	cmsFloat64Number dx, dy, dz;
+	cmsUNUSED_PARAMETER(ContextID);
+
+	dx = fabs(xyz1 -> X - xyz2 -> X);
+	dy = fabs(xyz1 -> Y - xyz2 -> Y);
+	dz = fabs(xyz1 -> Z - xyz2 -> Z);
+
+	return pow(Sqr(dx) + Sqr(dy) + Sqr(dy), 0.5);
+}
+
+
 // Returns dE on two Lab values
 cmsFloat64Number CMSEXPORT cmsDeltaE(cmsContext ContextID, const cmsCIELab* Lab1, const cmsCIELab* Lab2)
 {

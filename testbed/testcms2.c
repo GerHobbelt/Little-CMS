@@ -3992,11 +3992,11 @@ cmsInt32Number CheckFormatters16(cmsContext ContextID)
    C( TYPE_KYMC5_8           );
    C( TYPE_KYMC5_16          );
    C( TYPE_KYMC5_16_SE       );
-   C( TYPE_CMYK6_8          );
-   C( TYPE_CMYK6_8_PLANAR   );
-   C( TYPE_CMYK6_16         );
-   C( TYPE_CMYK6_16_PLANAR  );
-   C( TYPE_CMYK6_16_SE      );
+   C( TYPE_CMYK6_8           );
+   C( TYPE_CMYK6_8_PLANAR    );
+   C( TYPE_CMYK6_16          );
+   C( TYPE_CMYK6_16_PLANAR   );
+   C( TYPE_CMYK6_16_SE       );
    C( TYPE_CMYK7_8           );
    C( TYPE_CMYK7_16          );
    C( TYPE_CMYK7_16_SE       );
@@ -4192,7 +4192,7 @@ cmsInt32Number CheckFormattersFloat(cmsContext ContextID)
     C( TYPE_RGB_DBL  );
     C( TYPE_BGR_DBL  );
     C( TYPE_CMYK_DBL );
-    C( TYPE_XYZ_FLT );
+    C( TYPE_XYZ_FLT  );
 
 #ifndef CMS_NO_HALF_SUPPORT
    C( TYPE_GRAY_HALF_FLT );
@@ -4354,7 +4354,6 @@ cmsInt32Number CheckGamma(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE
     switch (Pass) {
 
         case 1:
-
             g = cmsBuildGamma(ContextID, 1.0);
             rc = cmsWriteTag(ContextID, hProfile, tag, g);
             cmsFreeToneCurve(ContextID, g);
@@ -4496,7 +4495,6 @@ cmsInt32Number CheckDateTime(cmsContext ContextID, cmsInt32Number Pass,  cmsHPRO
     switch (Pass) {
 
         case 1:
-
             Holder.tm_hour = 1;
             Holder.tm_min = 2;
             Holder.tm_sec = 3;
@@ -4538,7 +4536,6 @@ cmsInt32Number CheckNamedColor(cmsContext ContextID, cmsInt32Number Pass,  cmsHP
     switch (Pass) {
 
     case 1:
-
         nc = cmsAllocNamedColorList(ContextID, 0, 4, "prefix", "suffix");
         if (nc == NULL) return 0;
 
@@ -4556,7 +4553,6 @@ cmsInt32Number CheckNamedColor(cmsContext ContextID, cmsInt32Number Pass,  cmsHP
         return rc;
 
     case 2:
-
         nc = (cmsNAMEDCOLORLIST *) cmsReadTag(ContextID, hProfile, tag);
         if (nc == NULL) return 0;
 
@@ -4601,7 +4597,6 @@ cmsInt32Number CheckLUT(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE 
     switch (Pass) {
 
         case 1:
-
             Lut = cmsPipelineAlloc(ContextID, 3, 3);
             if (Lut == NULL) return 0;
 
@@ -8457,8 +8452,7 @@ int Check_OkLab(cmsContext ContextID)
     cmsHPROFILE hXYZ = cmsCreateXYZProfile(ContextID);
     cmsCIEXYZ xyz, xyz2;
     cmsCIELab okLab;
-
-#define TYPE_OKLAB_DBL          (FLOAT_SH(1)|COLORSPACE_SH(PT_MCH3)|CHANNELS_SH(3)|BYTES_SH(0))
+	cmsFloat64Number dist, Max = 0;
 
     cmsHTRANSFORM xform  = cmsCreateTransform(ContextID, hXYZ, TYPE_XYZ_DBL,  hOkLab, TYPE_OKLAB_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsHTRANSFORM xform2 = cmsCreateTransform(ContextID, hOkLab, TYPE_OKLAB_DBL, hXYZ, TYPE_XYZ_DBL,  INTENT_RELATIVE_COLORIMETRIC, 0);
@@ -8470,19 +8464,33 @@ int Check_OkLab(cmsContext ContextID)
     cmsDoTransform(ContextID, xform, &xyz, &okLab, 1);
     cmsDoTransform(ContextID, xform2, &okLab, &xyz2, 1);
 
+	// XYZ to OkLab and back should be performed at 1E-12 accuracy at least
+	dist = cmsXYZDeltaE(ContextID, &xyz, &xyz2);
+	if (dist > Max) Max = dist;
+
 
     xyz.X = 1.0; xyz.Y = 0.0; xyz.Z = 0.0;
     cmsDoTransform(ContextID, xform, &xyz, &okLab, 1);
     cmsDoTransform(ContextID, xform2, &okLab, &xyz2, 1);
+
+	dist = cmsXYZDeltaE(ContextID, &xyz, &xyz2);
+	if (dist > Max) Max = dist;
 
 
     xyz.X = 0.0; xyz.Y = 1.0; xyz.Z = 0.0;
     cmsDoTransform(ContextID, xform, &xyz, &okLab, 1);
     cmsDoTransform(ContextID, xform2, &okLab, &xyz2, 1);
 
+	dist = cmsXYZDeltaE(ContextID, &xyz, &xyz2);
+	if (dist > Max) Max = dist;
+
+
     xyz.X = 0.0; xyz.Y = 0.0; xyz.Z = 1.0;
     cmsDoTransform(ContextID, xform, &xyz, &okLab, 1);
     cmsDoTransform(ContextID, xform2, &okLab, &xyz2, 1);
+
+	dist = cmsXYZDeltaE(ContextID, &xyz, &xyz2);
+	if (dist > Max) Max = dist;
 
 
     cmsDeleteTransform(ContextID, xform);
@@ -8490,7 +8498,7 @@ int Check_OkLab(cmsContext ContextID)
     cmsCloseProfile(ContextID, hOkLab);
     cmsCloseProfile(ContextID, hXYZ);
 
-    return 1;
+	return Max < 1E-12;
 }
 
 static
@@ -8683,50 +8691,53 @@ int CheckIntToFloatTransform(cmsContext ContextID)
 }
 
 static
-int CheckSaveLinearizationDevicelink(void)
+int CheckSaveLinearizationDevicelink(cmsContext ContextID)
 {
+	int rc = 1;
     const cmsFloat32Number table[] = { 0, 0.5f, 1.0f };
 
-    cmsToneCurve* tone = cmsBuildTabulatedToneCurveFloat(NULL, 3, table);
+    cmsToneCurve* tone = cmsBuildTabulatedToneCurveFloat(ContextID, NULL, 3, table);
 
     cmsToneCurve* rgb_curves[3] = { tone, tone, tone };
 
-    cmsHPROFILE hDeviceLink = cmsCreateLinearizationDeviceLink(cmsSigRgbData, rgb_curves);
+    cmsHPROFILE hDeviceLink = cmsCreateLinearizationDeviceLink(ContextID, cmsSigRgbData, rgb_curves);
 
     cmsBool result;
     cmsHTRANSFORM xform;
     int i;
     
-    cmsFreeToneCurve(tone);
+    cmsFreeToneCurve(ContextID, tone);
 
-    result = cmsSaveProfileToFile(hDeviceLink, "lin_rgb.icc");
+    result = cmsSaveProfileToFile(ContextID, hDeviceLink, "lin_rgb.icc");
 
-    cmsCloseProfile(hDeviceLink);
+    cmsCloseProfile(ContextID, hDeviceLink);
 
     if (!result)
     {
         remove("lin_rgb.icc");
         Fail("Couldn't save linearization devicelink");        
+		rc = 0;
     }
 
 
-    hDeviceLink = cmsOpenProfileFromFile("lin_rgb.icc", "r");
+    hDeviceLink = cmsOpenProfileFromFile(ContextID, "lin_rgb.icc", "r");
 
     if (hDeviceLink == NULL)
     {
         remove("lin_rgb.icc");
         Fail("Could't open devicelink");
-    }
+		rc = 0;
+	}
 
-    xform = cmsCreateTransform(hDeviceLink, TYPE_RGB_8, NULL, TYPE_RGB_8, INTENT_PERCEPTUAL, 0);
-    cmsCloseProfile(hDeviceLink);
+    xform = cmsCreateTransform(ContextID, hDeviceLink, TYPE_RGB_8, NULL, TYPE_RGB_8, INTENT_PERCEPTUAL, 0);
+    cmsCloseProfile(ContextID, hDeviceLink);
 
     for (i = 0; i < 256; i++)
     {
         cmsUInt8Number rgb_in[3] = { i, i, i };
         cmsUInt8Number rgb_out[3];
 
-        cmsDoTransform(xform, rgb_in, rgb_out, 1);
+        cmsDoTransform(ContextID, xform, rgb_in, rgb_out, 1);
 
         if (rgb_in[0] != rgb_out[0] ||
             rgb_in[1] != rgb_out[1] ||
@@ -8734,17 +8745,15 @@ int CheckSaveLinearizationDevicelink(void)
         {
             remove("lin_rgb.icc");
             Fail("Saved devicelink was not working");
-        }
+			rc = 0;
+		}
     }
 
 
-    cmsDeleteTransform(xform);
+    cmsDeleteTransform(ContextID, xform);
     remove("lin_rgb.icc");
 
-    return 1;
-
-
-
+    return rc;
 }
 
 
