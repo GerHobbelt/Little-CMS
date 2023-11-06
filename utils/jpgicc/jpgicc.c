@@ -166,12 +166,12 @@ void Lab2ITU(const cmsCIELab* Lab, cmsUInt16Number Out[3])
 }
 
 // These are the samplers-- They are passed as callbacks to cmsStageSampleCLut16bit()
-// then, cmsSample3DGrid() will sweel whole Lab gamut calling these functions
+// then, cmsSample3DGrid() will sweep whole Lab gamut calling these functions
 // once for each node. In[] will contain the Lab PCS value to convert to ITUFAX
 // on PCS2ITU, or the ITUFAX value to convert to Lab in ITU2PCS
 // You can change the number of sample points if desired, the algorithm will
 // remain same. 33 points gives good accuracy, but you can reduce to 22 or less
-// is space is critical
+// when space is critical.
 
 #define GRID_POINTS 33
 
