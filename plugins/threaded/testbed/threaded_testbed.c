@@ -19,6 +19,7 @@
 //---------------------------------------------------------------------------------
 
 #include "threaded_internal.h"
+#include "lcms2_internal.h"
 
 #include <stdlib.h>
 #include <memory.h>
@@ -38,9 +39,6 @@
 #define FLAGS cmsFLAGS_NOOPTIMIZE
 
 
-// A fast way to convert from/to 16 <-> 8 bits
-#define FROM_8_TO_16(rgb) (cmsUInt16Number) ((((cmsUInt16Number) (rgb)) << 8)|(rgb)) 
-#define FROM_16_TO_8(rgb) (cmsUInt8Number) ((((rgb) * 65281 + 8388608) >> 24) & 0xFF)
 
 // Some pixel representations
 typedef struct { cmsUInt8Number  r, g, b;    }  Scanline_rgb8bits;
@@ -146,7 +144,7 @@ static
 void CheckChangeFormat(cmsContext ContextID)
 {
     cmsHPROFILE hsRGB, hLab;
-    cmsHTRANSFORM xform;
+    cmsHTRANSFORM xform, xform2;
     cmsUInt8Number rgb8[3]  = { 10, 120, 40 };
     cmsUInt16Number rgb16[3] = { 10* 257, 120*257, 40*257 };
     cmsUInt16Number lab16_1[3], lab16_2[3];
@@ -163,33 +161,11 @@ void CheckChangeFormat(cmsContext ContextID)
 
     cmsDoTransform(ContextID, xform, rgb16, lab16_1, 1);
 
-    //cmsChangeBuffersFormat(ContextID, xform, TYPE_RGB_8, TYPE_Lab_16);
-    //cmsBool CMSEXPORT cmsChangeBuffersFormat(cmsHTRANSFORM hTransform, cmsUInt32Number InputFormat, cmsUInt32Number OutputFormat)
-    {
-        cmsFormatter16 FromInput, ToOutput;
+    xform2 = cmsCloneTransformChangingFormats(ContextID, xform, TYPE_RGB_8, TYPE_Lab_16);
 
-        // We only can afford to change formatters if previous transform is at least 16 bits
-        if (!(xform ->dwOriginalFlags & cmsFLAGS_CAN_CHANGE_FORMATTER)) {
-
-            Fail(ContextID, "cmsChangeBuffersFormat works only on transforms created originally with at least 16 bits of precision");
-            return FALSE;
-        }
-
-        FromInput = cmsGetFormatter(ContextID, TYPE_RGB_8,  cmsFormatterInput, CMS_PACK_FLAGS_16BITS).Fmt16;
-        ToOutput  = cmsGetFormatter(ContextID, TYPE_RGB_16, cmsFormatterOutput, CMS_PACK_FLAGS_16BITS).Fmt16;
-
-        if (FromInput == NULL || ToOutput == NULL) {
-            Fail(ContextID, "Unsupported raster format");
-        }
-
-        xform ->InputFormat  = InputFormat;
-        xform ->OutputFormat = OutputFormat;
-        xform ->FromInput    = FromInput;
-        xform ->ToOutput     = ToOutput;
-    }
-
-    cmsDoTransform(ContextID, xform, rgb8, lab16_2, 1);
-    cmsDeleteTransform(ContextID, xform);
+    cmsDoTransform(ContextID, xform2, rgb8, lab16_2, 1);
+    cmsDeleteTransform(ContextID, xform2);
+	cmsDeleteTransform(ContextID, xform);
 
     if (memcmp(lab16_1, lab16_2, sizeof(lab16_1)) != 0)
         Fail(ContextID, "Change format failed!");
