@@ -23,7 +23,7 @@
 //
 //---------------------------------------------------------------------------------
 //
-// Version 2.16 alpha 
+// Version 2.16rc1
 //
 
 #ifndef _lcms2mt_H
@@ -1646,6 +1646,8 @@ CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateLinearizationDeviceLink(cmsContext Co
 CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateInkLimitingDeviceLink(cmsContext ContextID,
                                                                  cmsColorSpaceSignature ColorSpace,
                                                                  cmsFloat64Number Limit);
+
+CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateDeviceLinkFromCubeFile(cmsContext ContextID, const char* cFileName);
 
 CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateLab2Profile(cmsContext ContextID,
                                                  const cmsCIExyY* WhitePoint);

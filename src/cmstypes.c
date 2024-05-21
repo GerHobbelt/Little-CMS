@@ -1001,11 +1001,18 @@ void *Type_Text_Description_Read(cmsContext ContextID, struct _cms_typehandler_s
     UnicodeString = (wchar_t*)_cmsMalloc(ContextID, (UnicodeCount + 1) * sizeof(wchar_t));
     if (UnicodeString == NULL) goto Done;
 
-    if (!_cmsReadWCharArray(ContextID, io, UnicodeCount, UnicodeString)) goto Done;
+    if (!_cmsReadWCharArray(io, UnicodeCount, UnicodeString)) {
+        _cmsFree(self->ContextID, (void*)UnicodeString);
+        goto Done;
+    }
 
     UnicodeString[UnicodeCount] = 0;
 
-    if (!cmsMLUsetWide(ContextID, mlu, cmsV2Unicode, cmsV2Unicode, UnicodeString)) goto Done;
+    if (!cmsMLUsetWide(mlu, cmsV2Unicode, cmsV2Unicode, UnicodeString)) {
+        _cmsFree(self->ContextID, (void*)UnicodeString);
+        goto Done;
+    }
+
     _cmsFree(ContextID, (void*)UnicodeString);
     UnicodeString = NULL;
 

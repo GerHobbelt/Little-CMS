@@ -978,10 +978,15 @@ int WriteNamedColorCSA(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hNamed
 
     hLab  = cmsCreateLab4Profile(ContextID, NULL);
     xform = cmsCreateTransform(ContextID, hNamedColor, TYPE_NAMED_COLOR_INDEX, hLab, TYPE_Lab_DBL, Intent, 0);
+    cmsCloseProfile(hLab);
+
     if (xform == NULL) return 0;
 
     NamedColorList = cmsGetNamedColorList(xform);
-    if (NamedColorList == NULL) return 0;
+    if (NamedColorList == NULL) {
+        cmsDeleteTransform(xform);
+        return 0;
+    }
 
     _cmsIOPrintf(ContextID, m, "<<\n");
     _cmsIOPrintf(ContextID, m, "(colorlistcomment) (%s)\n", "Named color CSA");
@@ -989,7 +994,6 @@ int WriteNamedColorCSA(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hNamed
     _cmsIOPrintf(ContextID, m, "(Suffix) [ ( CV) ( CVC) ( C) ]\n");
 
     nColors   = cmsNamedColorCount(ContextID, NamedColorList);
-
 
     for (i=0; i < nColors; i++) {
 
@@ -1005,12 +1009,9 @@ int WriteNamedColorCSA(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hNamed
         _cmsIOPrintf(ContextID, m, "  (%s) [ %.3f %.3f %.3f ]\n", ColorName, Lab.L, Lab.a, Lab.b);
     }
 
-
-
     _cmsIOPrintf(ContextID, m, ">>\n");
 
     cmsDeleteTransform(ContextID, xform);
-    cmsCloseProfile(ContextID, hLab);
     return 1;
 }
 
@@ -1264,7 +1265,7 @@ int WriteOutputLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfile, 
     cmsUInt32Number InFrm = TYPE_Lab_16;
     cmsUInt32Number RelativeEncodingIntent;
     cmsColorSpaceSignature ColorSpace;
-
+    cmsStage* first;
 
     hLab = cmsCreateLab4Profile(ContextID, NULL);
     if (hLab == NULL) return 0;
@@ -1290,8 +1291,7 @@ int WriteOutputLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfile, 
                                               OutputFormat, RelativeEncodingIntent, 0);
     cmsCloseProfile(ContextID, hLab);
 
-    if (xform == NULL) {
-
+    if (xform == NULL) {        
         cmsSignalError(ContextID, cmsERROR_COLORSPACE_CHECK, "Cannot create transform Lab -> Profile in CRD creation");
         return 0;
     }
@@ -1299,10 +1299,12 @@ int WriteOutputLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfile, 
     // Get a copy of the internal devicelink
     v = (_cmsTRANSFORM*) xform;
     DeviceLink = cmsPipelineDup(ContextID, v ->core->Lut);
-    if (DeviceLink == NULL) return 0;
+    if (DeviceLink == NULL) {
+        cmsDeleteTransform(xform);
+        return 0;
+    }
 
-
-    // We need a CLUT
+     // We need a CLUT
     dwFlags |= cmsFLAGS_FORCE_CLUT;
     _cmsOptimizePipeline(ContextID, &DeviceLink, RelativeEncodingIntent, &InFrm, &OutputFormat, &dwFlags);
 
@@ -1329,8 +1331,10 @@ int WriteOutputLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfile, 
 
     _cmsIOPrintf(ContextID, m, "/RenderTable ");
 
-
-    WriteCLUT(ContextID, m, cmsPipelineGetPtrToFirstStage(ContextID, DeviceLink), "<", ">\n", "", "", lFixWhite, ColorSpace);
+    first = cmsPipelineGetPtrToFirstStage(DeviceLink);
+    if (first != NULL) {
+        WriteCLUT(m, first, "<", ">\n", "", "", lFixWhite, ColorSpace);
+    }
 
     _cmsIOPrintf(ContextID, m, " %d {} bind ", nChannels);
 
@@ -1338,7 +1342,6 @@ int WriteOutputLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfile, 
             _cmsIOPrintf(ContextID, m, "dup ");
 
     _cmsIOPrintf(ContextID, m, "]\n");
-
 
     EmitIntent(ContextID, m, Intent);
 
@@ -1402,7 +1405,10 @@ int WriteNamedColorCRD(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hNamed
 
 
     NamedColorList = cmsGetNamedColorList(xform);
-    if (NamedColorList == NULL) return 0;
+    if (NamedColorList == NULL) {
+        cmsDeleteTransform(xform);
+        return 0;
+    }
 
     _cmsIOPrintf(ContextID, m, "<<\n");
     _cmsIOPrintf(ContextID, m, "(colorlistcomment) (%s) \n", "Named profile");

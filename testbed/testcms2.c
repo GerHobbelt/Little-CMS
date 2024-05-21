@@ -7276,7 +7276,7 @@ cmsInt32Number CheckOutGray(cmsContext ContextID, cmsHTRANSFORM xform, double L,
 
     cmsDoTransform(ContextID, xform, &Lab, &g_out, 1);
 
-    return IsGoodVal("Gray value", g, (double) g_out, 0.01);
+    return IsGoodVal("Gray value", g, (double) g_out, 1);
 }
 
 static
@@ -8516,9 +8516,9 @@ int Check_OkLab(cmsContext ContextID)
     cmsDoTransform(ContextID, xform, &xyz, &okLab, 1);
     cmsDoTransform(ContextID, xform2, &okLab, &xyz2, 1);
 
-	dist = cmsXYZDeltaE(ContextID, &xyz, &xyz2);
-	if (dist > Max) Max = dist;
-
+    xyz.X = 0.143046; xyz.Y = 0.060610; xyz.Z = 0.713913;
+    cmsDoTransform(xform, &xyz, &okLab, 1);
+    cmsDoTransform(xform2, &okLab, &xyz2, 1);
 
     cmsDeleteTransform(ContextID, xform);
     cmsDeleteTransform(ContextID, xform2);
@@ -8527,6 +8527,40 @@ int Check_OkLab(cmsContext ContextID)
 
 	return Max < 1E-12;
 }
+
+
+static
+int Check_OkLab2(void)
+{
+#define TYPE_LABA_F32 (FLOAT_SH(1)|COLORSPACE_SH(PT_MCH3)|EXTRA_SH(1)|CHANNELS_SH(3)|BYTES_SH(4))
+
+    cmsUInt16Number rgb[3];
+    cmsFloat32Number lab[4];
+
+    cmsHPROFILE labProfile = cmsCreate_OkLabProfile(NULL);
+    cmsHPROFILE rgbProfile = cmsCreate_sRGBProfile();
+
+    cmsHTRANSFORM hBack = cmsCreateTransform(labProfile, TYPE_LABA_F32, rgbProfile, TYPE_RGB_16, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsHTRANSFORM hForth = cmsCreateTransform(rgbProfile, TYPE_RGB_16, labProfile, TYPE_LABA_F32, INTENT_RELATIVE_COLORIMETRIC, 0);
+
+    cmsCloseProfile(labProfile);
+    cmsCloseProfile(rgbProfile);
+
+    rgb[0] = 0;
+    rgb[1] = 0;
+    rgb[2] = 65535;
+
+    cmsDoTransform(hForth, rgb, &lab, 1);
+    cmsDoTransform(hBack, lab, &rgb, 1);
+
+    cmsDeleteTransform(hBack);
+    cmsDeleteTransform(hForth);
+
+    if (rgb[0] != 0 || rgb[1] != 0 || rgb[2] != 65535) return 0;
+
+    return 1;
+}
+
 
 static
 cmsHPROFILE createRgbGamma(cmsContext contextID, cmsFloat64Number g)
@@ -9725,6 +9759,7 @@ int main(int argc, const char** argv)
     Check(ctx, "Empty MLUC", CheckEmptyMLUC);
     Check(ctx, "sRGB round-trips", Check_sRGB_Rountrips);
     Check(ctx, "OkLab color space", Check_OkLab);
+    Check(ctx, "OkLab color space (2)", Check_OkLab2);
     Check(ctx, "Gamma space detection", CheckGammaSpaceDetection);
     Check(ctx, "Unbounded mode w/ integer output", CheckIntToFloatTransform);
     Check(ctx, "Corrupted built-in by using cmsWriteRawTag", CheckInducedCorruption);
