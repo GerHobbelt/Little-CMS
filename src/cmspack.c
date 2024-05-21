@@ -3226,7 +3226,7 @@ cmsUInt8Number* PackLabDoubleFromFloat(cmsContext ContextID, _cmsTRANSFORM* Info
 
 
 static
-cmsUInt8Number* PackEncodedBytesLabV2FromFloat(_cmsTRANSFORM* Info,
+cmsUInt8Number* PackEncodedBytesLabV2FromFloat(cmsContext ContextID, _cmsTRANSFORM* Info,
                                            cmsFloat32Number wOut[],
                                            cmsUInt8Number* output,
                                            cmsUInt32Number Stride)
@@ -3238,7 +3238,7 @@ cmsUInt8Number* PackEncodedBytesLabV2FromFloat(_cmsTRANSFORM* Info,
     Lab.a = (cmsFloat64Number)(wOut[1] * 255.0 - 128.0);
     Lab.b = (cmsFloat64Number)(wOut[2] * 255.0 - 128.0);
 
-    cmsFloat2LabEncoded(wlab, &Lab);
+    cmsFloat2LabEncoded(ContextID, wlab, &Lab);
     
     if (T_PLANAR(Info -> OutputFormat)) {
 
@@ -3261,7 +3261,7 @@ cmsUInt8Number* PackEncodedBytesLabV2FromFloat(_cmsTRANSFORM* Info,
 }
 
 static
-cmsUInt8Number* PackEncodedWordsLabV2FromFloat(_cmsTRANSFORM* Info,
+cmsUInt8Number* PackEncodedWordsLabV2FromFloat(cmsContext ContextID, _cmsTRANSFORM* Info,
                                            cmsFloat32Number wOut[],
                                            cmsUInt8Number* output,
                                            cmsUInt32Number Stride)
@@ -3273,7 +3273,7 @@ cmsUInt8Number* PackEncodedWordsLabV2FromFloat(_cmsTRANSFORM* Info,
     Lab.a = (cmsFloat64Number)(wOut[1] * 255.0 - 128.0);
     Lab.b = (cmsFloat64Number)(wOut[2] * 255.0 - 128.0);
 
-    cmsFloat2LabEncodedV2(wlab, &Lab);
+    cmsFloat2LabEncodedV2(ContextID, wlab, &Lab);
     
     if (T_PLANAR(Info -> OutputFormat)) {
 

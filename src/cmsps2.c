@@ -978,13 +978,13 @@ int WriteNamedColorCSA(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hNamed
 
     hLab  = cmsCreateLab4Profile(ContextID, NULL);
     xform = cmsCreateTransform(ContextID, hNamedColor, TYPE_NAMED_COLOR_INDEX, hLab, TYPE_Lab_DBL, Intent, 0);
-    cmsCloseProfile(hLab);
+    cmsCloseProfile(ContextID, hLab);
 
     if (xform == NULL) return 0;
 
     NamedColorList = cmsGetNamedColorList(xform);
     if (NamedColorList == NULL) {
-        cmsDeleteTransform(xform);
+        cmsDeleteTransform(ContextID, xform);
         return 0;
     }
 
@@ -1300,7 +1300,7 @@ int WriteOutputLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfile, 
     v = (_cmsTRANSFORM*) xform;
     DeviceLink = cmsPipelineDup(ContextID, v ->core->Lut);
     if (DeviceLink == NULL) {
-        cmsDeleteTransform(xform);
+        cmsDeleteTransform(ContextID, xform);
         return 0;
     }
 
@@ -1331,9 +1331,9 @@ int WriteOutputLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfile, 
 
     _cmsIOPrintf(ContextID, m, "/RenderTable ");
 
-    first = cmsPipelineGetPtrToFirstStage(DeviceLink);
+    first = cmsPipelineGetPtrToFirstStage(ContextID, DeviceLink);
     if (first != NULL) {
-        WriteCLUT(m, first, "<", ">\n", "", "", lFixWhite, ColorSpace);
+        WriteCLUT(ContextID, m, first, "<", ">\n", "", "", lFixWhite, ColorSpace);
     }
 
     _cmsIOPrintf(ContextID, m, " %d {} bind ", nChannels);
@@ -1406,7 +1406,7 @@ int WriteNamedColorCRD(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hNamed
 
     NamedColorList = cmsGetNamedColorList(xform);
     if (NamedColorList == NULL) {
-        cmsDeleteTransform(xform);
+        cmsDeleteTransform(ContextID, xform);
         return 0;
     }
 

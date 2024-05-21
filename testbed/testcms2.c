@@ -8517,8 +8517,8 @@ int Check_OkLab(cmsContext ContextID)
     cmsDoTransform(ContextID, xform2, &okLab, &xyz2, 1);
 
     xyz.X = 0.143046; xyz.Y = 0.060610; xyz.Z = 0.713913;
-    cmsDoTransform(xform, &xyz, &okLab, 1);
-    cmsDoTransform(xform2, &okLab, &xyz2, 1);
+    cmsDoTransform(ContextID, xform, &xyz, &okLab, 1);
+    cmsDoTransform(ContextID, xform2, &okLab, &xyz2, 1);
 
     cmsDeleteTransform(ContextID, xform);
     cmsDeleteTransform(ContextID, xform2);
@@ -8530,31 +8530,31 @@ int Check_OkLab(cmsContext ContextID)
 
 
 static
-int Check_OkLab2(void)
+int Check_OkLab2(cmsContext ContextID)
 {
 #define TYPE_LABA_F32 (FLOAT_SH(1)|COLORSPACE_SH(PT_MCH3)|EXTRA_SH(1)|CHANNELS_SH(3)|BYTES_SH(4))
 
     cmsUInt16Number rgb[3];
     cmsFloat32Number lab[4];
 
-    cmsHPROFILE labProfile = cmsCreate_OkLabProfile(NULL);
-    cmsHPROFILE rgbProfile = cmsCreate_sRGBProfile();
+    cmsHPROFILE labProfile = cmsCreate_OkLabProfile(ContextID);
+    cmsHPROFILE rgbProfile = cmsCreate_sRGBProfile(ContextID);
 
-    cmsHTRANSFORM hBack = cmsCreateTransform(labProfile, TYPE_LABA_F32, rgbProfile, TYPE_RGB_16, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsHTRANSFORM hForth = cmsCreateTransform(rgbProfile, TYPE_RGB_16, labProfile, TYPE_LABA_F32, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsHTRANSFORM hBack = cmsCreateTransform(ContextID, labProfile, TYPE_LABA_F32, rgbProfile, TYPE_RGB_16, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsHTRANSFORM hForth = cmsCreateTransform(ContextID, rgbProfile, TYPE_RGB_16, labProfile, TYPE_LABA_F32, INTENT_RELATIVE_COLORIMETRIC, 0);
 
-    cmsCloseProfile(labProfile);
-    cmsCloseProfile(rgbProfile);
+    cmsCloseProfile(ContextID, labProfile);
+    cmsCloseProfile(ContextID, rgbProfile);
 
     rgb[0] = 0;
     rgb[1] = 0;
     rgb[2] = 65535;
 
-    cmsDoTransform(hForth, rgb, &lab, 1);
-    cmsDoTransform(hBack, lab, &rgb, 1);
+    cmsDoTransform(ContextID, hForth, rgb, &lab, 1);
+    cmsDoTransform(ContextID, hBack, lab, &rgb, 1);
 
-    cmsDeleteTransform(hBack);
-    cmsDeleteTransform(hForth);
+    cmsDeleteTransform(ContextID, hBack);
+    cmsDeleteTransform(ContextID, hForth);
 
     if (rgb[0] != 0 || rgb[1] != 0 || rgb[2] != 65535) return 0;
 
