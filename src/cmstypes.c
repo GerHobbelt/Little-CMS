@@ -998,7 +998,7 @@ void *Type_Text_Description_Read(cmsContext ContextID, struct _cms_typehandler_s
 
     if (UnicodeCount == 0 || SizeOfTag < UnicodeCount*sizeof(cmsUInt16Number)) goto Done;
 
-    UnicodeString = (wchar_t*)_cmsMalloc(ContextID, (UnicodeCount + 1) * sizeof(wchar_t));
+    UnicodeString = (wchar_t*)_cmsMallocZero(ContextID, (UnicodeCount + 1) * sizeof(wchar_t));
     if (UnicodeString == NULL) goto Done;
 
     if (!_cmsReadWCharArray(ContextID, io, UnicodeCount, UnicodeString)) {

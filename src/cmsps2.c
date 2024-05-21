@@ -660,9 +660,11 @@ void WriteCLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsStage* mpe, const char*
     sc.FixWhite = FixWhite;
     sc.ColorSpace = ColorSpace;
 
+    if (sc.Pipeline != NULL && sc.Pipeline->Params != NULL) {
+
     _cmsIOPrintf(ContextID, m, "[");
 
-    for (i=0; i < sc.Pipeline->Params->nInputs; i++)
+    for (i = 0; i < sc.Pipeline->Params->nInputs; i++)
         _cmsIOPrintf(ContextID, m, " %d ", sc.Pipeline->Params->nSamples[i]);
 
     _cmsIOPrintf(ContextID, m, " [\n");
@@ -672,6 +674,7 @@ void WriteCLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsStage* mpe, const char*
     _cmsIOPrintf(ContextID, m, PostMin);
     _cmsIOPrintf(ContextID, m, PostMaj);
     _cmsIOPrintf(ContextID, m, "] ");
+    }
 
 }
 
