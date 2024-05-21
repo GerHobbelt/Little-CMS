@@ -1341,8 +1341,11 @@ CMSAPI cmsBool           CMSEXPORT cmsSliceSpaceFloat(cmsContext ContextID, cmsU
 
 typedef struct _cms_MLU_struct cmsMLU;
 
-#define  cmsNoLanguage "\0\0"
-#define  cmsNoCountry  "\0\0"
+#define  cmsNoLanguage    "\0\0"
+#define  cmsNoCountry     "\0\0"
+
+// Special language/country to retrieve unicode field for description in V2 profiles. Use with care.
+#define  cmsV2Unicode     "\xff\xff"
 
 CMSAPI cmsMLU*           CMSEXPORT cmsMLUalloc(cmsContext ContextID, cmsUInt32Number nItems);
 CMSAPI void              CMSEXPORT cmsMLUfree(cmsContext ContextID, cmsMLU* mlu);
@@ -1354,6 +1357,9 @@ CMSAPI cmsBool           CMSEXPORT cmsMLUsetASCII(cmsContext ContextID, cmsMLU* 
 CMSAPI cmsBool           CMSEXPORT cmsMLUsetWide(cmsContext ContextID, cmsMLU* mlu,
                                                   const char LanguageCode[3], const char CountryCode[3],
                                                   const wchar_t* WideString);
+CMSAPI cmsBool           CMSEXPORT cmsMLUsetUTF8(cmsMLU* mlu,
+                                                  const char LanguageCode[3], const char CountryCode[3],
+                                                  const char* UTF8String);
 
 CMSAPI cmsUInt32Number   CMSEXPORT cmsMLUgetASCII(cmsContext ContextID, const cmsMLU* mlu,
                                                   const char LanguageCode[3], const char CountryCode[3],
@@ -1362,6 +1368,10 @@ CMSAPI cmsUInt32Number   CMSEXPORT cmsMLUgetASCII(cmsContext ContextID, const cm
 CMSAPI cmsUInt32Number   CMSEXPORT cmsMLUgetWide(cmsContext ContextID, const cmsMLU* mlu,
                                                  const char LanguageCode[3], const char CountryCode[3],
                                                  wchar_t* Buffer, cmsUInt32Number BufferSize);
+CMSAPI cmsUInt32Number   CMSEXPORT cmsMLUgetUTF8(const cmsMLU* mlu,
+                                                 const char LanguageCode[3], const char CountryCode[3],
+                                                 char* Buffer, cmsUInt32Number BufferSize);
+
 
 CMSAPI cmsBool           CMSEXPORT cmsMLUgetTranslation(cmsContext ContextID, const cmsMLU* mlu,
                                                          const char LanguageCode[3], const char CountryCode[3],
@@ -1582,6 +1592,10 @@ CMSAPI cmsUInt32Number   CMSEXPORT cmsGetProfileInfo(cmsContext ContextID, cmsHP
                                                             wchar_t* Buffer, cmsUInt32Number BufferSize);
 
 CMSAPI cmsUInt32Number   CMSEXPORT cmsGetProfileInfoASCII(cmsContext ContextID, cmsHPROFILE hProfile, cmsInfoType Info,
+                                                            const char LanguageCode[3], const char CountryCode[3],
+                                                            char* Buffer, cmsUInt32Number BufferSize);
+
+CMSAPI cmsUInt32Number  CMSEXPORT cmsGetProfileInfoUTF8(cmsHPROFILE hProfile, cmsInfoType Info,
                                                             const char LanguageCode[3], const char CountryCode[3],
                                                             char* Buffer, cmsUInt32Number BufferSize);
 

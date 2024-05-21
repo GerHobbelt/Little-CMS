@@ -950,6 +950,7 @@ static
 void *Type_Text_Description_Read(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsUInt32Number* nItems, cmsUInt32Number SizeOfTag)
 {
     char* Text = NULL;
+    wchar_t* UnicodeString = NULL;
     cmsMLU* mlu = NULL;
     cmsUInt32Number  AsciiCount;
     cmsUInt32Number  i, UnicodeCode, UnicodeCount;
@@ -970,7 +971,7 @@ void *Type_Text_Description_Read(cmsContext ContextID, struct _cms_typehandler_s
     if (SizeOfTag < AsciiCount) return NULL;
 
     // All seems Ok, allocate the container
-    mlu = cmsMLUalloc(ContextID, 1);
+    mlu = cmsMLUalloc(ContextID, 2);
     if (mlu == NULL) return NULL;
 
     // As many memory as size of tag
@@ -995,15 +996,23 @@ void *Type_Text_Description_Read(cmsContext ContextID, struct _cms_typehandler_s
     if (!_cmsReadUInt32Number(ContextID, io, &UnicodeCount)) goto Done;
     SizeOfTag -= 2* sizeof(cmsUInt32Number);
 
-    if (SizeOfTag < UnicodeCount*sizeof(cmsUInt16Number)) goto Done;
+    if (UnicodeCount == 0 || SizeOfTag < UnicodeCount*sizeof(cmsUInt16Number)) goto Done;
 
-    for (i=0; i < UnicodeCount; i++) {
-        if (!io ->Read(ContextID, io, &Dummy, sizeof(cmsUInt16Number), 1)) goto Done;
-    }
+    UnicodeString = (wchar_t*)_cmsMalloc(self->ContextID, (UnicodeCount + 1) * sizeof(wchar_t));
+    if (UnicodeString == NULL) goto Done;
+
+    if (!_cmsReadWCharArray(io, UnicodeCount, UnicodeString)) goto Done;
+
+    UnicodeString[UnicodeCount] = 0;
+
+    if (!cmsMLUsetWide(mlu, cmsV2Unicode, cmsV2Unicode, UnicodeString)) goto Done;
+    _cmsFree(self->ContextID, (void*)UnicodeString);
+    UnicodeString = NULL;
+
     SizeOfTag -= UnicodeCount*sizeof(cmsUInt16Number);
 
     // Skip ScriptCode code if present. Some buggy profiles does have less
-    // data that stricttly required. We need to skip it as this type may come
+    // data that strictly required. We need to skip it as this type may come
     // embedded in other types.
 
     if (SizeOfTag >= sizeof(cmsUInt16Number) + sizeof(cmsUInt8Number) + 67) {
@@ -1023,6 +1032,7 @@ Done:
     return mlu;
 
 Error:
+    if (UnicodeString)  _cmsFree(self->ContextID, (void*)UnicodeString);
     if (Text) _cmsFree(ContextID, (void*) Text);
     if (mlu) cmsMLUfree(ContextID, mlu);
     return NULL;
@@ -1076,7 +1086,7 @@ cmsBool  Type_Text_Description_Write(cmsContext ContextID, struct _cms_typehandl
 
         // Get both representations.
         cmsMLUgetASCII(ContextID, mlu, cmsNoLanguage, cmsNoCountry,  Text, len * sizeof(char));
-        cmsMLUgetWide(ContextID, mlu,  cmsNoLanguage, cmsNoCountry,  Wide, len * sizeof(wchar_t));
+        cmsMLUgetWide(mlu,  cmsV2Unicode,  cmsV2Unicode,  Wide, len * sizeof(wchar_t));
     }
 
     // Tell the real text len including the null terminator and padding
@@ -1948,7 +1958,7 @@ Error:
 
 // We only allow a specific MPE structure: Matrix plus prelin, plus clut, plus post-lin.
 static
-cmsBool  Type_LUT8_Write(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
+cmsBool Type_LUT8_Write(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
 {
     cmsUInt32Number j, nTabSize, i;
     cmsUInt8Number  val;
@@ -1962,6 +1972,12 @@ cmsBool  Type_LUT8_Write(cmsContext ContextID, struct _cms_typehandler_struct* s
 
     // Disassemble the LUT into components.
     mpe = NewLUT -> Elements;
+
+    if (mpe == NULL) {  // Should never be empty. Corrupted?
+        cmsSignalError(self->ContextID, cmsERROR_UNKNOWN_EXTENSION, "empty LUT8 is not supported");
+        return FALSE;
+    }
+
     if (mpe ->Type == cmsSigMatrixElemType) {
 
         if (mpe->InputChannels != 3 || mpe->OutputChannels != 3) return FALSE;
