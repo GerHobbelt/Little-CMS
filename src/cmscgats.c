@@ -1936,13 +1936,13 @@ cmsBool CMSEXPORT cmsIT8SaveToFile(cmsContext ContextID, cmsHANDLE hIT8, const c
         /**
         * Check for wrong data
         */
-        t = GetTable(it8);
+        t = GetTable(ContextID, it8);
         if (t->Data == NULL) goto Error;
         if (t->DataFormat == NULL) goto Error;
 
-            WriteHeader(ContextID, it8, &sd);
-            WriteDataFormat(ContextID, &sd, it8);
-            WriteData(ContextID, &sd, it8);
+        WriteHeader(ContextID, it8, &sd);
+        WriteDataFormat(ContextID, &sd, it8);
+        WriteData(ContextID, &sd, it8);
     }
 
     if (fclose(sd.stream) != 0) return FALSE;

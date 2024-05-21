@@ -1017,12 +1017,12 @@ cmsUInt32Number  CMSEXPORT cmsGetProfileInfoASCII(cmsContext ContextID, cmsHPROF
     return cmsMLUgetASCII(ContextID, mlu, LanguageCode, CountryCode, Buffer, BufferSize);
 }
 
-cmsUInt32Number  CMSEXPORT cmsGetProfileInfoUTF8(cmsHPROFILE hProfile, cmsInfoType Info,
+cmsUInt32Number  CMSEXPORT cmsGetProfileInfoUTF8(cmsContext ContextID, cmsHPROFILE hProfile, cmsInfoType Info,
                                                           const char LanguageCode[3], const char CountryCode[3],
                                                           char* Buffer, cmsUInt32Number BufferSize)
 {
-    const cmsMLU* mlu = GetInfo(hProfile, Info);
+    const cmsMLU* mlu = GetInfo(ContextID, hProfile, Info);
     if (mlu == NULL) return 0;
 
-    return cmsMLUgetUTF8(mlu, LanguageCode, CountryCode, Buffer, BufferSize);
+    return cmsMLUgetUTF8(ContextID, mlu, LanguageCode, CountryCode, Buffer, BufferSize);
 }

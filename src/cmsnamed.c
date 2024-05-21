@@ -345,7 +345,7 @@ cmsBool CMSEXPORT cmsMLUsetASCII(cmsContext ContextID, cmsMLU* mlu, const char L
     if (len == 0)
     {
         wchar_t empty = 0;
-        return AddMLUBlock(mlu, sizeof(wchar_t), &empty, Lang, Cntry);
+        return AddMLUBlock(ContextID, mlu, sizeof(wchar_t), &empty, Lang, Cntry);
     }
 
     WStr = (wchar_t*) _cmsCalloc(ContextID, len,  sizeof(wchar_t));
@@ -363,7 +363,7 @@ cmsBool CMSEXPORT cmsMLUsetASCII(cmsContext ContextID, cmsMLU* mlu, const char L
 
 // Add an UTF8 entry. Do not add any \0 termination (ICC1v43_2010-12.pdf page 61)
 // In the case the user explicitly sets an empty string, we force a \0
-cmsBool CMSEXPORT cmsMLUsetUTF8(cmsMLU* mlu, const char LanguageCode[3], const char CountryCode[3], const char* UTF8String)
+cmsBool CMSEXPORT cmsMLUsetUTF8(cmsContext ContextID, cmsMLU* mlu, const char LanguageCode[3], const char CountryCode[3], const char* UTF8String)
 {
     cmsUInt32Number UTF8len;
     wchar_t* WStr;
@@ -376,21 +376,21 @@ cmsBool CMSEXPORT cmsMLUsetUTF8(cmsMLU* mlu, const char LanguageCode[3], const c
     if (*UTF8String == '\0')
     {
         wchar_t empty = 0;
-        return AddMLUBlock(mlu, sizeof(wchar_t), &empty, Lang, Cntry);
+        return AddMLUBlock(ContextID, mlu, sizeof(wchar_t), &empty, Lang, Cntry);
     }
     
     // Len excluding terminator 0
     UTF8len = decodeUTF8(NULL, UTF8String);
     
     // Get space for dest
-    WStr = (wchar_t*) _cmsCalloc(mlu ->ContextID, UTF8len,  sizeof(wchar_t));
+    WStr = (wchar_t*) _cmsCalloc(ContextID, UTF8len,  sizeof(wchar_t));
     if (WStr == NULL) return FALSE;
 
     decodeUTF8(WStr, UTF8String);
     
-    rc = AddMLUBlock(mlu, UTF8len  * sizeof(wchar_t), WStr, Lang, Cntry);
+    rc = AddMLUBlock(ContextID, mlu, UTF8len  * sizeof(wchar_t), WStr, Lang, Cntry);
 
-    _cmsFree(mlu ->ContextID, WStr);
+    _cmsFree(ContextID, WStr);
     return rc;
 }
 
@@ -486,7 +486,7 @@ void CMSEXPORT cmsMLUfree(cmsContext ContextID, cmsMLU* mlu)
 // The algorithm first searches for an exact match of country and language, if not found it uses
 // the Language. If none is found, first entry is used instead.
 static
-const wchar_t* _cmsMLUgetWide(const cmsMLU* mlu,
+const wchar_t* _cmsMLUgetWide(cmsContext ContextID, const cmsMLU* mlu,
                               cmsUInt32Number *len,
                               cmsUInt16Number LanguageCode, cmsUInt16Number CountryCode,
                               cmsUInt16Number* UsedLanguageCode, cmsUInt16Number* UsedCountryCode)
@@ -553,7 +553,7 @@ cmsUInt32Number CMSEXPORT cmsMLUgetASCII(cmsContext ContextID, const cmsMLU* mlu
     if (mlu == NULL) return 0;
 
     // Get WideChar
-    Wide = _cmsMLUgetWide(mlu, &StrLen, Lang, Cntry, NULL, NULL);
+    Wide = _cmsMLUgetWide(ContextID, mlu, &StrLen, Lang, Cntry, NULL, NULL);
     if (Wide == NULL) return 0;
 
     ASCIIlen = StrLen / sizeof(wchar_t);
@@ -586,7 +586,7 @@ cmsUInt32Number CMSEXPORT cmsMLUgetASCII(cmsContext ContextID, const cmsMLU* mlu
 
 
 // Obtain a UTF8 representation of the wide string. Setting buffer to NULL returns the len
-cmsUInt32Number CMSEXPORT cmsMLUgetUTF8(const cmsMLU* mlu,
+cmsUInt32Number CMSEXPORT cmsMLUgetUTF8(cmsContext ContextID, const cmsMLU* mlu,
                                        const char LanguageCode[3], const char CountryCode[3],
                                        char* Buffer, cmsUInt32Number BufferSize)
 {
@@ -601,7 +601,7 @@ cmsUInt32Number CMSEXPORT cmsMLUgetUTF8(const cmsMLU* mlu,
     if (mlu == NULL) return 0;
 
     // Get WideChar
-    Wide = _cmsMLUgetWide(mlu, &StrLen, Lang, Cntry, NULL, NULL);
+    Wide = _cmsMLUgetWide(ContextID, mlu, &StrLen, Lang, Cntry, NULL, NULL);
     if (Wide == NULL) return 0;
 
     UTF8len = encodeUTF8(NULL, Wide, StrLen / sizeof(wchar_t), BufferSize);
@@ -639,7 +639,7 @@ cmsUInt32Number CMSEXPORT cmsMLUgetWide(cmsContext ContextID, const cmsMLU* mlu,
     // Sanitize
     if (mlu == NULL) return 0;
 
-    Wide = _cmsMLUgetWide(mlu, &StrLen, Lang, Cntry, NULL, NULL);
+    Wide = _cmsMLUgetWide(ContextID, mlu, &StrLen, Lang, Cntry, NULL, NULL);
     if (Wide == NULL) return 0;
 
     // Maybe we want only to know the len?
@@ -674,7 +674,7 @@ CMSAPI cmsBool CMSEXPORT cmsMLUgetTranslation(cmsContext ContextID, const cmsMLU
     // Sanitize
     if (mlu == NULL) return FALSE;
 
-    Wide = _cmsMLUgetWide(mlu, NULL, Lang, Cntry, &ObtLang, &ObtCode);
+    Wide = _cmsMLUgetWide(ContextID, mlu, NULL, Lang, Cntry, &ObtLang, &ObtCode);
     if (Wide == NULL) return FALSE;
 
     // Get used language and code

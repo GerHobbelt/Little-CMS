@@ -3686,7 +3686,7 @@ Error:
 
 // Check UTF8 encoding
 static
-cmsInt32Number CheckMLU_UTF8(void)
+cmsInt32Number CheckMLU_UTF8(cmsContext ContextID)
 {
     cmsMLU* mlu;
     char Buffer[256];
@@ -3694,15 +3694,15 @@ cmsInt32Number CheckMLU_UTF8(void)
         
     mlu = cmsMLUalloc(DbgThread(), 0);
     
-    cmsMLUsetWide(mlu, "en", "US", L"\x3b2\x14b");
+    cmsMLUsetWide(ContextID, mlu, "en", "US", L"\x3b2\x14b");
 
-    cmsMLUgetUTF8(mlu, "en", "US", Buffer, 256);
+    cmsMLUgetUTF8(ContextID, mlu, "en", "US", Buffer, 256);
     if (strcmp(Buffer, "\xce\xb2\xc5\x8b") != 0) rc = 0;
 
     if (rc == 0)
         Fail("Unexpected string '%s'", Buffer);
 
-    cmsMLUfree(mlu);
+    cmsMLUfree(ContextID, mlu);
     return rc;
 }
 

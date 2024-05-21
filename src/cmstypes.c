@@ -998,15 +998,15 @@ void *Type_Text_Description_Read(cmsContext ContextID, struct _cms_typehandler_s
 
     if (UnicodeCount == 0 || SizeOfTag < UnicodeCount*sizeof(cmsUInt16Number)) goto Done;
 
-    UnicodeString = (wchar_t*)_cmsMalloc(self->ContextID, (UnicodeCount + 1) * sizeof(wchar_t));
+    UnicodeString = (wchar_t*)_cmsMalloc(ContextID, (UnicodeCount + 1) * sizeof(wchar_t));
     if (UnicodeString == NULL) goto Done;
 
-    if (!_cmsReadWCharArray(io, UnicodeCount, UnicodeString)) goto Done;
+    if (!_cmsReadWCharArray(ContextID, io, UnicodeCount, UnicodeString)) goto Done;
 
     UnicodeString[UnicodeCount] = 0;
 
-    if (!cmsMLUsetWide(mlu, cmsV2Unicode, cmsV2Unicode, UnicodeString)) goto Done;
-    _cmsFree(self->ContextID, (void*)UnicodeString);
+    if (!cmsMLUsetWide(ContextID, mlu, cmsV2Unicode, cmsV2Unicode, UnicodeString)) goto Done;
+    _cmsFree(ContextID, (void*)UnicodeString);
     UnicodeString = NULL;
 
     SizeOfTag -= UnicodeCount*sizeof(cmsUInt16Number);
@@ -1032,7 +1032,7 @@ Done:
     return mlu;
 
 Error:
-    if (UnicodeString)  _cmsFree(self->ContextID, (void*)UnicodeString);
+    if (UnicodeString)  _cmsFree(ContextID, (void*)UnicodeString);
     if (Text) _cmsFree(ContextID, (void*) Text);
     if (mlu) cmsMLUfree(ContextID, mlu);
     return NULL;
@@ -1086,7 +1086,7 @@ cmsBool  Type_Text_Description_Write(cmsContext ContextID, struct _cms_typehandl
 
         // Get both representations.
         cmsMLUgetASCII(ContextID, mlu, cmsNoLanguage, cmsNoCountry,  Text, len * sizeof(char));
-        cmsMLUgetWide(mlu,  cmsV2Unicode,  cmsV2Unicode,  Wide, len * sizeof(wchar_t));
+        cmsMLUgetWide(ContextID, mlu,  cmsV2Unicode,  cmsV2Unicode,  Wide, len * sizeof(wchar_t));
     }
 
     // Tell the real text len including the null terminator and padding
@@ -1974,7 +1974,7 @@ cmsBool Type_LUT8_Write(cmsContext ContextID, struct _cms_typehandler_struct* se
     mpe = NewLUT -> Elements;
 
     if (mpe == NULL) {  // Should never be empty. Corrupted?
-        cmsSignalError(self->ContextID, cmsERROR_UNKNOWN_EXTENSION, "empty LUT8 is not supported");
+        cmsSignalError(ContextID, cmsERROR_UNKNOWN_EXTENSION, "empty LUT8 is not supported");
         return FALSE;
     }
 

@@ -1357,7 +1357,7 @@ CMSAPI cmsBool           CMSEXPORT cmsMLUsetASCII(cmsContext ContextID, cmsMLU* 
 CMSAPI cmsBool           CMSEXPORT cmsMLUsetWide(cmsContext ContextID, cmsMLU* mlu,
                                                   const char LanguageCode[3], const char CountryCode[3],
                                                   const wchar_t* WideString);
-CMSAPI cmsBool           CMSEXPORT cmsMLUsetUTF8(cmsMLU* mlu,
+CMSAPI cmsBool           CMSEXPORT cmsMLUsetUTF8(cmsContext ContextID, cmsMLU* mlu,
                                                   const char LanguageCode[3], const char CountryCode[3],
                                                   const char* UTF8String);
 
@@ -1368,7 +1368,7 @@ CMSAPI cmsUInt32Number   CMSEXPORT cmsMLUgetASCII(cmsContext ContextID, const cm
 CMSAPI cmsUInt32Number   CMSEXPORT cmsMLUgetWide(cmsContext ContextID, const cmsMLU* mlu,
                                                  const char LanguageCode[3], const char CountryCode[3],
                                                  wchar_t* Buffer, cmsUInt32Number BufferSize);
-CMSAPI cmsUInt32Number   CMSEXPORT cmsMLUgetUTF8(const cmsMLU* mlu,
+CMSAPI cmsUInt32Number   CMSEXPORT cmsMLUgetUTF8(cmsContext ContextID, const cmsMLU* mlu,
                                                  const char LanguageCode[3], const char CountryCode[3],
                                                  char* Buffer, cmsUInt32Number BufferSize);
 
@@ -1595,7 +1595,7 @@ CMSAPI cmsUInt32Number   CMSEXPORT cmsGetProfileInfoASCII(cmsContext ContextID, 
                                                             const char LanguageCode[3], const char CountryCode[3],
                                                             char* Buffer, cmsUInt32Number BufferSize);
 
-CMSAPI cmsUInt32Number  CMSEXPORT cmsGetProfileInfoUTF8(cmsHPROFILE hProfile, cmsInfoType Info,
+CMSAPI cmsUInt32Number  CMSEXPORT cmsGetProfileInfoUTF8(cmsContext ContextID, cmsHPROFILE hProfile, cmsInfoType Info,
                                                             const char LanguageCode[3], const char CountryCode[3],
                                                             char* Buffer, cmsUInt32Number BufferSize);
 

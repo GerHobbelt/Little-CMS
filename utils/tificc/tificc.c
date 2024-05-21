@@ -209,7 +209,7 @@ unsigned char* PackTIFFLab8(cmsContext ContextID, struct _cmstransform_struct* C
 
 
 static
-unsigned char* PackTIFFLabA8(struct _cmstransform_struct* CMMcargo, 
+unsigned char* PackTIFFLabA8(cmsContext ContextID, struct _cmstransform_struct* CMMcargo,
                             CMSREGISTER cmsUInt16Number wOut[], 
                             CMSREGISTER cmsUInt8Number* output, 
                             CMSREGISTER cmsUInt32Number Stride)
@@ -257,7 +257,7 @@ unsigned char* PackTIFFLab16(cmsContext ContextID, struct _cmstransform_struct* 
 }
 
 static
-unsigned char* PackTIFFLabA16(struct _cmstransform_struct* CMMcargo, 
+unsigned char* PackTIFFLabA16(cmsContext ContextID, struct _cmstransform_struct* CMMcargo,
                             CMSREGISTER cmsUInt16Number wOut[], 
                             CMSREGISTER cmsUInt8Number* output, 
                             CMSREGISTER cmsUInt32Number Stride)
