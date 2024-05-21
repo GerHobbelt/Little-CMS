@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2023 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2024 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -49,7 +49,7 @@ typedef struct {
        // A flag for fast operation if identity
        cmsBool IdentityMat;
 
-       // Poits to the raw, unaligned memory
+       // Points to the raw, unaligned memory
        void * real_ptr;
 
 
