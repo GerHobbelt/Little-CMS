@@ -632,7 +632,7 @@ cmsHPROFILE CMSEXPORT cmsCreate_sRGBProfile(cmsContext ContextID)
 * 
 * This virtual profile cannot be saved as an ICC file
 */
-cmsHPROFILE cmsCreate_OkLabProfile(cmsContext ctx)
+cmsHPROFILE CMSEXPORT cmsCreate_OkLabProfile(cmsContext ctx)
 {
     cmsStage* XYZPCS = _cmsStageNormalizeFromXyzFloat(ctx);
     cmsStage* PCSXYZ = _cmsStageNormalizeToXyzFloat(ctx);

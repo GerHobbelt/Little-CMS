@@ -8225,6 +8225,34 @@ int CheckPlanar8opt(cmsContext ContextID)
 }
 
 /**
+* Bug reported from float32 to uint16 planar
+*/
+#define TYPE_RGB_FLT_PLANAR   (FLOAT_SH(1)|COLORSPACE_SH(PT_RGB)|CHANNELS_SH(3)|BYTES_SH(4)|PLANAR_SH(1))
+
+static
+int CheckPlanarFloat2int(void)
+{    
+    cmsHPROFILE sRGB = cmsCreate_sRGBProfile();
+
+    cmsHTRANSFORM transform = cmsCreateTransform(sRGB, TYPE_RGB_FLT_PLANAR,
+        sRGB, TYPE_RGB_16_PLANAR,INTENT_PERCEPTUAL, 0);
+
+    const cmsFloat32Number input[] = { 0, 0.4, 0.8,  0.1, 0.5, 0.9,  0.2, 0.6, 1.0,   0.3, 0.7, 1.0 };
+    cmsUInt16Number output[3*4] = { 0 };
+
+    cmsDoTransform(transform, input, output, 4);
+
+    cmsDeleteTransform(transform);    
+    cmsCloseProfile(sRGB);
+
+    return 1;
+}
+
+
+
+
+
+/**
 * Bug reported & fixed. Thanks to Kornel Lesinski for spotting this.
 */
 static
@@ -9752,6 +9780,7 @@ int main(int argc, const char** argv)
     Check(ctx, "Set free a tag", CheckRemoveTag);
     Check(ctx, "Matrix simplification", CheckMatrixSimplify);
     Check(ctx, "Planar 8 optimization", CheckPlanar8opt);
+    Check(ctx, "Planar float to int16", CheckPlanarFloat2int);
     Check(ctx, "Swap endian feature", CheckSE);
     Check(ctx, "Transform line stride RGB", CheckTransformLineStride);
     Check(ctx, "Forged MPE profile", CheckForgedMPE);
