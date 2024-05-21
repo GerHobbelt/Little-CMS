@@ -1346,6 +1346,47 @@ void CheckSoftProofing(cmsContext plugin)
     trace("Ok\n");
 }
 
+static
+void CheckPremultiplied(cmsContext plugin)
+{
+    uint8_t BGRA8[4] = { 255, 192, 160, 128 };    
+    uint8_t bgrA8_1[4], bgrA8_2[4];
+
+    cmsHPROFILE srgb1 = cmsCreate_sRGBProfile(plugin);
+    cmsHPROFILE srgb2 = cmsCreate_sRGBProfile(plugin);
+
+    cmsContext noPlugin = cmsCreateContext(0, 0);
+
+    cmsHTRANSFORM xform1 = cmsCreateTransform(noPlugin,
+        srgb1, TYPE_BGRA_8,
+        srgb2, TYPE_BGRA_8_PREMUL,
+        INTENT_PERCEPTUAL, cmsFLAGS_COPY_ALPHA);
+
+    cmsHTRANSFORM xform2 = cmsCreateTransform(plugin, 
+        srgb1, TYPE_BGRA_8,
+        srgb2, TYPE_BGRA_8_PREMUL,
+        INTENT_PERCEPTUAL, cmsFLAGS_COPY_ALPHA);
+
+    int i;
+
+    cmsCloseProfile(plugin, srgb1);
+    cmsCloseProfile(plugin, srgb2);
+
+    cmsDoTransform(plugin, xform1, BGRA8, bgrA8_1, 1);
+    cmsDoTransform(plugin, xform2, BGRA8, bgrA8_2, 1);
+
+    cmsDeleteTransform(plugin, xform1);
+    cmsDeleteTransform(plugin, xform2);
+
+    for (i = 0; i < 4; i++)
+    {
+        if (bgrA8_1[i] != bgrA8_2[i])
+            Fail("Premultiplied failed at (%d %d %d) != (%d %d %d)",
+                bgrA8_1[0], bgrA8_1[1], bgrA8_1[2],
+                bgrA8_2[0], bgrA8_2[1], bgrA8_2[2]);
+    }    
+}
+
 
 
 // --------------------------------------------------------------------------------------------------
@@ -2472,9 +2513,11 @@ int main(void)
 
        trace("Installing plug-in ... ");
        cmsPlugin(plugin, cmsFastFloatExtensions());
-       trace("done.\n\n");
-                      
+       trace("done.\n\n");                     
+
        CheckComputeIncrements();
+
+       CheckPremultiplied(plugin);
 
        // 15 bit functionality
        CheckFormatters15();

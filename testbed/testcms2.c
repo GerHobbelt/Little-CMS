@@ -8230,20 +8230,20 @@ int CheckPlanar8opt(cmsContext ContextID)
 #define TYPE_RGB_FLT_PLANAR   (FLOAT_SH(1)|COLORSPACE_SH(PT_RGB)|CHANNELS_SH(3)|BYTES_SH(4)|PLANAR_SH(1))
 
 static
-int CheckPlanarFloat2int(void)
+int CheckPlanarFloat2int(cmsContext ContextID)
 {    
-    cmsHPROFILE sRGB = cmsCreate_sRGBProfile();
+    cmsHPROFILE sRGB = cmsCreate_sRGBProfile(ContextID);
 
-    cmsHTRANSFORM transform = cmsCreateTransform(sRGB, TYPE_RGB_FLT_PLANAR,
+    cmsHTRANSFORM transform = cmsCreateTransform(ContextID, sRGB, TYPE_RGB_FLT_PLANAR,
         sRGB, TYPE_RGB_16_PLANAR,INTENT_PERCEPTUAL, 0);
 
-    const cmsFloat32Number input[] = { 0, 0.4, 0.8,  0.1, 0.5, 0.9,  0.2, 0.6, 1.0,   0.3, 0.7, 1.0 };
+    const cmsFloat32Number input[] = { 0.0f, 0.4f, 0.8f,  0.1f, 0.5f, 0.9f,  0.2f, 0.6f, 1.0f,   0.3f, 0.7f, 1.0f };
     cmsUInt16Number output[3*4] = { 0 };
 
-    cmsDoTransform(transform, input, output, 4);
+    cmsDoTransform(ContextID, transform, input, output, 4);
 
-    cmsDeleteTransform(transform);    
-    cmsCloseProfile(sRGB);
+    cmsDeleteTransform(ContextID, transform);
+    cmsCloseProfile(ContextID, sRGB);
 
     return 1;
 }
@@ -9579,8 +9579,6 @@ int main(int argc, const char** argv)
     printf("Installing error logger ... ");
     cmsSetLogErrorHandler(NULL, FatalErrorQuit);
     printf("done.\n");
-
-    CheckMethodPackDoublesFromFloat(ctx);
 
     PrintSupportedIntents();
 
