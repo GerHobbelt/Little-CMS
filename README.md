@@ -1,5 +1,10 @@
 
-![Little CMS](doc/logo-small.png)
+![Little CMS MT](doc/logo-small.png)
+
+This is lcms2mt, version 2.16. This is a forked, binary incompatible
+version of lcms2.16. For details of the differences from vanilla
+lcms2.16 see doc/WhyThisFork.txt
+
 
 # About Little CMS
 [www.littlecms.com](https://www.littlecms.com)
