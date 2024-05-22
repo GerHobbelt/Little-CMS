@@ -808,7 +808,7 @@ void InStringSymbol(cmsContext ContextID, cmsIT8* it8)
             else {
                 if (!StringAppend(ContextID, it8->str, (char)it8->ch)) {
 
-                    SynError(it8, "Out of memory");                    
+                    SynError(ContextID, it8, "Out of memory");
                     return;
                 }
 
@@ -843,7 +843,7 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
 
                 if (!StringAppend(ContextID, it8->id, (char)it8->ch)) {
 
-                    SynError(it8, "Out of memory");                    
+                    SynError(ContextID, it8, "Out of memory");
                     return;
                 }
 
@@ -962,17 +962,17 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
                     }
 
                     StringClear(it8->id);
-                    if (!StringCat(it8->id, buffer)) {
+                    if (!StringCat(ContextID, it8->id, buffer)) {
 
-                        SynError(it8, "Out of memory");                        
+                        SynError(ContextID, it8, "Out of memory");
                         return;
                     }
 
                     do {
 
-                        if (!StringAppend(it8->id, (char)it8->ch)) {
+                        if (!StringAppend(ContextID, it8->id, (char)it8->ch)) {
 
-                            SynError(it8, "Out of memory");                            
+                            SynError(ContextID, it8, "Out of memory");
                             return;
                         }
 
@@ -1237,7 +1237,7 @@ void* AllocChunk(cmsContext ContextID, cmsIT8* it8, cmsUInt32Number size)
                 it8 ->Allocator.BlockSize = size;
 
         it8 ->Allocator.Used = 0;
-        new_block = (cmsUInt8Number*)AllocBigBlock(it8, it8->Allocator.BlockSize);
+        new_block = (cmsUInt8Number*)AllocBigBlock(ContextID, it8, it8->Allocator.BlockSize);
         if (new_block == NULL) 
             return NULL;
 
@@ -1427,8 +1427,8 @@ cmsInt32Number CMSEXPORT cmsIT8SetTable(cmsContext ContextID, cmsHANDLE  IT8, cm
 
          if (nTable == it8 ->TablesCount) {
 
-             if (!AllocTable(it8)) {
-                 SynError(it8, "Too many tables");
+             if (!AllocTable(ContextID, it8)) {
+                 SynError(ContextID, it8, "Too many tables");
                  return -1;
              }
          }
@@ -1625,24 +1625,24 @@ cmsBool AllocateDataFormat(cmsContext ContextID, cmsIT8* it8)
 {
     cmsUInt32Number size;
 
-    TABLE* t = GetTable(it8);
+    TABLE* t = GetTable(ContextID, it8);
 
     if (t->DataFormat) return TRUE;    // Already allocated
 
-    t->nSamples = satoi(cmsIT8GetProperty(it8, "NUMBER_OF_FIELDS"));
+    t->nSamples = satoi(cmsIT8GetProperty(ContextID, it8, "NUMBER_OF_FIELDS"));
 
     if (t->nSamples <= 0 || t->nSamples > 0x7ffe) {
 
-        SynError(it8, "Wrong NUMBER_OF_FIELDS");
+        SynError(ContextID, it8, "Wrong NUMBER_OF_FIELDS");
         return FALSE;
     }
 
     size = ((cmsUInt32Number)t->nSamples + 1) * sizeof(char*);
 
-    t->DataFormat = (char**)AllocChunk(it8, size);
+    t->DataFormat = (char**)AllocChunk(ContextID, it8, size);
     if (t->DataFormat == NULL) {
 
-        SynError(it8, "Unable to allocate dataFormat array");
+        SynError(ContextID, it8, "Unable to allocate dataFormat array");
         return FALSE;
     }
 
@@ -1777,7 +1777,7 @@ cmsBool SetData(cmsContext ContextID, cmsIT8* it8, int nSet, int nField, const c
 
     }
 
-    ptr = AllocString(it8, Val);
+    ptr = AllocString(ContextID, it8, Val);
     if (ptr == NULL)
         return FALSE;
 
@@ -2241,7 +2241,7 @@ cmsBool HeaderSection(cmsContext ContextID, cmsIT8* it8)
             if (!GetVal(ContextID, it8, Buffer, MAXSTR - 1, "Property data expected")) return FALSE;
 
             if (Key->WriteAs != WRITE_PAIR) {
-                if (AddToList(it8, &GetTable(it8)->HeaderList, VarName, NULL, Buffer,
+                if (AddToList(ContextID, it8, &GetTable(ContextID, it8)->HeaderList, VarName, NULL, Buffer,
                     (it8->sy == SSTRING) ? WRITE_STRINGIFY : WRITE_UNCOOKED) == NULL) return FALSE;
             }
             else {
@@ -2346,11 +2346,11 @@ cmsBool ParseIT8(cmsContext ContextID, cmsIT8* it8, cmsBool nosheet)
 
             case SBEGIN_DATA:
 
-                    if (!DataSection(it8)) return FALSE;
+                    if (!DataSection(ContextID, it8)) return FALSE;
 
                     if (it8 -> sy != SEOF && it8->sy != SSYNERROR) {
 
-                            if (!AllocTable(it8)) return FALSE;                        
+                            if (!AllocTable(ContextID, it8)) return FALSE;
 
                             it8 ->nTable = it8 ->TablesCount - 1;
 

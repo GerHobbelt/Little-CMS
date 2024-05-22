@@ -1312,16 +1312,16 @@ cmsBool WriteOutputLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfi
     DeviceLink = cmsPipelineDup(ContextID, v ->core->Lut);
     if (DeviceLink == NULL) {
         cmsDeleteTransform(ContextID, xform);
-        cmsSignalError(m->ContextID, cmsERROR_CORRUPTION_DETECTED, "Cannot access link for CRD");
+        cmsSignalError(ContextID, cmsERROR_CORRUPTION_DETECTED, "Cannot access link for CRD");
         return FALSE;
     }
 
      // We need a CLUT
     dwFlags |= cmsFLAGS_FORCE_CLUT;
-    if (!_cmsOptimizePipeline(m->ContextID, &DeviceLink, RelativeEncodingIntent, &InFrm, &OutputFormat, &dwFlags)) {
-        cmsPipelineFree(DeviceLink);
-        cmsDeleteTransform(xform);
-        cmsSignalError(m->ContextID, cmsERROR_CORRUPTION_DETECTED, "Cannot create CLUT table for CRD");
+    if (!_cmsOptimizePipeline(ContextID, &DeviceLink, RelativeEncodingIntent, &InFrm, &OutputFormat, &dwFlags)) {
+        cmsPipelineFree(ContextID, DeviceLink);
+        cmsDeleteTransform(ContextID, xform);
+        cmsSignalError(ContextID, cmsERROR_CORRUPTION_DETECTED, "Cannot create CLUT table for CRD");
         return FALSE;
     }
 
