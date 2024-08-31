@@ -760,6 +760,8 @@ cmsInt32Number CheckFormattersPlugin(cmsContext ContextID)
 #define SigIntType      ((cmsTagTypeSignature)  0x74747448)   //   'tttH'
 #define SigInt          ((cmsTagSignature)  0x74747448)       //   'tttH'
 
+#define SigInt32        ((cmsTagSignature)  0x74747449)       //   'tttI'
+
 static
 void *Type_int_Read(cmsContext ContextID, struct _cms_typehandler_struct* self,
  			    cmsIOHANDLER* io,
@@ -801,9 +803,16 @@ static cmsPluginTag HiddenTagPluginSample = {
     SigInt,  {  1, 1, { SigIntType }, NULL }
 };
 
+static cmsPluginTag HiddenTagPluginSample2 = {
+
+    { cmsPluginMagicNumber, 2060, cmsPluginTagSig, (cmsPluginBase*) &HiddenTagPluginSample},
+    SigInt32,  {  1, 1, { cmsSigUInt32ArrayType }, NULL }
+};
+
+
 static cmsPluginTagType TagTypePluginSample = {
 
-     { cmsPluginMagicNumber, 2060-2000, cmsPluginTagTypeSig,  (cmsPluginBase*) &HiddenTagPluginSample},
+     { cmsPluginMagicNumber, 2060-2000, cmsPluginTagTypeSig,  (cmsPluginBase*) &HiddenTagPluginSample2 },
      { SigIntType, Type_int_Read, Type_int_Write, Type_int_Dup, Type_int_Free, 0 }
 };
 
@@ -815,6 +824,7 @@ cmsInt32Number CheckTagTypePlugin(cmsContext ContextID)
     cmsContext cpy2 = NULL;
     cmsHPROFILE h = NULL;
     cmsUInt32Number myTag = 1234;
+    cmsUInt32Number myTag32 = 5678;
     cmsUInt32Number rc = 0;
     char* data = NULL;
     cmsUInt32Number *ptr = NULL;
@@ -837,6 +847,11 @@ cmsInt32Number CheckTagTypePlugin(cmsContext ContextID)
 
 
     if (!cmsWriteTag(cpy2, h, SigInt, &myTag)) {
+        Fail("Plug-in failed");
+        goto Error;
+    }
+
+    if (!cmsWriteTag(h, SigInt32, &myTag32)) {
         Fail("Plug-in failed");
         goto Error;
     }
@@ -877,6 +892,13 @@ cmsInt32Number CheckTagTypePlugin(cmsContext ContextID)
         goto Error;
     }
 
+    ptr = (cmsUInt32Number*)cmsReadTag(h, SigInt32);
+    if (ptr != NULL) {
+
+        Fail("read tag/context switching failed");
+        goto Error;
+    }
+
     cmsCloseProfile(ContextID, h);
     ResetFatalError(ContextID);
 
@@ -896,6 +918,15 @@ cmsInt32Number CheckTagTypePlugin(cmsContext ContextID)
     }
 
     rc = (*ptr == 1234);
+
+    ptr = (cmsUInt32Number*)cmsReadTag(h, SigInt32);
+    if (ptr == NULL) {
+
+        Fail("read tag/context switching failed (2)");
+        goto Error;
+    }
+
+    rc &= (*ptr == 5678);
 
     cmsCloseProfile(cpy2, h);
     cmsDeleteContext(cpy2);

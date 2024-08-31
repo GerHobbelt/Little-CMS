@@ -5208,7 +5208,6 @@ cmsInt32Number CheckVCGT(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE
 
 
 // Only one of the two following may be used, as they share the same tag
-static
 cmsInt32Number CheckDictionary16(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile)
 {
       cmsHANDLE hDict;
@@ -5252,9 +5251,6 @@ cmsInt32Number CheckDictionary16(cmsContext ContextID, cmsInt32Number Pass,  cms
     return 0;
 }
 
-
-
-static
 cmsInt32Number CheckDictionary24(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile)
 {
     cmsHANDLE hDict;
@@ -9546,7 +9542,10 @@ int main(int argc, const char** argv)
     cmsInt32Number DoSpeedTests = 1;
     cmsInt32Number DoCheckTests = 1;
     cmsInt32Number DoPluginTests = 1;
+
+#ifdef CMS_IS_WINDOWS_
     cmsInt32Number DoZooTests = 0;
+#endif
     cmsContext ctx;
 
 #ifdef _MSC_VER
