@@ -851,7 +851,7 @@ cmsInt32Number CheckTagTypePlugin(cmsContext ContextID)
         goto Error;
     }
 
-    if (!cmsWriteTag(h, SigInt32, &myTag32)) {
+    if (!cmsWriteTag(cpy2, h, SigInt32, &myTag32)) {
         Fail("Plug-in failed");
         goto Error;
     }
@@ -892,7 +892,7 @@ cmsInt32Number CheckTagTypePlugin(cmsContext ContextID)
         goto Error;
     }
 
-    ptr = (cmsUInt32Number*)cmsReadTag(h, SigInt32);
+    ptr = (cmsUInt32Number*)cmsReadTag(ContextID, h, SigInt32);
     if (ptr != NULL) {
 
         Fail("read tag/context switching failed");
@@ -919,7 +919,7 @@ cmsInt32Number CheckTagTypePlugin(cmsContext ContextID)
 
     rc = (*ptr == 1234);
 
-    ptr = (cmsUInt32Number*)cmsReadTag(h, SigInt32);
+    ptr = (cmsUInt32Number*)cmsReadTag(cpy2, h, SigInt32);
     if (ptr == NULL) {
 
         Fail("read tag/context switching failed (2)");

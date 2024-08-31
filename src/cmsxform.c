@@ -2489,7 +2489,7 @@ cmsBool  IsProperColorSpace(cmsContext ContextID, cmsColorSpaceSignature Check, 
     int Space1 = (int) T_COLORSPACE(dwFormat);
     int Space2 = _cmsLCMScolorSpace(ContextID, Check);
 
-    if (Space1 == PT_ANY) return (T_CHANNELS(dwFormat) == cmsChannelsOf(Check));
+    if (Space1 == PT_ANY) return (T_CHANNELS(dwFormat) == cmsChannelsOf(ContextID, Check));
     if (Space1 == Space2) return TRUE;
 
     if (Space1 == PT_LabV2 && Space2 == PT_Lab) return TRUE;

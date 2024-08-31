@@ -586,21 +586,21 @@ void Type_ColorantOrderType_Free(cmsContext ContextID, struct _cms_typehandler_s
 // This type represents an array of generic 1-byte/8-bit quantity.
 
 static
-void* Type_UInt8_Read(struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsUInt32Number* nItems, cmsUInt32Number SizeOfTag)
+void* Type_UInt8_Read(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsUInt32Number* nItems, cmsUInt32Number SizeOfTag)
 {
     cmsUInt8Number* array;
     cmsUInt32Number i, n;
 
     *nItems = 0;
     n = SizeOfTag / sizeof(cmsUInt8Number);
-    array = (cmsUInt8Number*)_cmsCalloc(self->ContextID, n, sizeof(cmsUInt8Number));
+    array = (cmsUInt8Number*)_cmsCalloc(ContextID, n, sizeof(cmsUInt8Number));
     if (array == NULL) return NULL;
 
     for (i = 0; i < n; i++) {
 
-        if (!_cmsReadUInt8Number(io, &array[i])) {
+        if (!_cmsReadUInt8Number(ContextID, io, &array[i])) {
 
-            _cmsFree(self->ContextID, array);
+            _cmsFree(ContextID, array);
             return NULL;
         }
     }
@@ -610,14 +610,14 @@ void* Type_UInt8_Read(struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cm
 }
 
 static
-cmsBool Type_UInt8_Write(struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
+cmsBool Type_UInt8_Write(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
 {
     cmsUInt8Number* Value = (cmsUInt8Number*)Ptr;
     cmsUInt32Number i;
 
     for (i = 0; i < nItems; i++) {
 
-        if (!_cmsWriteUInt8Number(io, Value[i])) return FALSE;
+        if (!_cmsWriteUInt8Number(ContextID, io, Value[i])) return FALSE;
     }
 
     return TRUE;
@@ -626,16 +626,16 @@ cmsBool Type_UInt8_Write(struct _cms_typehandler_struct* self, cmsIOHANDLER* io,
 }
 
 static
-void* Type_UInt8_Dup(struct _cms_typehandler_struct* self, const void* Ptr, cmsUInt32Number n)
+void* Type_UInt8_Dup(cmsContext ContextID, struct _cms_typehandler_struct* self, const void* Ptr, cmsUInt32Number n)
 {
-    return _cmsDupMem(self->ContextID, Ptr, n * sizeof(cmsUInt8Number));
+    return _cmsDupMem(ContextID, Ptr, n * sizeof(cmsUInt8Number));
 }
 
 
 static
-void Type_UInt8_Free(struct _cms_typehandler_struct* self, void* Ptr)
+void Type_UInt8_Free(cmsContext ContextID, struct _cms_typehandler_struct* self, void* Ptr)
 {
-    _cmsFree(self->ContextID, Ptr);
+    _cmsFree(ContextID, Ptr);
 }
 
 // ********************************************************************************
@@ -643,21 +643,21 @@ void Type_UInt8_Free(struct _cms_typehandler_struct* self, void* Ptr)
 // ********************************************************************************
 // This type represents an array of generic 4-byte/32-bit quantity.
 static
-void* Type_UInt32_Read(struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsUInt32Number* nItems, cmsUInt32Number SizeOfTag)
+void* Type_UInt32_Read(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsUInt32Number* nItems, cmsUInt32Number SizeOfTag)
 {
     cmsUInt32Number* array;
     cmsUInt32Number i, n;
 
     *nItems = 0;
     n = SizeOfTag / sizeof(cmsUInt32Number);
-    array = (cmsUInt32Number*)_cmsCalloc(self->ContextID, n, sizeof(cmsUInt32Number));
+    array = (cmsUInt32Number*)_cmsCalloc(ContextID, n, sizeof(cmsUInt32Number));
     if (array == NULL) return NULL;
 
     for (i = 0; i < n; i++) {
 
-        if (!_cmsReadUInt32Number(io, &array[i])) {
+        if (!_cmsReadUInt32Number(ContextID, io, &array[i])) {
 
-            _cmsFree(self->ContextID, array);
+            _cmsFree(ContextID, array);
             return NULL;
         }
     }
@@ -667,14 +667,14 @@ void* Type_UInt32_Read(struct _cms_typehandler_struct* self, cmsIOHANDLER* io, c
 }
 
 static
-cmsBool Type_UInt32_Write(struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
+cmsBool Type_UInt32_Write(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
 {
     cmsUInt32Number* Value = (cmsUInt32Number*)Ptr;
     cmsUInt32Number i;
 
     for (i = 0; i < nItems; i++) {
 
-        if (!_cmsWriteUInt32Number(io, Value[i])) return FALSE;
+        if (!_cmsWriteUInt32Number(ContextID, io, Value[i])) return FALSE;
     }
 
     return TRUE;
@@ -683,16 +683,16 @@ cmsBool Type_UInt32_Write(struct _cms_typehandler_struct* self, cmsIOHANDLER* io
 }
 
 static
-void* Type_UInt32_Dup(struct _cms_typehandler_struct* self, const void* Ptr, cmsUInt32Number n)
+void* Type_UInt32_Dup(cmsContext ContextID, struct _cms_typehandler_struct* self, const void* Ptr, cmsUInt32Number n)
 {
-    return _cmsDupMem(self->ContextID, Ptr, n * sizeof(cmsUInt32Number));
+    return _cmsDupMem(ContextID, Ptr, n * sizeof(cmsUInt32Number));
 }
 
 
 static
-void Type_UInt32_Free(struct _cms_typehandler_struct* self, void* Ptr)
+void Type_UInt32_Free(cmsContext ContextID, struct _cms_typehandler_struct* self, void* Ptr)
 {
-    _cmsFree(self->ContextID, Ptr);
+    _cmsFree(ContextID, Ptr);
 }
 
 // ********************************************************************************
@@ -700,21 +700,21 @@ void Type_UInt32_Free(struct _cms_typehandler_struct* self, void* Ptr)
 // ********************************************************************************
 // This type represents an array of generic 8-byte/64-bit quantity.
 static
-void* Type_UInt64_Read(struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsUInt32Number* nItems, cmsUInt32Number SizeOfTag)
+void* Type_UInt64_Read(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsUInt32Number* nItems, cmsUInt32Number SizeOfTag)
 {
     cmsUInt64Number* array;
     cmsUInt32Number i, n;
 
     *nItems = 0;
     n = SizeOfTag / sizeof(cmsUInt64Number);
-    array = (cmsUInt64Number*)_cmsCalloc(self->ContextID, n, sizeof(cmsUInt64Number));
+    array = (cmsUInt64Number*)_cmsCalloc(ContextID, n, sizeof(cmsUInt64Number));
     if (array == NULL) return NULL;
 
     for (i = 0; i < n; i++) {
 
-        if (!_cmsReadUInt64Number(io, &array[i])) {
+        if (!_cmsReadUInt64Number(ContextID, io, &array[i])) {
 
-            _cmsFree(self->ContextID, array);
+            _cmsFree(ContextID, array);
             return NULL;
         }
     }
@@ -724,14 +724,14 @@ void* Type_UInt64_Read(struct _cms_typehandler_struct* self, cmsIOHANDLER* io, c
 }
 
 static
-cmsBool Type_UInt64_Write(struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
+cmsBool Type_UInt64_Write(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
 {
     cmsUInt64Number* Value = (cmsUInt64Number*)Ptr;
     cmsUInt32Number i;
 
     for (i = 0; i < nItems; i++) {
 
-        if (!_cmsWriteUInt64Number(io, &Value[i])) return FALSE;
+        if (!_cmsWriteUInt64Number(ContextID, io, &Value[i])) return FALSE;
     }
 
     return TRUE;
@@ -740,16 +740,16 @@ cmsBool Type_UInt64_Write(struct _cms_typehandler_struct* self, cmsIOHANDLER* io
 }
 
 static
-void* Type_UInt64_Dup(struct _cms_typehandler_struct* self, const void* Ptr, cmsUInt32Number n)
+void* Type_UInt64_Dup(cmsContext ContextID, struct _cms_typehandler_struct* self, const void* Ptr, cmsUInt32Number n)
 {
-    return _cmsDupMem(self->ContextID, Ptr, n * sizeof(cmsUInt64Number));
+    return _cmsDupMem(ContextID, Ptr, n * sizeof(cmsUInt64Number));
 }
 
 
 static
-void Type_UInt64_Free(struct _cms_typehandler_struct* self, void* Ptr)
+void Type_UInt64_Free(cmsContext ContextID, struct _cms_typehandler_struct* self, void* Ptr)
 {
-    _cmsFree(self->ContextID, Ptr);
+    _cmsFree(ContextID, Ptr);
 }
 
 // ********************************************************************************
