@@ -90,7 +90,7 @@ void ConsoleErrorHandler(const char* module, const char* fmt, va_list ap)
 
 
 static
-void Help()
+void Help(void)
 {
     fprintf(stderr, "Little CMS TIFF compare utility. v1.1\n\n");
 
