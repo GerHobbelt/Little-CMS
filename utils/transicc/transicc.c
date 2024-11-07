@@ -205,7 +205,7 @@ void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
         case 'i':
         case 'I':
             if (lIsDeviceLink)
-                FatalError("icctrans: Device-link already specified");
+                FatalError("transicc: Device-link already specified");
 
             cInProf = xoptarg;
             break;
@@ -234,7 +234,7 @@ void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
         case 'o':
         case 'O':
             if (lIsDeviceLink)
-                FatalError("icctrans: Device-link already specified");
+                FatalError("transicc: Device-link already specified");
             cOutProf = xoptarg;
             break;
 
@@ -857,7 +857,7 @@ void PrintPCSEncoded(cmsContext ContextID, cmsFloat64Number Input[])
 
 
 
-// Take a value from IT8 and scale it accordly to fill a cmsUInt16Number (0..FFFF)
+// Take a value from IT8 and scale it accordingly to fill a cmsUInt16Number (0..FFFF)
 
 static
 cmsFloat64Number GetIT8Val(cmsContext ContextID, const char* Name, cmsFloat64Number Max)
@@ -1110,7 +1110,7 @@ static
 void SetOutputDataFormat(cmsContext ContextID)
 {
     cmsIT8DefineDblFormat(ContextID, hIT8out, "%.4g");
-    cmsIT8SetPropertyStr(ContextID, hIT8out, "ORIGINATOR", "icctrans");
+    cmsIT8SetPropertyStr(ContextID, hIT8out, "ORIGINATOR", "transicc");
 
     if (IncludePart != NULL)
         cmsIT8SetPropertyStr(ContextID, hIT8out, ".INCLUDE", IncludePart);
