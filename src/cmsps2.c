@@ -823,7 +823,7 @@ cmsToneCurve* ExtractGray2Y(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt3
             cmsUInt8Number Gray = (cmsUInt8Number) i;
             cmsCIEXYZ XYZ;
 
-            cmsDoTransform(ContextID, xform, &Gray, &XYZ, 1);
+            cmsDoTransformEx(ContextID, xform, &Gray, &XYZ, 1);
 
             Out ->Table16[i] =_cmsQuickSaturateWord(XYZ.Y * 65535.0);
         }
@@ -1016,7 +1016,7 @@ int WriteNamedColorCSA(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hNamed
         if (!cmsNamedColorInfo(ContextID, NamedColorList, i, ColorName, NULL, NULL, NULL, NULL))
                 continue;
 
-        cmsDoTransform(ContextID, xform, In, &Lab, 1);
+        cmsDoTransformEx(ContextID, xform, In, &Lab, 1);
         _cmsIOPrintf(ContextID, m, "  (%s) [ %.3f %.3f %.3f ]\n", ColorName, Lab.L, Lab.a, Lab.b);
     }
 
@@ -1443,7 +1443,7 @@ int WriteNamedColorCRD(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hNamed
         if (!cmsNamedColorInfo(ContextID, NamedColorList, i, ColorName, NULL, NULL, NULL, NULL))
                 continue;
 
-        cmsDoTransform(ContextID, xform, In, Out, 1);
+        cmsDoTransformEx(ContextID, xform, In, Out, 1);
         BuildColorantList(Colorant, nColorant, Out);
         _cmsIOPrintf(ContextID, m, "  (%s) [ %s ]\n", ColorName, Colorant);
     }

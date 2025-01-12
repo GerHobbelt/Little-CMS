@@ -251,8 +251,8 @@ void CMSEXPORT cmsDoTransformLineStride(cmsContext ContextID, cmsHTRANSFORM  Tra
 // Note that because extended range, we can use a -1.0 value for out of gamut in this case.
 static
 void FloatXFORM(cmsContext ContextID, _cmsTRANSFORM* p,
-                const void* in,
-                void* out,
+                const cmsUInt8Number* in,
+                cmsUInt8Number* out,
                 cmsUInt32Number PixelsPerLine,
                 cmsUInt32Number LineCount,
                 const cmsStride* Stride)
@@ -318,8 +318,8 @@ void FloatXFORM(cmsContext ContextID, _cmsTRANSFORM* p,
 
 static
 void NullFloatXFORM(cmsContext ContextID, _cmsTRANSFORM* p,
-                    const void* in,
-                    void* out,
+                    const cmsUInt8Number* in,
+                    cmsUInt8Number* out,
                     cmsUInt32Number PixelsPerLine,
                     cmsUInt32Number LineCount,
                     const cmsStride* Stride)

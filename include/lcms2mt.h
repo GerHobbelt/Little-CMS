@@ -1791,6 +1791,9 @@ CMSAPI void             CMSEXPORT cmsDoTransform(cmsContext ContextID,
 																								 cmsUInt8Number* OutputBuffer,
                                                  cmsUInt32Number Size);
 
+#define cmsDoTransformEx(ContextID, Transform, InputBuffer, OutputBuffer, Size)   \
+	cmsDoTransform(ContextID, Transform, (const cmsUInt8Number *)(InputBuffer), (cmsUInt8Number *)(OutputBuffer), Size)
+
 CMSAPI void             CMSEXPORT cmsDoTransformStride(cmsContext ContextID,      // Deprecated
                                                  cmsHTRANSFORM Transform,
 																								 const cmsUInt8Number* InputBuffer,
