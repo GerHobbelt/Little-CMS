@@ -247,8 +247,8 @@
 static
 void FUNCTION_NAME(cmsContext ContextID,
 		           _cmsTRANSFORM* p,
-                   const void* in,
-                   void* out,
+                   const cmsUInt8Number* in,
+                   cmsUInt8Number* out,
                    cmsUInt32Number PixelsPerLine,
                    cmsUInt32Number LineCount,
                    const cmsStride* Stride)
@@ -470,8 +470,8 @@ void FUNCTION_NAME(cmsContext ContextID,
             }
 #endif
         } /* End x loop */
-        in = (void *)((cmsUInt8Number *)in + Stride->BytesPerLineIn);
-        out = (void *)((cmsUInt8Number *)out + Stride->BytesPerLineOut);
+        in = ((cmsUInt8Number *)in + Stride->BytesPerLineIn);
+        out = ((cmsUInt8Number *)out + Stride->BytesPerLineOut);
     } /* End y loop */
     /* The following code is only safe if we know that a given transform is
      * called on one thread a time. */

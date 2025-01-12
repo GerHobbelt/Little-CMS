@@ -185,8 +185,8 @@ cmsUInt32Number PixelSize(cmsUInt32Number Format)
 
 // Apply transform.
 void CMSEXPORT cmsDoTransform(cmsContext ContextID, cmsHTRANSFORM  Transform,
-                              const void* InputBuffer,
-                              void* OutputBuffer,
+                              const cmsUInt8Number* InputBuffer,
+                              cmsUInt8Number* OutputBuffer,
                               cmsUInt32Number Size)
 
 {
@@ -204,8 +204,8 @@ void CMSEXPORT cmsDoTransform(cmsContext ContextID, cmsHTRANSFORM  Transform,
 
 // This is a legacy stride for planar
 void CMSEXPORT cmsDoTransformStride(cmsContext ContextID, cmsHTRANSFORM  Transform,
-                              const void* InputBuffer,
-                              void* OutputBuffer,
+                              const cmsUInt8Number* InputBuffer,
+                              cmsUInt8Number* OutputBuffer,
                               cmsUInt32Number Size, cmsUInt32Number Stride)
 
 {
@@ -222,8 +222,8 @@ void CMSEXPORT cmsDoTransformStride(cmsContext ContextID, cmsHTRANSFORM  Transfo
 
 // This is the "fast" function for plugins
 void CMSEXPORT cmsDoTransformLineStride(cmsContext ContextID, cmsHTRANSFORM  Transform,
-                              const void* InputBuffer,
-                              void* OutputBuffer,
+                              const cmsUInt8Number* InputBuffer,
+                              cmsUInt8Number* OutputBuffer,
                               cmsUInt32Number PixelsPerLine,
                               cmsUInt32Number LineCount,
                               cmsUInt32Number BytesPerLineIn,
@@ -374,8 +374,8 @@ static inline cmsUInt32Number mul65535(cmsUInt32Number a, cmsUInt32Number b)
 static
 void NullXFORM(cmsContext ContextID,
                _cmsTRANSFORM* p,
-               const void* in,
-               void* out,
+               const cmsUInt8Number* in,
+               cmsUInt8Number* out,
                cmsUInt32Number PixelsPerLine,
                cmsUInt32Number LineCount,
                const cmsStride* Stride)
@@ -422,8 +422,8 @@ void NullXFORM(cmsContext ContextID,
 static
 void PrecalculatedXFORMIdentity(cmsContext ContextID,
                                 _cmsTRANSFORM* p,
-                                const void* in,
-                                void* out,
+                                const cmsUInt8Number* in,
+                                cmsUInt8Number* out,
                                 cmsUInt32Number PixelsPerLine,
                                 cmsUInt32Number LineCount,
                                 const cmsStride* Stride)
@@ -448,16 +448,16 @@ void PrecalculatedXFORMIdentity(cmsContext ContextID,
     while (LineCount-- > 0)
     {
         memmove(out, in, PixelsPerLine);
-        in = (void *)((cmsUInt8Number *)in + bpli);
-        out = (void *)((cmsUInt8Number *)out + bplo);
+        in = ((cmsUInt8Number *)in + bpli);
+        out = ((cmsUInt8Number *)out + bplo);
     }
 }
 
 static
 void PrecalculatedXFORMIdentityPlanar(cmsContext ContextID,
                                       _cmsTRANSFORM* p,
-                                      const void* in,
-                                      void* out,
+                                      const cmsUInt8Number* in,
+                                      cmsUInt8Number* out,
                                       cmsUInt32Number PixelsPerLine,
                                       cmsUInt32Number LineCount,
                                       const cmsStride* Stride)
@@ -496,8 +496,8 @@ void PrecalculatedXFORMIdentityPlanar(cmsContext ContextID,
             plane_in = (void *)((cmsUInt8Number *)plane_in + bpli);
             plane_out = (void *)((cmsUInt8Number *)plane_out + bplo);
         }
-        in = (void *)((cmsUInt8Number *)in + bppi);
-        out = (void *)((cmsUInt8Number *)out + bppo);
+        in = ((cmsUInt8Number *)in + bppi);
+        out = ((cmsUInt8Number *)out + bppo);
     }
 }
 
@@ -2825,7 +2825,7 @@ cmsHTRANSFORM cmsCloneTransformChangingFormats(cmsContext ContextID,
         return NULL;
     }
 
-    xform = _cmsMalloc(ContextID, sizeof(*xform));
+    xform = (_cmsTRANSFORM *)_cmsMalloc(ContextID, sizeof(*xform));
     if (xform == NULL)
         return NULL;
 

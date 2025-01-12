@@ -59,8 +59,8 @@ static void free_aligned(cmsContext ContextID, void* Data)
 
 static void FastEvaluateFloatRGBCurves(cmsContext ContextID,
                                         struct _cmstransform_struct *CMMcargo,
-                                        const void* Input,
-                                        void* Output,
+                                        const cmsUInt8Number* Input,
+                                        cmsUInt8Number* Output,
                                         cmsUInt32Number PixelsPerLine,
                                         cmsUInt32Number LineCount,
                                         const cmsStride* Stride)
@@ -92,7 +92,7 @@ static void FastEvaluateFloatRGBCurves(cmsContext ContextID,
     _cmsComputeComponentIncrements(InputFormat,  Stride->BytesPerPlaneIn, &nchans, &nalpha, SourceStartingOrder, SourceIncrements);
     _cmsComputeComponentIncrements(OutputFormat, Stride->BytesPerPlaneOut, &nchans, &nalpha, DestStartingOrder, DestIncrements);
 
-    if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
+    if (!(_cmsGetTransformFlags(CMMcargo) & cmsFLAGS_COPY_ALPHA))
         nalpha = 0;
 
 
@@ -144,8 +144,8 @@ static void FastEvaluateFloatRGBCurves(cmsContext ContextID,
 // Do nothing but arrange the RGB format.
 static void FastFloatRGBIdentity(cmsContext ContextID,
                                 struct _cmstransform_struct *CMMcargo,
-                                        const void* Input,
-                                        void* Output,
+                                        const cmsUInt8Number* Input,
+                                        cmsUInt8Number* Output,
                                         cmsUInt32Number PixelsPerLine,
                                         cmsUInt32Number LineCount,
                                         const cmsStride* Stride)
@@ -173,7 +173,7 @@ static void FastFloatRGBIdentity(cmsContext ContextID,
     _cmsComputeComponentIncrements(InputFormat,  Stride->BytesPerPlaneIn,  &nchans, &nalpha, SourceStartingOrder, SourceIncrements);
     _cmsComputeComponentIncrements(OutputFormat, Stride->BytesPerPlaneOut, &nchans, &nalpha, DestStartingOrder, DestIncrements);
 
-    if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
+    if (!(_cmsGetTransformFlags(CMMcargo) & cmsFLAGS_COPY_ALPHA))
         nalpha = 0;
 
     strideIn = strideOut = 0;
@@ -226,8 +226,8 @@ static void FastFloatRGBIdentity(cmsContext ContextID,
 // Evaluate 1 channel only
 static void FastEvaluateFloatGrayCurves(cmsContext ContextID,
                                         struct _cmstransform_struct *CMMcargo,
-                                        const void* Input,
-                                        void* Output,
+                                        const cmsUInt8Number* Input,
+                                        cmsUInt8Number* Output,
                                         cmsUInt32Number PixelsPerLine,
                                         cmsUInt32Number LineCount,
                                         const cmsStride* Stride)
@@ -252,7 +252,7 @@ static void FastEvaluateFloatGrayCurves(cmsContext ContextID,
     _cmsComputeComponentIncrements(InputFormat, Stride->BytesPerPlaneIn, &nchans, &nalpha, SourceStartingOrder, SourceIncrements);
     _cmsComputeComponentIncrements(OutputFormat, Stride->BytesPerPlaneIn, &nchans, &nalpha, DestStartingOrder, DestIncrements);
 
-    if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
+    if (!(_cmsGetTransformFlags(CMMcargo) & cmsFLAGS_COPY_ALPHA))
         nalpha = 0;
 
     strideIn = strideOut = 0;
@@ -290,8 +290,8 @@ static void FastEvaluateFloatGrayCurves(cmsContext ContextID,
 
 static void FastFloatGrayIdentity(cmsContext ContextID,
                                 struct _cmstransform_struct *CMMcargo,
-                                        const void* Input,
-                                        void* Output,
+                                        const cmsUInt8Number* Input,
+                                        cmsUInt8Number* Output,
                                         cmsUInt32Number PixelsPerLine,
                                         cmsUInt32Number LineCount,
                                         const cmsStride* Stride)
@@ -316,7 +316,7 @@ static void FastFloatGrayIdentity(cmsContext ContextID,
     _cmsComputeComponentIncrements(InputFormat, Stride->BytesPerPlaneIn, &nchans, &nalpha, SourceStartingOrder, SourceIncrements);
     _cmsComputeComponentIncrements(OutputFormat, Stride->BytesPerPlaneOut, &nchans, &nalpha, DestStartingOrder, DestIncrements);
 
-    if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
+    if (!(_cmsGetTransformFlags(CMMcargo) & cmsFLAGS_COPY_ALPHA))
         nalpha = 0;
 
     strideIn = strideOut = 0;

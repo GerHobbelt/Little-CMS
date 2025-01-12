@@ -1787,21 +1787,21 @@ CMSAPI void             CMSEXPORT cmsDeleteTransform(cmsContext ContextID, cmsHT
 
 CMSAPI void             CMSEXPORT cmsDoTransform(cmsContext ContextID,
                                                  cmsHTRANSFORM Transform,
-                                                 const void * InputBuffer,
-                                                 void * OutputBuffer,
+																								 const cmsUInt8Number* InputBuffer,
+																								 cmsUInt8Number* OutputBuffer,
                                                  cmsUInt32Number Size);
 
 CMSAPI void             CMSEXPORT cmsDoTransformStride(cmsContext ContextID,      // Deprecated
                                                  cmsHTRANSFORM Transform,
-                                                 const void * InputBuffer,
-                                                 void * OutputBuffer,
+																								 const cmsUInt8Number* InputBuffer,
+																								 cmsUInt8Number* OutputBuffer,
                                                  cmsUInt32Number Size,
                                                  cmsUInt32Number Stride);
 
 CMSAPI void             CMSEXPORT cmsDoTransformLineStride(cmsContext ContextID,
                                                  cmsHTRANSFORM  Transform,
-                                                 const void* InputBuffer,
-                                                 void* OutputBuffer,
+																								 const cmsUInt8Number* InputBuffer,
+																								 cmsUInt8Number* OutputBuffer,
                                                  cmsUInt32Number PixelsPerLine,
                                                  cmsUInt32Number LineCount,
                                                  cmsUInt32Number BytesPerLineIn,

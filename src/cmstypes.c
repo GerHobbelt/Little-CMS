@@ -5769,11 +5769,11 @@ void Type_MHC2_Free(cmsContext ContextID, struct _cms_typehandler_struct* self, 
 
 void* Type_MHC2_Dup(cmsContext ContextID, struct _cms_typehandler_struct* self, const void* Ptr, cmsUInt32Number n)
 {
-    cmsMHC2Type* mhc2 = _cmsDupMem(ContextID, Ptr, sizeof(cmsMHC2Type));
+    cmsMHC2Type* mhc2 = (cmsMHC2Type *)_cmsDupMem(ContextID, Ptr, sizeof(cmsMHC2Type));
 
-    mhc2->RedCurve = _cmsDupMem(ContextID,   mhc2->RedCurve, mhc2->CurveEntries*sizeof(cmsFloat64Number));
-    mhc2->GreenCurve = _cmsDupMem(ContextID, mhc2->GreenCurve, mhc2->CurveEntries * sizeof(cmsFloat64Number));
-    mhc2->BlueCurve = _cmsDupMem(ContextID,  mhc2->BlueCurve, mhc2->CurveEntries * sizeof(cmsFloat64Number));
+    mhc2->RedCurve = (cmsFloat64Number *)_cmsDupMem(ContextID,   mhc2->RedCurve, mhc2->CurveEntries*sizeof(cmsFloat64Number));
+    mhc2->GreenCurve = (cmsFloat64Number*)_cmsDupMem(ContextID, mhc2->GreenCurve, mhc2->CurveEntries * sizeof(cmsFloat64Number));
+    mhc2->BlueCurve = (cmsFloat64Number*)_cmsDupMem(ContextID,  mhc2->BlueCurve, mhc2->CurveEntries * sizeof(cmsFloat64Number));
 
     if (mhc2->RedCurve == NULL ||
         mhc2->GreenCurve == NULL ||

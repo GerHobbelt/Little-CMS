@@ -33,8 +33,8 @@ typedef struct {
 // Evaluator for RGB 8-bit curves. This are just 1D tables
 static void FastEvaluateRGBCurves8(cmsContext ContextID,
                                    struct _cmstransform_struct *CMMcargo,
-                                   const void* Input,
-                                   void* Output,
+                                   const cmsUInt8Number* Input,
+                                   cmsUInt8Number* Output,
                                    cmsUInt32Number PixelsPerLine,
                                    cmsUInt32Number LineCount,
                                    const cmsStride* Stride)
@@ -64,7 +64,7 @@ static void FastEvaluateRGBCurves8(cmsContext ContextID,
        _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
        _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
 
-       if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
+       if (!(_cmsGetTransformFlags(CMMcargo) & cmsFLAGS_COPY_ALPHA))
            nalpha = 0;
 
        strideIn = strideOut = 0;
@@ -114,8 +114,8 @@ static void FastEvaluateRGBCurves8(cmsContext ContextID,
 // Do nothing but arrange the format. RGB
 static void FastRGBIdentity8(cmsContext ContextID,
                              struct _cmstransform_struct *CMMcargo,
-                             const void* Input,
-                             void* Output,
+                             const cmsUInt8Number* Input,
+                             cmsUInt8Number* Output,
                              cmsUInt32Number PixelsPerLine,
                              cmsUInt32Number LineCount,
                              const cmsStride* Stride)
@@ -143,7 +143,7 @@ static void FastRGBIdentity8(cmsContext ContextID,
        _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
        _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
 
-       if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
+       if (!(_cmsGetTransformFlags(CMMcargo) & cmsFLAGS_COPY_ALPHA))
            nalpha = 0;
 
        strideIn = strideOut = 0;
@@ -194,8 +194,8 @@ static void FastRGBIdentity8(cmsContext ContextID,
 // Evaluate 1 channel only
 static void FastEvaluateGrayCurves8(cmsContext ContextID,
                                     struct _cmstransform_struct *CMMcargo,
-                                    const void* Input,
-                                    void* Output,
+                                    const cmsUInt8Number* Input,
+                                    cmsUInt8Number* Output,
                                     cmsUInt32Number PixelsPerLine,
                                     cmsUInt32Number LineCount,
                                     const cmsStride* Stride)
@@ -221,7 +221,7 @@ static void FastEvaluateGrayCurves8(cmsContext ContextID,
        _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
        _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
 
-       if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
+       if (!(_cmsGetTransformFlags(CMMcargo) & cmsFLAGS_COPY_ALPHA))
            nalpha = 0;
 
        strideIn = strideOut = 0;
@@ -261,8 +261,8 @@ static void FastEvaluateGrayCurves8(cmsContext ContextID,
 
 static void FastGrayIdentity8(cmsContext ContextID,
                              struct _cmstransform_struct *CMMcargo,
-                             const void* Input,
-                             void* Output,
+                             const cmsUInt8Number* Input,
+                             cmsUInt8Number* Output,
                              cmsUInt32Number PixelsPerLine,
                              cmsUInt32Number LineCount,
                              const cmsStride* Stride)
@@ -286,7 +286,7 @@ static void FastGrayIdentity8(cmsContext ContextID,
        _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
        _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
 
-       if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
+       if (!(_cmsGetTransformFlags(CMMcargo) & cmsFLAGS_COPY_ALPHA))
            nalpha = 0;
 
        strideIn = strideOut = 0;

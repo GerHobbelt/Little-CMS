@@ -25,8 +25,8 @@
 // portion can be calculated by a different thread. All locking is already done by lcms 
 // mutexes, memory should not overlap.
 void  _cmsThrScheduler(cmsContext ContextID, struct _cmstransform_struct* CMMcargo,
-						const void* InputBuffer,
-						void* OutputBuffer,
+						const cmsUInt8Number* InputBuffer,
+						cmsUInt8Number* OutputBuffer,
 						cmsUInt32Number PixelsPerLine,
 						cmsUInt32Number LineCount,
 						const cmsStride* Stride)

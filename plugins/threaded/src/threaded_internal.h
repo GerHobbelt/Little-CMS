@@ -46,8 +46,8 @@ typedef struct {
 
 	struct _cmstransform_struct* CMMcargo;
 
-	const void* InputBuffer;
-	void* OutputBuffer;
+	const cmsUInt8Number* InputBuffer;
+	cmsUInt8Number* OutputBuffer;
 
 	cmsUInt32Number  PixelsPerLine;
 	cmsUInt32Number  LineCount;
@@ -70,8 +70,8 @@ cmsInt32Number  _cmsThrIdealThreadCount(void);
 
 // The scheduler
 void  _cmsThrScheduler(cmsContext ContextID, struct _cmstransform_struct* CMMcargo,
-				       const void* InputBuffer,
-				       void* OutputBuffer,
+							 const cmsUInt8Number* InputBuffer,
+							 cmsUInt8Number* OutputBuffer,
 				       cmsUInt32Number PixelsPerLine,
 				       cmsUInt32Number LineCount,
 				       const cmsStride* Stride);

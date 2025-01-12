@@ -601,8 +601,8 @@ typedef void     (* _cmsTransformFn)(cmsContext ContextID, struct _cmstransform_
 
 
 typedef void     (*_cmsTransform2Fn)(cmsContext ContextID, struct _cmstransform_struct *CMMcargo,
-                                     const void* InputBuffer,
-                                     void* OutputBuffer,
+																		 const cmsUInt8Number* InputBuffer,
+																		 cmsUInt8Number* OutputBuffer,
                                      cmsUInt32Number PixelsPerLine,
                                      cmsUInt32Number LineCount,
                                      const cmsStride* Stride);

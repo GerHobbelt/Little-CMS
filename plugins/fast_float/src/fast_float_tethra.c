@@ -57,8 +57,8 @@ int XFormSampler(cmsContext ContextID, CMSREGISTER const cmsFloat32Number In[], 
 static
 void FloatCLUTEval(cmsContext ContextID,
                       struct _cmstransform_struct *CMMcargo,
-                        const void* Input,
-                        void* Output,
+                        const cmsUInt8Number* Input,
+                        cmsUInt8Number* Output,
                         cmsUInt32Number PixelsPerLine,
                         cmsUInt32Number LineCount,
                         const cmsStride* Stride)
@@ -101,7 +101,7 @@ void FloatCLUTEval(cmsContext ContextID,
     _cmsComputeComponentIncrements(InputFormat, Stride->BytesPerPlaneIn, &nchans, &nalpha, SourceStartingOrder, SourceIncrements);
     _cmsComputeComponentIncrements(OutputFormat, Stride->BytesPerPlaneOut, &nchans, &nalpha, DestStartingOrder, DestIncrements);
 
-    if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
+    if (!(_cmsGetTransformFlags(CMMcargo) & cmsFLAGS_COPY_ALPHA))
         nalpha = 0;
 
     strideIn = strideOut = 0;

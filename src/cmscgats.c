@@ -3180,7 +3180,7 @@ cmsBool ParseCube(cmsContext ContextID, cmsIT8* cube, cmsStage** Shaper, cmsStag
 
                 int nodes = lut_size * lut_size * lut_size;
 
-                cmsFloat32Number* lut_table = _cmsMalloc(ContextID, nodes * 3 * sizeof(cmsFloat32Number));
+                cmsFloat32Number* lut_table = (cmsFloat32Number *)_cmsMalloc(ContextID, nodes * 3 * sizeof(cmsFloat32Number));
                 if (lut_table == NULL) return FALSE;
 
                 for (i = 0; i < nodes; i++) {
