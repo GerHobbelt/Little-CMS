@@ -1299,7 +1299,7 @@ cmsBool  Type_Text_Description_Write(cmsContext ContextID, struct _cms_typehandl
     if (!io ->Write(ContextID, io, 67, Filler)) goto Error;
 
     // possibly add pad at the end of tag
-    if(len_aligned - len_tag_requirement > 0)
+    if (len_aligned > len_tag_requirement)
       if (!io ->Write(ContextID, io, len_aligned - len_tag_requirement, Filler)) goto Error;
 
     rc = TRUE;
