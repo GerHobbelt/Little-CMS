@@ -1,3 +1,5 @@
+LIBRARY     LCMS2MT.DLL
+
 EXPORTS
 
 _cms15Fixed16toDouble                    =   _cms15Fixed16toDouble
@@ -195,7 +197,7 @@ cmsMLUfree                               =    cmsMLUfree
 cmsMLUgetASCII                           =    cmsMLUgetASCII
 cmsMLUgetTranslation                     =    cmsMLUgetTranslation
 cmsMLUgetWide                            =    cmsMLUgetWide
-cmsMLUgetUTF8						     =    cmsMLUgetUTF8
+cmsMLUgetUTF8                            =    cmsMLUgetUTF8
 cmsMLUsetASCII                           =    cmsMLUsetASCII
 cmsMLUsetWide                            =    cmsMLUsetWide
 cmsMLUsetUTF8                            =    cmsMLUsetUTF8
@@ -216,21 +218,7 @@ cmsStageSampleCLut16bit                  =    cmsStageSampleCLut16bit
 cmsStageSampleCLutFloat                  =    cmsStageSampleCLutFloat
 cmsStageType                             =    cmsStageType
 cmsStageData                             =    cmsStageData
-cmsGetStageContextID                     =    cmsGetStageContextID
-cmsNamedColorCount                       =    cmsNamedColorCount
-cmsNamedColorIndex                       =    cmsNamedColorIndex
-cmsNamedColorInfo                        =    cmsNamedColorInfo
-cmsOpenIOhandlerFromFile                 =    cmsOpenIOhandlerFromFile
-cmsOpenIOhandlerFromMem                  =    cmsOpenIOhandlerFromMem
-cmsOpenIOhandlerFromNULL                 =    cmsOpenIOhandlerFromNULL
-cmsOpenIOhandlerFromStream               =    cmsOpenIOhandlerFromStream
-cmsOpenProfileFromFile                   =    cmsOpenProfileFromFile
-cmsOpenProfileFromIOhandler              =    cmsOpenProfileFromIOhandler
-cmsOpenProfileFromIOhandler2             =    cmsOpenProfileFromIOhandler2
-cmsOpenProfileFromMem                    =    cmsOpenProfileFromMem
-cmsOpenProfileFromStream                 =    cmsOpenProfileFromStream
-cmsCreateDeviceLinkFromCubeFileTHR		 =    cmsCreateDeviceLinkFromCubeFileTHR
-cmsCreateDeviceLinkFromCubeFile			 =    cmsCreateDeviceLinkFromCubeFile
+cmsCreateDeviceLinkFromCubeFile		 =    cmsCreateDeviceLinkFromCubeFile
 cmsPlugin                                =    cmsPlugin
 _cmsRead15Fixed16Number                  =    _cmsRead15Fixed16Number
 _cmsReadAlignment                        =    _cmsReadAlignment
