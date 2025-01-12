@@ -289,7 +289,7 @@ void FloatXFORM(cmsContext ContextID, _cmsTRANSFORM* p,
                 // Is current color out of gamut?
                 if (OutOfGamut > 0.0) {
 
-                    _cmsAlarmCodesChunkType* ContextAlarmCodes = (_cmsAlarmCodesChunkType*)_cmsContextGetClientChunk(p->ContextID, AlarmCodesContext);
+                    _cmsAlarmCodesChunkType* ContextAlarmCodes = (_cmsAlarmCodesChunkType*)_cmsContextGetClientChunk(ContextID, AlarmCodesContext);
 
                     // Certainly, out of gamut
                     for (c = 0; c < cmsMAXCHANNELS; c++)

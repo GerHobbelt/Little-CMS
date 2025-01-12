@@ -350,8 +350,8 @@ cmsPipeline* _cmsCreateGamutCheckPipeline(cmsContext ContextID,
     nChannels   = cmsChannelsOfColorSpace(ContextID, ColorSpace);
     nGridpoints = _cmsReasonableGridpointsByColorspace(ContextID, ColorSpace, cmsFLAGS_HIGHRESPRECALC);
     
-    InputColorSpace = cmsGetColorSpace(ProfileList[0]);
-    nInputChannels  = cmsChannelsOfColorSpace(InputColorSpace);
+    InputColorSpace = cmsGetColorSpace(ContextID, ProfileList[0]);
+    nInputChannels  = cmsChannelsOfColorSpace(ContextID, InputColorSpace);
     dwFormat        = (CHANNELS_SH(nInputChannels)|BYTES_SH(2));
 
     // 16 bits to Lab double
