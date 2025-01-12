@@ -147,7 +147,7 @@ void SlicePerLines(cmsContext ContextID, const _cmsWorkSlice* master, cmsInt32Nu
     }
 
     // Add left lines because rounding
-    if (slices > 0) slices[nslices - 1].LineCount += TotalLines;
+    if (nslices > 0) slices[nslices - 1].LineCount += TotalLines;
 }
 
 // Per pixels on big blocks of one line
@@ -178,7 +178,7 @@ void SlicePerPixels(cmsContext ContextID, const _cmsWorkSlice* master, cmsInt32N
     }
 
     // Add left pixels because rounding
-    if (slices > 0) slices[nslices - 1].PixelsPerLine += TotalPixels;
+    if (nslices > 0) slices[nslices - 1].PixelsPerLine += TotalPixels;
 }
 
 
