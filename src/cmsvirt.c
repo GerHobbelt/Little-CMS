@@ -1061,9 +1061,9 @@ cmsHPROFILE CreateNamedColorDevicelink(cmsContext ContextID, cmsHTRANSFORM xform
     v ->ToOutput     = ToOutput;
     _cmsFindFormatter(v, InputFormat, OutputFormat, v->core->dwOriginalFlags);
 
-    // Apply the transfor to colorants.
+    // Apply the transform to colorants.
     for (i=0; i < nColors; i++) {
-        cmsDoTransformEx(ContextID, xform, &i, nc2 ->List[i].DeviceColorant, 1);
+        cmsDoTransform(ContextID, xform, &i, nc2 ->List[i].DeviceColorant, 1);
     }
 
     if (!cmsWriteTag(ContextID, hICC, cmsSigNamedColor2Tag, (void*) nc2)) goto Error;

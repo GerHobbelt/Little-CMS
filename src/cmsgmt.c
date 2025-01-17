@@ -118,7 +118,7 @@ cmsToneCurve* ComputeKToLstar(cmsContext            ContextID,
         cmyk[2] = 0;
         cmyk[3] = (cmsFloat32Number) ((i * 100.0) / (nPoints-1));
 
-        cmsDoTransformEx(ContextID, xform, cmyk, &Lab, 1);
+        cmsDoTransform(ContextID, xform, cmyk, &Lab, 1);
         SampledPoints[i]= (cmsFloat32Number) (1.0 - Lab.L / 100.0); // Negate K for easier operation
     }
 
@@ -223,20 +223,20 @@ int GamutSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], C
     ErrorRatio = 1.0;
 
     // Convert input to Lab
-    cmsDoTransformEx(ContextID, t -> hInput, In, &LabIn1, 1);
+    cmsDoTransform(ContextID, t -> hInput, In, &LabIn1, 1);
 
     // converts from PCS to colorant. This always
     // does return in-gamut values,
-    cmsDoTransformEx(ContextID, t -> hForward, &LabIn1, Proof, 1);
+    cmsDoTransform(ContextID, t -> hForward, &LabIn1, Proof, 1);
 
     // Now, do the inverse, from colorant to PCS.
-    cmsDoTransformEx(ContextID, t -> hReverse, Proof, &LabOut1, 1);
+    cmsDoTransform(ContextID, t -> hReverse, Proof, &LabOut1, 1);
 
     memmove(&LabIn2, &LabOut1, sizeof(cmsCIELab));
 
     // Try again, but this time taking Check as input
-    cmsDoTransformEx(ContextID, t -> hForward, &LabOut1, Proof2, 1);
-    cmsDoTransformEx(ContextID, t -> hReverse, Proof2, &LabOut2, 1);
+    cmsDoTransform(ContextID, t -> hForward, &LabOut1, Proof2, 1);
+    cmsDoTransform(ContextID, t -> hReverse, Proof2, &LabOut2, 1);
 
     // Take difference of direct value
     dE1 = cmsDeltaE(ContextID, &LabIn1, &LabOut1);
@@ -436,7 +436,7 @@ int EstimateTAC(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], CM
 
 
     // Evaluate the xform
-    cmsDoTransformEx(ContextID, bp->hRoundTrip, In, RoundTrip, 1);
+    cmsDoTransform(ContextID, bp->hRoundTrip, In, RoundTrip, 1);
 
     // All all amounts of ink
     for (Sum=0, i=0; i < bp ->nOutputChans; i++)
@@ -637,7 +637,7 @@ cmsFloat64Number CMSEXPORT cmsDetectRGBProfileGamma(cmsContext ContextID, cmsHPR
         rgb[i][0] = rgb[i][1] = rgb[i][2] = FROM_8_TO_16(i);
     }
 
-    cmsDoTransformEx(ContextID, xform, rgb, XYZ, 256);
+    cmsDoTransform(ContextID, xform, rgb, XYZ, 256);
 
     cmsDeleteTransform(ContextID, xform);
     cmsCloseProfile(ContextID, hXYZ);

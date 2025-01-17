@@ -8842,41 +8842,41 @@ int CheckSaveLinearizationDevicelink(cmsContext ContextID)
 }
 
 static
-int CheckGamutCheckFloats(void)
+int CheckGamutCheckFloats(cmsContext ContextID)
 {
 
     cmsUInt16Number alarms[16] = { 0x0f0f,3,4,5,6,7,8,9,10 };
     
 
-    cmsHPROFILE hLab = cmsCreateLab4Profile(NULL);
-    cmsHPROFILE hNull = cmsCreateNULLProfile();
-    cmsHPROFILE hsRGB = cmsCreate_sRGBProfile();
+    cmsHPROFILE hLab = cmsCreateLab4Profile(ContextID, NULL);
+    cmsHPROFILE hNull = cmsCreateNULLProfile(ContextID);
+    cmsHPROFILE hsRGB = cmsCreate_sRGBProfile(ContextID);
 
-    cmsHTRANSFORM xfrm = cmsCreateProofingTransform(hLab,
+    cmsHTRANSFORM xfrm = cmsCreateProofingTransform(ContextID, hLab,
         TYPE_Lab_DBL, hNull, TYPE_GRAY_8, hsRGB,
         INTENT_RELATIVE_COLORIMETRIC, INTENT_ABSOLUTE_COLORIMETRIC,
         cmsFLAGS_GAMUTCHECK);
 
-    cmsCloseProfile(hLab);
-    cmsCloseProfile(hNull);
-    cmsCloseProfile(hsRGB);
+    cmsCloseProfile(ContextID, hLab);
+    cmsCloseProfile(ContextID, hNull);
+    cmsCloseProfile(ContextID, hsRGB);
 
     cmsCIELab Lab = { 50, -125, 125 };
     cmsCIELab Lab2 = { 50, -10, 12 };
 
     cmsUInt8Number gamut;
 
-    cmsSetAlarmCodes(alarms);
+    cmsSetAlarmCodes(ContextID, alarms);
 
-    cmsDoTransform(xfrm, &Lab, &gamut, 1);  // Gives the alarm != 0
+    cmsDoTransform(ContextID, xfrm, &Lab, &gamut, 1);  // Gives the alarm != 0
     if (gamut != 0x0f)
         Fail("Gamut check not good");
 
-    cmsDoTransform(xfrm, &Lab2, &gamut, 1);
+    cmsDoTransform(ContextID, xfrm, &Lab2, &gamut, 1);
     if (gamut != 0)
         Fail("Gamut check zero");
 
-    cmsDeleteTransform(xfrm);
+    cmsDeleteTransform(ContextID, xfrm);
     return 1;
 }
 

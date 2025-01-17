@@ -120,7 +120,7 @@ cmsBool  BlackPointAsDarkerColorant(cmsContext ContextID,
     }
 
     // Convert black to Lab
-    cmsDoTransformEx(ContextID, xform, Black, &Lab, 1);
+    cmsDoTransform(ContextID, xform, Black, &Lab, 1);
 
     // Force it to be neutral, check for inconsistencies
     Lab.a = Lab.b = 0;
@@ -164,7 +164,7 @@ cmsBool BlackPointUsingPerceptualBlack(cmsContext ContextID, cmsCIEXYZ* BlackPoi
     }
 
     LabIn.L = LabIn.a = LabIn.b = 0;
-    cmsDoTransformEx(ContextID, hRoundTrip, &LabIn, &LabOut, 1);
+    cmsDoTransform(ContextID, hRoundTrip, &LabIn, &LabOut, 1);
 
     // Clip Lab to reasonable limits
     if (LabOut.L > 50) LabOut.L = 50;
@@ -448,7 +448,7 @@ cmsBool CMSEXPORT cmsDetectDestinationBlackPoint(cmsContext ContextID, cmsCIEXYZ
         Lab.a = cmsmin(50, cmsmax(-50, InitialLab.a));
         Lab.b = cmsmin(50, cmsmax(-50, InitialLab.b));
 
-        cmsDoTransformEx(ContextID, hRoundTrip, &Lab, &destLab, 1);
+        cmsDoTransform(ContextID, hRoundTrip, &Lab, &destLab, 1);
 
         inRamp[l]  = Lab.L;
         outRamp[l] = destLab.L;

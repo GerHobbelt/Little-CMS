@@ -911,11 +911,11 @@ int BlackPreservingSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Numb
 
     // K differ, measure and keep Lab measurement for further usage
     // this is done in relative colorimetric intent
-    cmsDoTransformEx(ContextID, bp->hProofOutput, Out, &ColorimetricLab, 1);
+    cmsDoTransform(ContextID, bp->hProofOutput, Out, &ColorimetricLab, 1);
 
     // Is not black only and the transform doesn't keep black.
     // Obtain the Lab of output CMYK. After that we have Lab + K
-    cmsDoTransformEx(ContextID, bp ->cmyk2Lab, Outf, LabK, 1);
+    cmsDoTransform(ContextID, bp ->cmyk2Lab, Outf, LabK, 1);
 
     // Obtain the corresponding CMY using reverse interpolation
     // (K is fixed in LabK[3])
@@ -948,7 +948,7 @@ int BlackPreservingSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Numb
     Out[3] = _cmsQuickSaturateWord(Outf[3] * 65535.0);
 
     // Estimate the error (this goes 16 bits to Lab DBL)
-    cmsDoTransformEx(ContextID, bp->hProofOutput, Out, &BlackPreservingLab, 1);
+    cmsDoTransform(ContextID, bp->hProofOutput, Out, &BlackPreservingLab, 1);
     Error = cmsDeltaE(ContextID, &ColorimetricLab, &BlackPreservingLab);
     if (Error > bp -> MaxError)
         bp->MaxError = Error;

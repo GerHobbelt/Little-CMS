@@ -1785,14 +1785,11 @@ CMSAPI cmsHTRANSFORM    CMSEXPORT cmsCreateExtendedTransform(cmsContext ContextI
 
 CMSAPI void             CMSEXPORT cmsDeleteTransform(cmsContext ContextID, cmsHTRANSFORM hTransform);
 
-CMSAPI void             CMSEXPORT cmsDoTransform(cmsContext ContextID,
+CMSAPI void             CMSEXPORT cmsDoTransformEx(cmsContext ContextID,
                                                  cmsHTRANSFORM Transform,
 																								 const cmsUInt8Number* InputBuffer,
 																								 cmsUInt8Number* OutputBuffer,
                                                  cmsUInt32Number Size);
-
-#define cmsDoTransformEx(ContextID, Transform, InputBuffer, OutputBuffer, Size)   \
-	cmsDoTransform(ContextID, Transform, (const cmsUInt8Number *)(InputBuffer), (cmsUInt8Number *)(OutputBuffer), Size)
 
 CMSAPI void             CMSEXPORT cmsDoTransformStride(cmsContext ContextID,      // Deprecated
                                                  cmsHTRANSFORM Transform,
@@ -1801,7 +1798,7 @@ CMSAPI void             CMSEXPORT cmsDoTransformStride(cmsContext ContextID,    
                                                  cmsUInt32Number Size,
                                                  cmsUInt32Number Stride);
 
-CMSAPI void             CMSEXPORT cmsDoTransformLineStride(cmsContext ContextID,
+CMSAPI void             CMSEXPORT cmsDoTransformLineStrideEx(cmsContext ContextID,
                                                  cmsHTRANSFORM  Transform,
 																								 const cmsUInt8Number* InputBuffer,
 																								 cmsUInt8Number* OutputBuffer,
@@ -1953,6 +1950,34 @@ CMSAPI cmsBool          CMSEXPORT cmsDesaturateLab(cmsContext ContextID, cmsCIEL
 #   ifdef __cplusplus
     }
 #   endif
+#endif
+
+#ifdef __cplusplus
+
+template <class T1, class T2>
+inline void
+cmsDoTransform(cmsContext ContextID, cmsHTRANSFORM Transform, const T1* InputBuffer, T2* OutputBuffer, cmsUInt32Number Size) {
+	cmsDoTransformEx(ContextID, Transform, (const cmsUInt8Number *)(InputBuffer), (cmsUInt8Number *)(OutputBuffer), Size);
+}
+
+template <class T1, class T2>
+inline void
+cmsDoTransformLineStride(cmsContext ContextID, cmsHTRANSFORM  Transform, const T1* InputBuffer, T2* OutputBuffer,
+												 cmsUInt32Number PixelsPerLine, cmsUInt32Number LineCount, cmsUInt32Number BytesPerLineIn, cmsUInt32Number BytesPerLineOut,
+												 cmsUInt32Number BytesPerPlaneIn, cmsUInt32Number BytesPerPlaneOut) {
+	cmsDoTransformLineStrideEx(ContextID, Transform, (const cmsUInt8Number *)(InputBuffer), (cmsUInt8Number *)(OutputBuffer),
+														 PixelsPerLine, LineCount, BytesPerLineIn, BytesPerLineOut, BytesPerPlaneIn, BytesPerPlaneOut);
+}
+
+#else
+
+#define cmsDoTransform(ContextID, Transform, InputBuffer, OutputBuffer, Size)   \
+	cmsDoTransformEx(ContextID, Transform, (const cmsUInt8Number *)(InputBuffer), (cmsUInt8Number *)(OutputBuffer), Size)
+
+#define cmsDoTransformLineStride(ContextID, Transform, InputBuffer, OutputBuffer, PixelsPerLine, LineCount, BytesPerLineIn, BytesPerLineOut, BytesPerPlaneIn, BytesPerPlaneOut)   \
+  cmsDoTransformLineStrideEx(ContextID, Transform, (const cmsUInt8Number *)(InputBuffer), (cmsUInt8Number *)(OutputBuffer),   \
+														PixelsPerLine, LineCount, BytesPerLineIn, BytesPerLineOut, BytesPerPlaneIn, BytesPerPlaneOut)
+
 #endif
 
 #define _lcms2mt_H
