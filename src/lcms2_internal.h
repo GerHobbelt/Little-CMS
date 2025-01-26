@@ -158,6 +158,12 @@
 #define FIXED_REST_TO_INT(x)    ((x)&0xFFFFU)
 #define ROUND_FIXED_TO_INT(x)   (((x)+0x8000)>>16)
 
+#ifndef CMS_USE_CPP_API
+#ifdef __cplusplus
+extern "C" {
+#endif
+#endif
+
 cmsINLINE cmsS15Fixed16Number _cmsToFixedDomain(int a)                   { return a + ((a + 0x7fff) / 0xffff); }
 cmsINLINE int                 _cmsFromFixedDomain(cmsS15Fixed16Number a) { return a - ((a + 0x7fff) >> 16); }
 
@@ -203,6 +209,12 @@ cmsINLINE cmsUInt16Number _cmsQuickSaturateWord(cmsFloat64Number d)
 
     return _cmsQuickFloorWord(d);
 }
+
+#ifndef CMS_USE_CPP_API
+#ifdef __cplusplus
+}
+#endif
+#endif
 
 // Test bed entry points---------------------------------------------------------------
 #define CMSCHECKPOINT CMSAPI
@@ -299,6 +311,12 @@ typedef CRITICAL_SECTION _cmsMutex;
 #      define CMS_MUTEX_INITIALIZER {(PRTL_CRITICAL_SECTION_DEBUG)NULL,-1,0,0,0,0}
 #endif
 
+#ifndef CMS_USE_CPP_API
+#ifdef __cplusplus
+extern "C" {
+#endif
+#endif
+
 cmsINLINE int _cmsLockPrimitive(_cmsMutex *m)
 {
     EnterCriticalSection(m);
@@ -335,10 +353,22 @@ cmsINLINE int _cmsLeaveCriticalSectionPrimitive(_cmsMutex *m)
     return 0;
 }
 
+#ifndef CMS_USE_CPP_API
+#ifdef __cplusplus
+}
+#endif
+#endif
+
 #else
 
 // Rest of the wide world
 #include <pthread.h>
+
+#ifndef CMS_USE_CPP_API
+#ifdef __cplusplus
+extern "C" {
+#endif
+#endif
 
 #define CMS_MUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 typedef pthread_mutex_t _cmsMutex;
@@ -374,8 +404,20 @@ cmsINLINE int _cmsLeaveCriticalSectionPrimitive(_cmsMutex *m)
     return pthread_mutex_unlock(m);
 }
 
+#ifndef CMS_USE_CPP_API
+#ifdef __cplusplus
+}
+#endif
+#endif
+
 #endif
 #else
+
+#ifndef CMS_USE_CPP_API
+#ifdef __cplusplus
+extern "C" {
+#endif
+#endif
 
 #define CMS_MUTEX_INITIALIZER 0
 typedef int _cmsMutex;
@@ -416,9 +458,22 @@ cmsINLINE int _cmsLeaveCriticalSectionPrimitive(_cmsMutex *m)
     cmsUNUSED_PARAMETER(m);
     return 0;
 }
+
+#ifndef CMS_USE_CPP_API
+#ifdef __cplusplus
+}
+#endif
+#endif
+
 #endif
 
 // Plug-In registration ---------------------------------------------------------------
+
+#ifndef CMS_USE_CPP_API
+#ifdef __cplusplus
+extern "C" {
+#endif
+#endif
 
 // Specialized function for plug-in memory management. No pairing free() since whole pool is freed at once.
 void* _cmsPluginMalloc(cmsContext ContextID, cmsUInt32Number size);
@@ -1174,6 +1229,12 @@ cmsUInt32Number _cmsAdjustReferenceCount(cmsUInt32Number *rc, int delta);
 
 // thread-safe gettime
 cmsBool _cmsGetTime(struct tm* ptr_time);
+
+#ifndef CMS_USE_CPP_API
+#ifdef __cplusplus
+}
+#endif
+#endif
 
 #define _lcms_internal_H
 #endif

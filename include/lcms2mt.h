@@ -1957,7 +1957,7 @@ CMSAPI cmsBool          CMSEXPORT cmsDesaturateLab(cmsContext ContextID, cmsCIEL
 template <class T1, class T2>
 inline void
 cmsDoTransform(cmsContext ContextID, cmsHTRANSFORM Transform, const T1* InputBuffer, T2* OutputBuffer, cmsUInt32Number Size) {
-	cmsDoTransformEx(ContextID, Transform, (const cmsUInt8Number *)(InputBuffer), (cmsUInt8Number *)(OutputBuffer), Size);
+	cmsDoTransformEx(ContextID, Transform, reinterpret_cast<const cmsUInt8Number *>(InputBuffer), reinterpret_cast<cmsUInt8Number *>(OutputBuffer), Size);
 }
 
 template <class T1, class T2>
@@ -1965,7 +1965,7 @@ inline void
 cmsDoTransformLineStride(cmsContext ContextID, cmsHTRANSFORM  Transform, const T1* InputBuffer, T2* OutputBuffer,
 												 cmsUInt32Number PixelsPerLine, cmsUInt32Number LineCount, cmsUInt32Number BytesPerLineIn, cmsUInt32Number BytesPerLineOut,
 												 cmsUInt32Number BytesPerPlaneIn, cmsUInt32Number BytesPerPlaneOut) {
-	cmsDoTransformLineStrideEx(ContextID, Transform, (const cmsUInt8Number *)(InputBuffer), (cmsUInt8Number *)(OutputBuffer),
+	cmsDoTransformLineStrideEx(ContextID, Transform, reinterpret_cast<const cmsUInt8Number *>(InputBuffer), reinterpret_cast<cmsUInt8Number *>(OutputBuffer),
 														 PixelsPerLine, LineCount, BytesPerLineIn, BytesPerLineOut, BytesPerPlaneIn, BytesPerPlaneOut);
 }
 

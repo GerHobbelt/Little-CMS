@@ -51,7 +51,7 @@ CMSAPI void* CMSEXPORT cmsThreadedExtensions(cmsInt32Number max_threads, cmsUInt
 
 #ifndef CMS_USE_CPP_API
 #   ifdef __cplusplus
-    }
+}
 #   endif
 #endif
 

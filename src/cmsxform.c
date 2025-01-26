@@ -184,7 +184,7 @@ cmsUInt32Number PixelSize(cmsUInt32Number Format)
 
 
 // Apply transform.
-void CMSEXPORT cmsDoTransform(cmsContext ContextID, cmsHTRANSFORM  Transform,
+void CMSEXPORT cmsDoTransformEx(cmsContext ContextID, cmsHTRANSFORM  Transform,
                               const cmsUInt8Number* InputBuffer,
                               cmsUInt8Number* OutputBuffer,
                               cmsUInt32Number Size)
@@ -221,7 +221,7 @@ void CMSEXPORT cmsDoTransformStride(cmsContext ContextID, cmsHTRANSFORM  Transfo
 }
 
 // This is the "fast" function for plugins
-void CMSEXPORT cmsDoTransformLineStride(cmsContext ContextID, cmsHTRANSFORM  Transform,
+void CMSEXPORT cmsDoTransformLineStrideEx(cmsContext ContextID, cmsHTRANSFORM  Transform,
                               const cmsUInt8Number* InputBuffer,
                               cmsUInt8Number* OutputBuffer,
                               cmsUInt32Number PixelsPerLine,
