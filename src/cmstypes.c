@@ -1137,6 +1137,8 @@ void *Type_Text_Description_Read(cmsContext ContextID, struct _cms_typehandler_s
 
     // Read len of ASCII
     if (!_cmsReadUInt32Number(ContextID, io, &AsciiCount)) return NULL;
+    if (AsciiCount > 0x7ffff) return NULL;
+
     SizeOfTag -= sizeof(cmsUInt32Number);
 
     // Check for size
@@ -1167,8 +1169,9 @@ void *Type_Text_Description_Read(cmsContext ContextID, struct _cms_typehandler_s
     if (!_cmsReadUInt32Number(ContextID, io, &UnicodeCode)) goto Done;
     if (!_cmsReadUInt32Number(ContextID, io, &UnicodeCount)) goto Done;
     SizeOfTag -= 2* sizeof(cmsUInt32Number);
-
-    if (UnicodeCount == 0 || SizeOfTag < UnicodeCount*sizeof(cmsUInt16Number)) goto Done;
+    
+    if (UnicodeCount == 0 || UnicodeCount > 0x7ffff || 
+        SizeOfTag < UnicodeCount*sizeof(cmsUInt16Number)) goto Done;
 
     UnicodeString = (wchar_t*)_cmsMallocZero(ContextID, (UnicodeCount + 1) * sizeof(wchar_t));
     if (UnicodeString == NULL) goto Done;
@@ -5392,7 +5395,7 @@ cmsBool ReadOneWChar(cmsContext ContextID, cmsIOHANDLER* io,  _cmsDICelem* e, cm
       if (!io -> Seek(ContextID, io, e -> Offsets[i])) return FALSE;
 
       nChars = e ->Sizes[i] / sizeof(cmsUInt16Number);
-
+      if (nChars > 0x7ffff) return FALSE;
 
       *wcstr = (wchar_t*) _cmsMallocZero(ContextID, (nChars + 1) * sizeof(wchar_t));
       if (*wcstr == NULL) return FALSE;
