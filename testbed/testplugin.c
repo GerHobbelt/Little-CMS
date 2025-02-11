@@ -1514,7 +1514,7 @@ cmsInt32Number CheckMethodPackDoublesFromFloat(cmsContext ContextID)
     if (l_pFakeProfileLAB == NULL)
         return 0;
 
-    OutputCMYKProfile = cmsOpenProfileFromFile(ctx, "TestCLT.icc", "r");
+    OutputCMYKProfile = cmsOpenProfileFromFile(ctx, "test2.icc", "r");
 
     if (OutputCMYKProfile == NULL)
         return 0;
@@ -1548,9 +1548,12 @@ cmsInt32Number CheckMethodPackDoublesFromFloat(cmsContext ContextID)
     cmsDoTransform(ctx, xform, &LabInBlack, l_D_OutputColorArrayBlack, 1);
     cmsDoTransform(ctx, xform, &LabInBlue, l_D_OutputColorArrayBlue, 1);
 
-
     cmsDeleteTransform(ctx, xform);
     cmsDeleteContext(ctx);
+
+    if (l_D_OutputColorArrayBlack[0] < 85 ||
+        l_D_OutputColorArrayBlue[0] < 90)
+        Fail("Ink amount is not right");
 
     return 1;
 }

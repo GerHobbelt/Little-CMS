@@ -9850,7 +9850,7 @@ int main(int argc, const char** argv)
         Check(ctx, "Rendering intent plugin", CheckIntentPlugin);
         Check(ctx, "Full transform plugin",   CheckTransformPlugin);
         Check(ctx, "Mutex plugin",            CheckMutexPlugin);
-
+        Check(ctx, "Double from float",       CheckMethodPackDoublesFromFloat);
     }
 
 
