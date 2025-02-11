@@ -1975,10 +1975,10 @@ cmsDoTransformLineStride(cmsContext ContextID, cmsHTRANSFORM  Transform, const T
 #else
 
 #define cmsDoTransform(ContextID, Transform, InputBuffer, OutputBuffer, Size)   \
-	cmsDoTransformEx(ContextID, Transform, (const cmsUInt8Number *)(InputBuffer), (cmsUInt8Number *)(OutputBuffer), Size)
+	cmsDoTransformEx(ContextID, Transform, (const cmsUInt8Number *)(const void *)(InputBuffer), (cmsUInt8Number *)(void *)(OutputBuffer), Size)
 
 #define cmsDoTransformLineStride(ContextID, Transform, InputBuffer, OutputBuffer, PixelsPerLine, LineCount, BytesPerLineIn, BytesPerLineOut, BytesPerPlaneIn, BytesPerPlaneOut)   \
-  cmsDoTransformLineStrideEx(ContextID, Transform, (const cmsUInt8Number *)(InputBuffer), (cmsUInt8Number *)(OutputBuffer),   \
+  cmsDoTransformLineStrideEx(ContextID, Transform, (const cmsUInt8Number *)(const void *)(InputBuffer), (cmsUInt8Number *)(void *)(OutputBuffer),   \
 														PixelsPerLine, LineCount, BytesPerLineIn, BytesPerLineOut, BytesPerPlaneIn, BytesPerPlaneOut)
 
 #endif
