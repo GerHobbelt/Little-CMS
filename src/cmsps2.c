@@ -1349,6 +1349,13 @@ cmsBool WriteOutputLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfi
 
     first = cmsPipelineGetPtrToFirstStage(ContextID, DeviceLink);
     if (first != NULL) {
+        if (first->Type != cmsSigCLutElemType) {
+            cmsPipelineFree(ContextID, DeviceLink);
+            cmsDeleteTransform(ContextID, xform);
+            cmsSignalError(ContextID, cmsERROR_CORRUPTION_DETECTED, "Cannot create CLUT, revise your flags!");
+            return FALSE;
+        }
+
         WriteCLUT(ContextID, m, first, "<", ">\n", "", "", lFixWhite, ColorSpace);
     }
 
