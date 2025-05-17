@@ -73,7 +73,7 @@ cmsBool  BlackPointAsDarkerColorant(cmsContext ContextID,
     cmsUInt32Number dwFormat;
     cmsHPROFILE hLab;
     cmsCIELab  Lab;
-    cmsCIEXYZ  BlackXYZ;
+    cmsCIEXYZ  BlackXYZ;    
 
     // If the profile does not support input direction, assume Black point 0
     if (!cmsIsIntentSupported(ContextID, hInput, Intent, LCMS_USED_AS_INPUT)) {
@@ -122,9 +122,12 @@ cmsBool  BlackPointAsDarkerColorant(cmsContext ContextID,
     // Convert black to Lab
     cmsDoTransform(ContextID, xform, Black, &Lab, 1);
 
-    // Force it to be neutral, check for inconsistencies
-    Lab.a = Lab.b = 0;
-    if (Lab.L > 50 || Lab.L < 0) Lab.L = 0;
+    if (Lab.L > 95)
+        Lab.L = 0;  // for synthetical negative profiles
+    else if (Lab.L < 0)
+        Lab.L = 0;
+    else if (Lab.L > 50)
+        Lab.L = 50;
 
     // Free the resources
     cmsDeleteTransform(ContextID, xform);
