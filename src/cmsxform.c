@@ -2491,6 +2491,8 @@ cmsBool  IsProperColorSpace(cmsContext ContextID, cmsColorSpaceSignature Check, 
     int Space1 = (int) T_COLORSPACE(dwFormat);
     int Space2 = _cmsLCMScolorSpace(ContextID, Check);
 
+    if (dwFormat == 0) return TRUE; // Bypass used by linkicc
+
     if (Space1 == PT_ANY) return (T_CHANNELS(dwFormat) == cmsChannelsOf(ContextID, Check));
     if (Space1 == Space2) return TRUE;
 
