@@ -313,7 +313,7 @@ cmsBool OptimizeCLUTRGBTransform(cmsContext ContextID,
                 cmsStage* XYZ_fix = cmsStageAllocMatrix(ContextID, 3, 3, mat, NULL);
                 if (XYZ_fix == NULL) goto Error;
 
-                cmsPipelineInsertStage(OriginalLut, cmsAT_END, XYZ_fix);
+                cmsPipelineInsertStage(ContextID, OriginalLut, cmsAT_END, XYZ_fix);
 
             }
             else {
