@@ -751,7 +751,7 @@ void* _cmsContextGetClientChunk(cmsContext ContextID, _cmsMemoryClient mc)
            cmsSignalError(ContextID, cmsERROR_INTERNAL, "Bad context client -- possible corruption");
 
            // This is catastrophic. Should never reach here
-           _cmsAssert(0);
+           _cmsAssert(!!0);
 
            // Reverts to global context
            return globalContext.chunks[UserPtr];
