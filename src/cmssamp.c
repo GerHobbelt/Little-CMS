@@ -122,12 +122,14 @@ cmsBool  BlackPointAsDarkerColorant(cmsContext ContextID,
     // Convert black to Lab
     cmsDoTransform(ContextID, xform, Black, &Lab, 1);
 
+    // Force it to be neutral, check for inconsistencies
     if (Lab.L > 95)
-        Lab.L = 0;  // for synthetical negative profiles
-    else if (Lab.L < 0)
-        Lab.L = 0;
+        Lab.L = 0; // Synthetic negative profiles
     else if (Lab.L > 50)
         Lab.L = 50;
+    else if (Lab.L < 0)
+        Lab.L = 0;
+    Lab.a = Lab.b = 0;
 
     // Free the resources
     cmsDeleteTransform(ContextID, xform);
