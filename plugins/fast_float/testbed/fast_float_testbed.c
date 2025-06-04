@@ -781,11 +781,11 @@ void CheckToFloatXYZ(void)
     cmsContext Plugin = cmsCreateContext(cmsFastFloatExtensions(), NULL);
     cmsContext Raw = cmsCreateContext(NULL, NULL);
 
-    cmsHPROFILE hsRGB = cmsCreate_sRGBProfile();
-    cmsHPROFILE hXYZ = cmsCreateXYZProfile();
+    cmsHPROFILE hsRGB = cmsCreate_sRGBProfile(Raw);
+    cmsHPROFILE hXYZ = cmsCreateXYZProfile(Raw);
 
-    cmsHTRANSFORM xform_plugin = cmsCreateTransformTHR(Plugin, hsRGB, TYPE_RGB_8, hXYZ, TYPE_XYZ_DBL, INTENT_PERCEPTUAL, 0);
-    cmsHTRANSFORM xform = cmsCreateTransformTHR(Raw, hsRGB, TYPE_RGB_8, hXYZ, TYPE_XYZ_DBL, INTENT_PERCEPTUAL, 0);
+    cmsHTRANSFORM xform_plugin = cmsCreateTransform(Plugin, hsRGB, TYPE_RGB_8, hXYZ, TYPE_XYZ_DBL, INTENT_PERCEPTUAL, 0);
+    cmsHTRANSFORM xform = cmsCreateTransform(Raw, hsRGB, TYPE_RGB_8, hXYZ, TYPE_XYZ_DBL, INTENT_PERCEPTUAL, 0);
 
     int r, g, b;
     cmsCIEXYZ XYZ1, XYZ2;
@@ -799,13 +799,13 @@ void CheckToFloatXYZ(void)
             {
                 rgb[0] = (cmsUInt8Number)r; rgb[1] = (cmsUInt8Number)g; rgb[2] = (cmsUInt8Number)b;
 
-                cmsDoTransform(xform_plugin, rgb, &XYZ1, 1);
-                cmsDoTransform(xform, rgb, &XYZ2, 1);
+                cmsDoTransform(Raw, xform_plugin, rgb, &XYZ1, 1);
+                cmsDoTransform(Raw, xform, rgb, &XYZ2, 1);
 
-                cmsXYZ2Lab(NULL, &Lab1, &XYZ1);
-                cmsXYZ2Lab(NULL, &Lab2, &XYZ2);
+                cmsXYZ2Lab(Raw, NULL, &Lab1, &XYZ1);
+                cmsXYZ2Lab(Raw, NULL, &Lab2, &XYZ2);
 
-                err = cmsDeltaE(&Lab1, &Lab2);
+                err = cmsDeltaE(Raw, &Lab1, &Lab2);
                 if (err > 0.1)
                 {
                     trace("Error on lab encoded (%f, %f, %f) <> (% f, % f, % f)\n",
@@ -814,8 +814,8 @@ void CheckToFloatXYZ(void)
             }
 
 
-    cmsDeleteTransform(xform); cmsDeleteTransform(xform_plugin);
-    cmsCloseProfile(hsRGB); cmsCloseProfile(hXYZ);
+    cmsDeleteTransform(Raw, xform); cmsDeleteTransform(Plugin, xform_plugin);
+    cmsCloseProfile(Raw, hsRGB); cmsCloseProfile(Raw, hXYZ);
     cmsDeleteContext(Raw);
     cmsDeleteContext(Plugin);
 }
@@ -826,11 +826,11 @@ void CheckFloatToFloatXYZ(void)
     cmsContext Plugin = cmsCreateContext(cmsFastFloatExtensions(), NULL);
     cmsContext Raw = cmsCreateContext(NULL, NULL);
 
-    cmsHPROFILE hsRGB = cmsCreate_sRGBProfile();
-    cmsHPROFILE hXYZ  = cmsCreateXYZProfile();
+    cmsHPROFILE hsRGB = cmsCreate_sRGBProfile(Raw);
+    cmsHPROFILE hXYZ  = cmsCreateXYZProfile(Raw);
 
-    cmsHTRANSFORM xform_plugin = cmsCreateTransformTHR(Plugin, hsRGB, TYPE_RGB_FLT, hXYZ, TYPE_XYZ_FLT, INTENT_PERCEPTUAL, 0);
-    cmsHTRANSFORM xform = cmsCreateTransformTHR(Raw, hsRGB, TYPE_RGB_FLT, hXYZ, TYPE_XYZ_FLT, INTENT_PERCEPTUAL, 0);
+    cmsHTRANSFORM xform_plugin = cmsCreateTransform(Plugin, hsRGB, TYPE_RGB_FLT, hXYZ, TYPE_XYZ_FLT, INTENT_PERCEPTUAL, 0);
+    cmsHTRANSFORM xform = cmsCreateTransform(Raw, hsRGB, TYPE_RGB_FLT, hXYZ, TYPE_XYZ_FLT, INTENT_PERCEPTUAL, 0);
 
     int r, g, b;
     cmsCIEXYZ XYZ1, XYZ2;
@@ -848,15 +848,15 @@ void CheckFloatToFloatXYZ(void)
                 rgb[1] = (cmsFloat32Number)g / 255.0f;
                 rgb[2] = (cmsFloat32Number)b / 255.0f;
 
-                cmsDoTransform(xform_plugin, rgb, XYZ, 1);
+                cmsDoTransform(Raw, xform_plugin, rgb, XYZ, 1);
                 XYZ1.X = XYZ[0]; XYZ1.Y = XYZ[1]; XYZ1.Z = XYZ[2];
-                cmsDoTransform(xform, rgb, XYZ, 1);
+                cmsDoTransform(Raw, xform, rgb, XYZ, 1);
                 XYZ2.X = XYZ[0]; XYZ2.Y = XYZ[1]; XYZ2.Z = XYZ[2];
 
-                cmsXYZ2Lab(NULL, &Lab1, &XYZ1);
-                cmsXYZ2Lab(NULL, &Lab2, &XYZ2);
+                cmsXYZ2Lab(Raw, NULL, &Lab1, &XYZ1);
+                cmsXYZ2Lab(Raw, NULL, &Lab2, &XYZ2);
 
-                err = cmsDeltaE(&Lab1, &Lab2);
+                err = cmsDeltaE(Raw, &Lab1, &Lab2);
                 if (err > 0.5)
                 {
                     trace("Error on XYZ encoded (%f, %f, %f) <> (% f, % f, % f)\n",
@@ -865,8 +865,8 @@ void CheckFloatToFloatXYZ(void)
             }
 
 
-    cmsDeleteTransform(xform); cmsDeleteTransform(xform_plugin);
-    cmsCloseProfile(hsRGB); cmsCloseProfile(hXYZ);
+    cmsDeleteTransform(Raw, xform); cmsDeleteTransform(Raw, xform_plugin);
+    cmsCloseProfile(Raw, hsRGB); cmsCloseProfile(Raw, hXYZ);
     cmsDeleteContext(Raw);
     cmsDeleteContext(Plugin);
 
