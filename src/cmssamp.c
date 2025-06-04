@@ -124,12 +124,11 @@ cmsBool  BlackPointAsDarkerColorant(cmsContext ContextID,
 
     // Force it to be neutral, check for inconsistencies
     if (Lab.L > 95)
-        Lab.L = 0; // Synthetic negative profiles
+        Lab.L = 0;  // for synthetical negative profiles
     else if (Lab.L > 50)
         Lab.L = 50;
     else if (Lab.L < 0)
         Lab.L = 0;
-    Lab.a = Lab.b = 0;
 
     // Free the resources
     cmsDeleteTransform(ContextID, xform);
@@ -172,7 +171,14 @@ cmsBool BlackPointUsingPerceptualBlack(cmsContext ContextID, cmsCIEXYZ* BlackPoi
     cmsDoTransform(ContextID, hRoundTrip, &LabIn, &LabOut, 1);
 
     // Clip Lab to reasonable limits
-    if (LabOut.L > 50) LabOut.L = 50;
+
+    // Force it to be neutral, check for inconsistencies
+    if (Lab.L > 95)
+        Lab.L = 0;  // for synthetical negative profiles
+    else if (Lab.L > 50)
+        Lab.L = 50;
+    else if (Lab.L < 0)
+        Lab.L = 0;
     LabOut.a = LabOut.b = 0;
 
     cmsDeleteTransform(ContextID, hRoundTrip);
