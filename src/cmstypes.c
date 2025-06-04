@@ -4812,8 +4812,7 @@ cmsBool ReadMPEElem(cmsContext ContextID, struct _cms_typehandler_struct* self,
     }
 
     return TRUE;
-
-    cmsUNUSED_PARAMETER(SizeOfTag);
+    
     cmsUNUSED_PARAMETER(n);
 }
 
@@ -4921,9 +4920,10 @@ cmsBool Type_MPE_Write(cmsContext ContextID, struct _cms_typehandler_struct* sel
                  goto Error;
         }
 
+        Before = io ->Tell(ContextID, io);
+
         if (!_cmsWriteUInt32Number(ContextID, io, ElementSig)) goto Error;
         if (!_cmsWriteUInt32Number(ContextID, io, 0)) goto Error;
-        Before = io ->Tell(ContextID, io);
         if (!TypeHandler ->WritePtr(ContextID, self, io, Elem, 1)) goto Error;
         if (!_cmsWriteAlignment(ContextID, io)) goto Error;
 
