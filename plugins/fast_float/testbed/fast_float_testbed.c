@@ -2594,17 +2594,17 @@ void TestGrayTransformPerformance1(cmsContext ct)
 
 
 static
-void sRGB_XYZ_roundtrip(void)
+void sRGB_XYZ_roundtrip(cmsContext ContextID)
 {
-    cmsHPROFILE hsRGB = cmsCreate_sRGBProfile();
-    cmsHPROFILE hXYZ = cmsCreateXYZProfile();
+    cmsHPROFILE hsRGB = cmsCreate_sRGBProfile(ContextID);
+    cmsHPROFILE hXYZ = cmsCreateXYZProfile(ContextID);
 
 
-    cmsHTRANSFORM hform_forward = cmsCreateTransform(hsRGB, TYPE_RGB_FLT, hXYZ, TYPE_XYZ_FLT, INTENT_PERCEPTUAL, 0);
-    cmsHTRANSFORM hform_reverse = cmsCreateTransform(hXYZ, TYPE_XYZ_FLT, hsRGB, TYPE_RGB_FLT, INTENT_PERCEPTUAL, 0);
+    cmsHTRANSFORM hform_forward = cmsCreateTransform(ContextID, hsRGB, TYPE_RGB_FLT, hXYZ, TYPE_XYZ_FLT, INTENT_PERCEPTUAL, 0);
+    cmsHTRANSFORM hform_reverse = cmsCreateTransform(ContextID, hXYZ, TYPE_XYZ_FLT, hsRGB, TYPE_RGB_FLT, INTENT_PERCEPTUAL, 0);
 
-    cmsCloseProfile(hXYZ);
-    cmsCloseProfile(hsRGB);
+    cmsCloseProfile(ContextID, hXYZ);
+    cmsCloseProfile(ContextID, hsRGB);
 
     float diff[3] = { 0, 0, 0 };
 
@@ -2617,8 +2617,8 @@ void sRGB_XYZ_roundtrip(void)
                 float output_rgb[3];
 
 
-                cmsDoTransform(hform_forward, input_rgb, xyz, 1);
-                cmsDoTransform(hform_reverse, xyz, output_rgb, 1);
+                cmsDoTransform(ContextID, hform_forward, input_rgb, xyz, 1);
+                cmsDoTransform(ContextID, hform_reverse, xyz, output_rgb, 1);
 
                 for (int i = 0; i < 3; i++)
                 {
@@ -2630,8 +2630,8 @@ void sRGB_XYZ_roundtrip(void)
 
 
     printf("sRGB XYZ roundtrip differences: %f %f %f\n", diff[0], diff[1], diff[2]);
-    cmsDeleteTransform(hform_forward);
-    cmsDeleteTransform(hform_reverse);
+    cmsDeleteTransform(ContextID, hform_forward);
+    cmsDeleteTransform(ContextID, hform_reverse);
 
 }
 

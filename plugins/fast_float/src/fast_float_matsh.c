@@ -267,7 +267,7 @@ cmsBool OptimizeFloatMatrixShaper(cmsContext ContextID,
 
     // Check for shaper-matrix-matrix-shaper structure, that is what this optimizer stands for
 
-    if (cmsPipelineCheckAndRetreiveStages(Src, 3,
+    if (cmsPipelineCheckAndRetreiveStages(ContextID, Src, 3,
         cmsSigCurveSetElemType, cmsSigMatrixElemType, cmsSigCurveSetElemType,
         &Curve1, &Matrix1, &Curve2))
     {
@@ -283,7 +283,7 @@ cmsBool OptimizeFloatMatrixShaper(cmsContext ContextID,
                                                         0,  MAX_ENCODEABLE_XYZ,   0,
                                                         0,      0,   MAX_ENCODEABLE_XYZ };
 
-            XYZmatrix = Matrix2 = cmsStageAllocMatrix(cmsGetPipelineContextID(Src), 3, 3, mat, NULL);
+            XYZmatrix = Matrix2 = cmsStageAllocMatrix(ContextID, 3, 3, mat, NULL);
         }
         else 
             if (T_COLORSPACE(*InputFormat) == PT_XYZ) {
@@ -292,17 +292,16 @@ cmsBool OptimizeFloatMatrixShaper(cmsContext ContextID,
                                                         0,      0,   1.0/MAX_ENCODEABLE_XYZ };
 
                 Matrix2 = Matrix1;
-                XYZmatrix = Matrix1 = cmsStageAllocMatrix(cmsGetPipelineContextID(Src), 3, 3, mat, NULL);
+                XYZmatrix = Matrix1 = cmsStageAllocMatrix(ContextID, 3, 3, mat, NULL);
             }
             else
                 return FALSE;
     }
     else
-        if (!cmsPipelineCheckAndRetreiveStages(Src, 4, 
+        if (!cmsPipelineCheckAndRetreiveStages(ContextID, Src, 4,
             cmsSigCurveSetElemType, cmsSigMatrixElemType, cmsSigMatrixElemType, cmsSigCurveSetElemType, 
             &Curve1, &Matrix1, &Matrix2, &Curve2)) return FALSE;
 
-    ContextID = cmsGetPipelineContextID(Src);
     nChans    = T_CHANNELS(*InputFormat);
 
     // Get both matrices, which are 3x3
@@ -378,7 +377,7 @@ cmsBool OptimizeFloatMatrixShaper(cmsContext ContextID,
     *dwFlags &= ~cmsFLAGS_CAN_CHANGE_FORMATTER;
     cmsPipelineFree(ContextID, Src);
     if (XYZmatrix != NULL)
-        cmsStageFree(XYZmatrix);
+        cmsStageFree(ContextID, XYZmatrix);
     *Lut = Dest;
     return TRUE;
 }
