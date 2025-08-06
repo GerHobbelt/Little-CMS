@@ -216,7 +216,6 @@ cmsInt32Number checkSingleComputeIncrements(cmsUInt32Number Format, cmsUInt32Num
        cmsUInt32Number ComponentStartingOrder[cmsMAXCHANNELS], ComponentPointerIncrements[cmsMAXCHANNELS];
        va_list args;
 
-
        va_start(args, ExpectedAlpha);
 
        _cmsComputeComponentIncrements(Format, planeStride, &nChannels, &nAlpha, ComponentStartingOrder, ComponentPointerIncrements);

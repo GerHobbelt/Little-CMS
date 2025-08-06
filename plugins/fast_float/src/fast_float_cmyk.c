@@ -348,7 +348,7 @@ cmsBool OptimizeCLUTCMYKTransform(cmsContext ContextID,
     if (T_COLORSPACE(*InputFormat)  != PT_CMYK) return FALSE;
 
     OriginalLut = *Lut;
-    nGridPoints = _cmsReasonableGridpointsByColorspace(cmsSigRgbData, *dwFlags);
+    nGridPoints = _cmsReasonableGridpointsByColorspace(ContextID, cmsSigRgbData, *dwFlags);
 
     // Create the result LUT
     OptimizedLUT = cmsPipelineAlloc(ContextID, 4, cmsPipelineOutputChannels(ContextID, OriginalLut));

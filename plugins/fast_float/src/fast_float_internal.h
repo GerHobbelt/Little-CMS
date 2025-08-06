@@ -22,6 +22,8 @@
 #ifndef _FAST_INTERNAL_H
 #define _FAST_INTERNAL_H
 
+#include "../../../src/lcms2_internal.h"
+
 #include "lcms2mt_fast_float.h"
 #include <stdint.h>
 
@@ -56,10 +58,11 @@
 #endif
 
 
+#if !defined(BUILD_MONOLITHIC)
 // A fast way to convert from/to 16 <-> 8 bits
 #define FROM_8_TO_16(rgb) (cmsUInt16Number) ((((cmsUInt16Number) (rgb)) << 8)|(rgb))
-#define FROM_16_TO_8(rgb) (cmsUInt8Number) ((((rgb) * 65281 + 8388608) >> 24) & 0xFF)
-
+#define FROM_16_TO_8(rgb) (cmsUInt8Number) ((((cmsUInt32Number)(rgb) * 65281U + 8388608U) >> 24) & 0xFFU)
+#endif
 
 // This macro return words stored as big endian
 #define CHANGE_ENDIAN(w)    (cmsUInt16Number) ((cmsUInt16Number) ((w)<<8)|((w)>>8))
@@ -73,9 +76,17 @@
 
 #define cmsFLAGS_CAN_CHANGE_FORMATTER     0x02000000   // Allow change buffer format
 
+#ifndef CMS_USE_CPP_API
+#ifdef __cplusplus
+extern "C" {
+#endif
+#endif
+
+#if !defined(BUILD_MONOLITHIC)
 // Utility macros to convert from to 0...1.0 in 15.16 fixed domain to 0..0xffff as integer
 cmsINLINE cmsS15Fixed16Number _cmsToFixedDomain(int a)                   { return a + ((a + 0x7fff) / 0xffff); }
 cmsINLINE int                 _cmsFromFixedDomain(cmsS15Fixed16Number a) { return a - ((a + 0x7fff) >> 16); }
+#endif
 
 // This is the upper part of internal transform structure. Only format specifiers are used
 typedef struct {
@@ -93,28 +104,29 @@ cmsINLINE cmsFloat32Number fclamp(cmsFloat32Number v)
     return ((v < 1.0e-9f) || isnan(v)) ? 0.0f : (v > 1.0f ? 1.0f : v);
 }
 
+#if !defined(BUILD_MONOLITHIC)
 // Fast floor conversion logic.
 cmsINLINE int _cmsQuickFloor(cmsFloat64Number val)
 {
 #ifdef CMS_DONT_USE_FAST_FLOOR
-       return (int)floor(val);
+	return (int)floor(val);
 #else
-#define _lcms_double2fixmagic  (68719476736.0 * 1.5)
+	const cmsFloat64Number _lcms_double2fixmagic = 68719476736.0 * 1.5;  // 2^36 * 1.5, (52-16=36) uses limited precision to floor
+	union {
+		cmsFloat64Number val;
+		int halves[2];
+	} temp;
 
-       union {
-              cmsFloat64Number val;
-              int halves[2];
-       } temp;
-
-       temp.val = val + _lcms_double2fixmagic;
+	temp.val = val + _lcms_double2fixmagic;
 
 #ifdef CMS_USE_BIG_ENDIAN
-       return temp.halves[1] >> 16;
+	return temp.halves[1] >> 16;
 #else
-       return temp.halves[0] >> 16;
+	return temp.halves[0] >> 16;
 #endif
 #endif
 }
+#endif // !defined(BUILD_MONOLITHIC)
 
 // Floor to word, taking care of saturation. This is not critical in terms of performance
 cmsINLINE cmsUInt16Number _cmsSaturateWord(cmsFloat64Number d)
@@ -162,7 +174,7 @@ cmsINLINE cmsFloat32Number flerp(const cmsFloat32Number LutTable[], cmsFloat32Nu
 
 
 // Some secret sauce from lcms
-CMSAPI cmsUInt32Number  CMSEXPORT _cmsReasonableGridpointsByColorspace(cmsColorSpaceSignature Colorspace, cmsUInt32Number dwFlags);
+CMSAPI cmsUInt32Number  CMSEXPORT _cmsReasonableGridpointsByColorspace(cmsContext ContextID, cmsColorSpaceSignature Colorspace, cmsUInt32Number dwFlags);
 
 
 
@@ -284,5 +296,12 @@ cmsBool OptimizeCLUTLabTransform(cmsContext ContextID,
                                  cmsUInt32Number* OutputFormat,
                                  cmsUInt32Number* dwFlags);
 
+
+
+#ifndef CMS_USE_CPP_API
+#ifdef __cplusplus
+}
+#endif
+#endif
 
 #endif

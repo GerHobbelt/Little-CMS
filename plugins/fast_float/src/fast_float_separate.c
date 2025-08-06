@@ -178,8 +178,8 @@ void ComputeIncrementsForPlanar(cmsUInt32Number Format,
 
 
 
-// Dispatcher por chunky and planar RGB
-CMSCHECKPOINT void  CMSEXPORT _cmsComputeComponentIncrements(cmsUInt32Number Format,
+// Dispatcher for chunky and planar RGB
+CMSCHECKPOINT void CMSEXPORT _cmsComputeComponentIncrements(cmsUInt32Number Format,
                                      cmsUInt32Number BytesPerPlane,
                                      cmsUInt32Number* nChannels,
                                      cmsUInt32Number* nAlpha,
@@ -187,11 +187,10 @@ CMSCHECKPOINT void  CMSEXPORT _cmsComputeComponentIncrements(cmsUInt32Number For
                                      cmsUInt32Number ComponentPointerIncrements[])
 {
        if (T_PLANAR(Format)) {
-
-              ComputeIncrementsForPlanar(Format,  BytesPerPlane, nChannels, nAlpha, ComponentStartingOrder, ComponentPointerIncrements);
+              ComputeIncrementsForPlanar(Format, BytesPerPlane, nChannels, nAlpha, ComponentStartingOrder, ComponentPointerIncrements);
        }
        else {
-              ComputeIncrementsForChunky(Format,  BytesPerPlane, nChannels, nAlpha, ComponentStartingOrder, ComponentPointerIncrements);
+              ComputeIncrementsForChunky(Format, BytesPerPlane, nChannels, nAlpha, ComponentStartingOrder, ComponentPointerIncrements);
        }
 
 }

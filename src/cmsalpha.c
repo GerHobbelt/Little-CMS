@@ -525,11 +525,10 @@ cmsBool ComputeComponentIncrements(cmsUInt32Number Format,
                                  cmsUInt32Number ComponentPointerIncrements[])
 {
        if (T_PLANAR(Format)) {
-
-              return ComputeIncrementsForPlanar(Format,  BytesPerPlane, ComponentStartingOrder, ComponentPointerIncrements);
+              return ComputeIncrementsForPlanar(Format, BytesPerPlane, ComponentStartingOrder, ComponentPointerIncrements);
        }
        else {
-              return ComputeIncrementsForChunky(Format,  ComponentStartingOrder, ComponentPointerIncrements);
+              return ComputeIncrementsForChunky(Format, ComponentStartingOrder, ComponentPointerIncrements);
        }
 
 }
