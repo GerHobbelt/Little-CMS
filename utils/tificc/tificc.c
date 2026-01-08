@@ -629,7 +629,6 @@ void WriteOutputTags(TIFF* out, int Colorspace, int BytesPerSample, int AlphaCha
 
     case PT_GRAY:
         TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
-
         break;
 
     case PT_RGB:
@@ -733,11 +732,11 @@ void CopyOtherTags(TIFF* in, TIFF* out)
     // This is tricky, libtiff would access predictor in a wrong way
     // if the codec is none of those
     if (compression == COMPRESSION_LZW ||
-        compression == 34925 /*COMPRESSION_LZMA*/ ||
+        compression == COMPRESSION_LZMA ||
         compression == COMPRESSION_PIXARLOG ||
         compression == COMPRESSION_DEFLATE ||
         compression == COMPRESSION_ADOBE_DEFLATE ||
-        compression == 50000 /*COMPRESSION_ZSTD*/)
+        compression == COMPRESSION_ZSTD)
     {
         if (PixelDepth != 32)
             CopyField(TIFFTAG_PREDICTOR, shortv);
@@ -769,7 +768,6 @@ void CopyOtherTags(TIFF* in, TIFF* out)
     CopyField(TIFFTAG_HOSTCOMPUTER, stringv);
     CopyField(TIFFTAG_PAGENAME, stringv);
     CopyField(TIFFTAG_DOCUMENTNAME, stringv);
-
 }
 
 
