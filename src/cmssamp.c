@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2024 Marti Maria Saguer
+//  Copyright (c) 1998-2026 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -333,7 +333,7 @@ cmsFloat64Number RootOfLeastSquaresFitQuadraticCurve(cmsContext ContextID, int n
     if (fabs(a) < 1.0E-10) {
 
         if (fabs(b) < 1.0E-10) return 0;
-        return cmsmin(0, cmsmax(50, -c/b ));
+        return cmsmax(0, cmsmin(50, -c/b ));
     }
     else {
 

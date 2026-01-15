@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2024 Marti Maria Saguer
+//  Copyright (c) 1998-2026 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -5341,6 +5341,8 @@ cmsInt32Number CheckRAWtags(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROF
 
 
 
+
+
 static
 cmsInt32Number Check_cicp(cmsContext ContextID, cmsInt32Number Pass, cmsHPROFILE hProfile)
 {
@@ -8493,6 +8495,41 @@ int Check_sRGB_Rountrips(cmsContext contextID)
     return 1;
 }
 
+
+static
+int CheckCenteringOfLab(void)
+{
+    cmsHPROFILE hProPhoto = cmsOpenProfileFromFile("test4.icc", "r");
+    cmsHPROFILE hLab = cmsCreateLab4Profile(NULL);
+
+    cmsHTRANSFORM xform1 = cmsCreateTransform(hProPhoto, TYPE_BGR_16, hLab, TYPE_Lab_16, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_HIGHRESPRECALC);
+    cmsHTRANSFORM xform2 = cmsCreateTransform(hLab, TYPE_Lab_16, hProPhoto, TYPE_BGR_16, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_HIGHRESPRECALC);
+
+    cmsUInt16Number bgr[3] = { 0xffff, 0xffff, 0xffff };
+    cmsUInt16Number bgr2[3];
+    cmsUInt16Number lab[3];
+
+    cmsDoTransform(xform1, bgr, lab, 1);
+    cmsDoTransform(xform2, lab, bgr2, 1);
+
+    if ((0xffff - bgr2[0]) > 5 ||
+        (0xffff - bgr2[1]) > 5 ||
+        (0xffff - bgr2[2]) > 5)
+    {
+        printf("Centering of Lab16 failed. Got %x %x %x\n", bgr2[0], bgr2[1], bgr2[2]);
+        return 0;
+    }
+
+
+    cmsCloseProfile(hLab);
+    cmsCloseProfile(hProPhoto);
+    cmsDeleteTransform(xform1);
+    cmsDeleteTransform(xform2);
+
+    return 1;
+}
+
+
 /**
 * Check OKLab colorspace
 */
@@ -8880,6 +8917,38 @@ int CheckGamutCheckFloats(cmsContext ContextID)
     return 1;
 }
 
+static
+int CheckMixedRawAndCooked(void)
+{
+    const cmsUInt32Number data = cmsSigFilmScanner;
+    const cmsUInt32Number* pdata;
+    cmsBool is_ok = FALSE;
+
+    // This is the internal representation of cmsSigTechnologyTag tag type
+    struct _cooked_st
+    {
+        _cmsTagBase base;
+        cmsUInt32Number data;
+
+    } buffer = { { (cmsTagTypeSignature) cmsSigTechnologyTag, {0} }, cmsSigFilmScanner };
+
+    cmsHPROFILE hProfile = cmsCreateProfilePlaceholder(0);   
+    cmsWriteRawTag(hProfile, cmsSigTechnologyTag, &buffer, sizeof buffer);
+    cmsWriteTag(hProfile, cmsSigTechnologyTag, &data);
+    cmsWriteRawTag(hProfile, cmsSigTechnologyTag, &buffer, sizeof buffer);
+    cmsWriteRawTag(hProfile, cmsSigTechnologyTag, &buffer, sizeof buffer);
+    cmsWriteTag(hProfile, cmsSigTechnologyTag, &data);
+    cmsWriteTag(hProfile, cmsSigTechnologyTag, &data);
+    memset(&buffer, 0, sizeof(buffer));
+
+    cmsReadRawTag(hProfile, cmsSigTechnologyTag, &buffer, sizeof buffer );
+    pdata = cmsReadTag(hProfile, cmsSigTechnologyTag);
+
+    is_ok = (*pdata == cmsSigFilmScanner) && (_cmsAdjustEndianess32(buffer.data) == cmsSigFilmScanner);
+
+    cmsCloseProfile(hProfile);
+    return is_ok;
+}
 
 // --------------------------------------------------------------------------------------------------
 // P E R F O R M A N C E   C H E C K S
@@ -9617,7 +9686,7 @@ int main(int argc, const char** argv)
     printf("Installing error logger ... ");
     cmsSetLogErrorHandler(NULL, FatalErrorQuit);
     printf("done.\n");
-        
+           
     PrintSupportedIntents();
 
     Check(ctx, "Base types", CheckBaseTypes);
@@ -9825,12 +9894,14 @@ int main(int argc, const char** argv)
     Check(ctx, "sRGB round-trips", Check_sRGB_Rountrips);
     Check(ctx, "OkLab color space", Check_OkLab);
     Check(ctx, "OkLab color space (2)", Check_OkLab2);
+    Check("centering of Lab16", CheckCenteringOfLab);
     Check(ctx, "Gamma space detection", CheckGammaSpaceDetection);
     Check(ctx, "Unbounded mode w/ integer output", CheckIntToFloatTransform);
     Check(ctx, "Corrupted built-in by using cmsWriteRawTag", CheckInducedCorruption);
     Check(ctx, "Bad CGATS file", CheckBadCGATS);
     Check(ctx, "Saving linearization devicelink", CheckSaveLinearizationDevicelink);
     Check(ctx, "Gamut check on floats", CheckGamutCheckFloats);
+    Check("Mixing RAW and Cooked tags", CheckMixedRawAndCooked);
     }
 
     if (DoPluginTests)

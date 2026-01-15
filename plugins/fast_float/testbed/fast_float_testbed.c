@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2024 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2026 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -2652,7 +2652,7 @@ int main(void)
        cmsContext plugin = cmsCreateContext(NULL, NULL);
 
        trace("FastFloating point extensions testbed - 1.7\n");
-       trace("Copyright (c) 1998-2024 Marti Maria Saguer, all rights reserved\n");
+       trace("Copyright (c) 1998-2026 Marti Maria Saguer, all rights reserved\n");
 
        trace("\nInstalling error logger ... ");
        cmsSetLogErrorHandler(raw, FatalErrorQuit);

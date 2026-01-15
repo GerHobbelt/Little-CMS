@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2024 Marti Maria Saguer
+//  Copyright (c) 1998-2026 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -272,7 +272,7 @@ cmsUInt32Number encodeUTF8(char* out, const wchar_t* in, cmsUInt32Number max_wch
     cmsUInt32Number size = 0;
     cmsUInt32Number len_w = 0;
         
-    while (*in && len_w < max_wchars)
+    while (len_w < max_wchars && *in)
     {
         if (*in >= 0xd800 && *in <= 0xdbff)
             codepoint = ((*in - 0xd800) << 10) + 0x10000;
@@ -1046,16 +1046,15 @@ cmsSEQ* CMSEXPORT cmsDupProfileSequenceDescription(cmsContext ContextID, const c
     if (pseq == NULL)
         return NULL;
 
-    NewSeq = (cmsSEQ*) _cmsMalloc(ContextID, sizeof(cmsSEQ));
+    NewSeq = (cmsSEQ*)_cmsMallocZero(pseq->ContextID, sizeof(cmsSEQ));
     if (NewSeq == NULL) return NULL;
 
-
     NewSeq -> seq      = (cmsPSEQDESC*) _cmsCalloc(ContextID, pseq ->n, sizeof(cmsPSEQDESC));
-    if (NewSeq ->seq == NULL) goto Error;
+    if (NewSeq->seq == NULL) goto Error;
 
-    NewSeq -> n        = pseq ->n;
+    NewSeq->n = pseq->n;
 
-    for (i=0; i < pseq->n; i++) {
+    for (i = 0; i < pseq->n; i++) {
 
         memmove(&NewSeq ->seq[i].attributes, &pseq ->seq[i].attributes, sizeof(cmsUInt64Number));
 

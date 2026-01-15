@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2024 Marti Maria Saguer
+//  Copyright (c) 1998-2026 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -44,6 +44,9 @@ static int NumOfGridPoints = 0;
 static
 void Help(void)
 {
+    fprintf(stderr, "Little CMS ICC PostScript generator - v2.1 [LittleCMS %2.2f]\n", cmsGetEncodedCMMversion() / 1000.0);
+    fprintf(stderr, "Copyright (c) 1998-2026 Marti Maria Saguer. See COPYING file for details.\n\n");
+
     fprintf(stderr, "usage: psicc [flags] [<Output file>]\n\n");
 
     fprintf(stderr, "flags:\n\n");
@@ -218,10 +221,6 @@ int main(int argc, const char *argv[])
 {
 	int nargs;
     cmsContext ContextID = NULL;
-
-    fprintf(stderr, "Little CMS ICC PostScript generator - v2.1 [LittleCMS %2.2f]\n", cmsGetEncodedCMMversion() / 1000.0);
-    fprintf(stderr, "Copyright (c) 1998-2024 Marti Maria Saguer. See COPYING file for details.\n");
-    fflush(stderr);
 
 	// Initialize
 	InitUtils(NULL, "psicc");
