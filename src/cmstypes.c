@@ -5836,19 +5836,19 @@ cmsBool Type_MHC2_Write(cmsContext ContextID, struct _cms_typehandler_struct* se
 
     OffsetRedTable = io->Tell(ContextID, io) - BaseOffset;
 
-    if(!_cmsWriteUInt32Number(io, cmsSigS15Fixed16ArrayType)) return FALSE;
-    if(!_cmsWriteUInt32Number(io, 0)) return FALSE;   
+    if(!_cmsWriteUInt32Number(ContextID, io, cmsSigS15Fixed16ArrayType)) return FALSE;
+    if(!_cmsWriteUInt32Number(ContextID, io, 0)) return FALSE;
 
     if (!WriteDoubles(ContextID, io, mhc2->CurveEntries, mhc2->RedCurve)) return FALSE;
 
     OffsetGreenTable = io->Tell(ContextID, io) - BaseOffset;
-    if (!_cmsWriteUInt32Number(io, cmsSigS15Fixed16ArrayType)) return FALSE;
-    if (!_cmsWriteUInt32Number(io, 0)) return FALSE;
+    if (!_cmsWriteUInt32Number(ContextID, io, cmsSigS15Fixed16ArrayType)) return FALSE;
+    if (!_cmsWriteUInt32Number(ContextID, io, 0)) return FALSE;
     if (!WriteDoubles(ContextID, io, mhc2->CurveEntries, mhc2->GreenCurve)) return FALSE;
 
     OffsetBlueTable = io->Tell(ContextID, io) - BaseOffset;
-    if (!_cmsWriteUInt32Number(io, cmsSigS15Fixed16ArrayType)) return FALSE;
-    if (!_cmsWriteUInt32Number(io, 0)) return FALSE;
+    if (!_cmsWriteUInt32Number(ContextID, io, cmsSigS15Fixed16ArrayType)) return FALSE;
+    if (!_cmsWriteUInt32Number(ContextID, io, 0)) return FALSE;
     if (!WriteDoubles(ContextID, io, mhc2->CurveEntries, mhc2->BlueCurve)) return FALSE;
 
     if (!io->Seek(ContextID, io, TablesOffsetPos)) return FALSE;
@@ -5923,9 +5923,9 @@ void* Type_MHC2_Read(cmsContext ContextID, struct _cms_typehandler_struct* self,
     }
 
     // Skip sf32 tag and filler (8bytes)
-    if (!ReadDoublesAt(io, BaseOffset + OffsetRedTable + 8, mhc2->CurveEntries, mhc2->RedCurve)) goto Error;
-    if (!ReadDoublesAt(io, BaseOffset + OffsetGreenTable + 8, mhc2->CurveEntries, mhc2->GreenCurve)) goto Error;
-    if (!ReadDoublesAt(io, BaseOffset + OffsetBlueTable + 8, mhc2->CurveEntries, mhc2->BlueCurve)) goto Error;
+    if (!ReadDoublesAt(ContextID, io, BaseOffset + OffsetRedTable + 8, mhc2->CurveEntries, mhc2->RedCurve)) goto Error;
+    if (!ReadDoublesAt(ContextID, io, BaseOffset + OffsetGreenTable + 8, mhc2->CurveEntries, mhc2->GreenCurve)) goto Error;
+    if (!ReadDoublesAt(ContextID, io, BaseOffset + OffsetBlueTable + 8, mhc2->CurveEntries, mhc2->BlueCurve)) goto Error;
     
     // Success
     *nItems = 1;

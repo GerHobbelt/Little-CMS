@@ -669,7 +669,7 @@ cmsBool OptimizeByResampling(cmsContext ContextID, cmsPipeline** Lut, cmsUInt32N
         nGridPoints = 2;
     else
     {
-        nGridPoints = _cmsReasonableGridpointsByColorspace(ColorSpace, *dwFlags);
+        nGridPoints = _cmsReasonableGridpointsByColorspace(ContextID, ColorSpace, *dwFlags);
 
         // Lab16 as input cannot be optimized by a CLUT due to centering issues, thanks to Mike Chaney for discovering this.
         if (!(*dwFlags & cmsFLAGS_FORCE_CLUT) && (ColorSpace == cmsSigLabData) && (T_BYTES(*InputFormat) == 2)) return FALSE;

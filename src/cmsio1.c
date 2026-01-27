@@ -975,7 +975,7 @@ const cmsMLU* GetInfo(cmsContext ContextID, cmsHPROFILE hProfile, cmsInfoType In
         /**
         * Add for MacOS, which uses propiertary tags for description
         */
-        if (cmsIsTag(hProfile, cmsSigProfileDescriptionMLTag))
+        if (cmsIsTag(ContextID, hProfile, cmsSigProfileDescriptionMLTag))
             sig = cmsSigProfileDescriptionMLTag;
         else
             sig = cmsSigProfileDescriptionTag;

@@ -1815,7 +1815,7 @@ cmsBool CMSEXPORT cmsWriteTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTag
 
     // This cannot be RAW
     if (Icc->TagSaveAsRaw[i]) {
-        cmsSignalError(Icc->ContextID, cmsERROR_ALREADY_DEFINED, "Tag  '%x' was already saved as RAW", sig);
+        cmsSignalError(ContextID, cmsERROR_ALREADY_DEFINED, "Tag  '%x' was already saved as RAW", sig);
         goto Error;
     }
     

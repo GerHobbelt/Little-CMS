@@ -1046,7 +1046,7 @@ cmsSEQ* CMSEXPORT cmsDupProfileSequenceDescription(cmsContext ContextID, const c
     if (pseq == NULL)
         return NULL;
 
-    NewSeq = (cmsSEQ*)_cmsMallocZero(pseq->ContextID, sizeof(cmsSEQ));
+    NewSeq = (cmsSEQ*)_cmsMallocZero(ContextID, sizeof(cmsSEQ));
     if (NewSeq == NULL) return NULL;
 
     NewSeq -> seq      = (cmsPSEQDESC*) _cmsCalloc(ContextID, pseq ->n, sizeof(cmsPSEQDESC));

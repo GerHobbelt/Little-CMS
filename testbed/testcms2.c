@@ -8497,20 +8497,20 @@ int Check_sRGB_Rountrips(cmsContext contextID)
 
 
 static
-int CheckCenteringOfLab(void)
+int CheckCenteringOfLab(cmsContext contextID)
 {
-    cmsHPROFILE hProPhoto = cmsOpenProfileFromFile("test4.icc", "r");
-    cmsHPROFILE hLab = cmsCreateLab4Profile(NULL);
+    cmsHPROFILE hProPhoto = cmsOpenProfileFromFile(contextID, "test4.icc", "r");
+    cmsHPROFILE hLab = cmsCreateLab4Profile(contextID, NULL);
 
-    cmsHTRANSFORM xform1 = cmsCreateTransform(hProPhoto, TYPE_BGR_16, hLab, TYPE_Lab_16, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_HIGHRESPRECALC);
-    cmsHTRANSFORM xform2 = cmsCreateTransform(hLab, TYPE_Lab_16, hProPhoto, TYPE_BGR_16, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_HIGHRESPRECALC);
+    cmsHTRANSFORM xform1 = cmsCreateTransform(contextID, hProPhoto, TYPE_BGR_16, hLab, TYPE_Lab_16, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_HIGHRESPRECALC);
+    cmsHTRANSFORM xform2 = cmsCreateTransform(contextID, hLab, TYPE_Lab_16, hProPhoto, TYPE_BGR_16, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_HIGHRESPRECALC);
 
     cmsUInt16Number bgr[3] = { 0xffff, 0xffff, 0xffff };
     cmsUInt16Number bgr2[3];
     cmsUInt16Number lab[3];
 
-    cmsDoTransform(xform1, bgr, lab, 1);
-    cmsDoTransform(xform2, lab, bgr2, 1);
+    cmsDoTransform(contextID, xform1, bgr, lab, 1);
+    cmsDoTransform(contextID, xform2, lab, bgr2, 1);
 
     if ((0xffff - bgr2[0]) > 5 ||
         (0xffff - bgr2[1]) > 5 ||
@@ -8521,10 +8521,10 @@ int CheckCenteringOfLab(void)
     }
 
 
-    cmsCloseProfile(hLab);
-    cmsCloseProfile(hProPhoto);
-    cmsDeleteTransform(xform1);
-    cmsDeleteTransform(xform2);
+    cmsCloseProfile(contextID, hLab);
+    cmsCloseProfile(contextID, hProPhoto);
+    cmsDeleteTransform(contextID, xform1);
+    cmsDeleteTransform(contextID, xform2);
 
     return 1;
 }
@@ -8918,7 +8918,7 @@ int CheckGamutCheckFloats(cmsContext ContextID)
 }
 
 static
-int CheckMixedRawAndCooked(void)
+int CheckMixedRawAndCooked(cmsContext ContextID)
 {
     const cmsUInt32Number data = cmsSigFilmScanner;
     const cmsUInt32Number* pdata;
@@ -8933,20 +8933,20 @@ int CheckMixedRawAndCooked(void)
     } buffer = { { (cmsTagTypeSignature) cmsSigTechnologyTag, {0} }, cmsSigFilmScanner };
 
     cmsHPROFILE hProfile = cmsCreateProfilePlaceholder(0);   
-    cmsWriteRawTag(hProfile, cmsSigTechnologyTag, &buffer, sizeof buffer);
-    cmsWriteTag(hProfile, cmsSigTechnologyTag, &data);
-    cmsWriteRawTag(hProfile, cmsSigTechnologyTag, &buffer, sizeof buffer);
-    cmsWriteRawTag(hProfile, cmsSigTechnologyTag, &buffer, sizeof buffer);
-    cmsWriteTag(hProfile, cmsSigTechnologyTag, &data);
-    cmsWriteTag(hProfile, cmsSigTechnologyTag, &data);
+    cmsWriteRawTag(ContextID, hProfile, cmsSigTechnologyTag, &buffer, sizeof buffer);
+    cmsWriteTag(ContextID, hProfile, cmsSigTechnologyTag, &data);
+    cmsWriteRawTag(ContextID, hProfile, cmsSigTechnologyTag, &buffer, sizeof buffer);
+    cmsWriteRawTag(ContextID, hProfile, cmsSigTechnologyTag, &buffer, sizeof buffer);
+    cmsWriteTag(ContextID, hProfile, cmsSigTechnologyTag, &data);
+    cmsWriteTag(ContextID, hProfile, cmsSigTechnologyTag, &data);
     memset(&buffer, 0, sizeof(buffer));
 
-    cmsReadRawTag(hProfile, cmsSigTechnologyTag, &buffer, sizeof buffer );
-    pdata = cmsReadTag(hProfile, cmsSigTechnologyTag);
+    cmsReadRawTag(ContextID, hProfile, cmsSigTechnologyTag, &buffer, sizeof buffer );
+    pdata = cmsReadTag(ContextID, hProfile, cmsSigTechnologyTag);
 
     is_ok = (*pdata == cmsSigFilmScanner) && (_cmsAdjustEndianess32(buffer.data) == cmsSigFilmScanner);
 
-    cmsCloseProfile(hProfile);
+    cmsCloseProfile(ContextID, hProfile);
     return is_ok;
 }
 
@@ -9894,14 +9894,14 @@ int main(int argc, const char** argv)
     Check(ctx, "sRGB round-trips", Check_sRGB_Rountrips);
     Check(ctx, "OkLab color space", Check_OkLab);
     Check(ctx, "OkLab color space (2)", Check_OkLab2);
-    Check("centering of Lab16", CheckCenteringOfLab);
+    Check(ctx, "centering of Lab16", CheckCenteringOfLab);
     Check(ctx, "Gamma space detection", CheckGammaSpaceDetection);
     Check(ctx, "Unbounded mode w/ integer output", CheckIntToFloatTransform);
     Check(ctx, "Corrupted built-in by using cmsWriteRawTag", CheckInducedCorruption);
     Check(ctx, "Bad CGATS file", CheckBadCGATS);
     Check(ctx, "Saving linearization devicelink", CheckSaveLinearizationDevicelink);
     Check(ctx, "Gamut check on floats", CheckGamutCheckFloats);
-    Check("Mixing RAW and Cooked tags", CheckMixedRawAndCooked);
+    Check(ctx, "Mixing RAW and Cooked tags", CheckMixedRawAndCooked);
     }
 
     if (DoPluginTests)

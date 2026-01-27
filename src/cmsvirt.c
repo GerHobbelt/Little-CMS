@@ -498,11 +498,11 @@ cmsHPROFILE CMSEXPORT cmsCreateLab4Profile(cmsContext ContextID, const cmsCIExyY
     cmsCIEXYZ xyz;
     
     if (WhitePoint == NULL)
-        xyz = *cmsD50_XYZ();
+        xyz = *cmsD50_XYZ(ContextID);
     else
-        cmsxyY2XYZ(&xyz, WhitePoint);
+        cmsxyY2XYZ(ContextID, &xyz, WhitePoint);
 
-    hProfile = cmsCreateRGBProfileTHR(ContextID, NULL, NULL, NULL);
+    hProfile = cmsCreateRGBProfile(ContextID, NULL, NULL, NULL);
     if (hProfile == NULL) return NULL;
 
     cmsSetProfileVersion(ContextID, hProfile, 4.4);
@@ -511,7 +511,7 @@ cmsHPROFILE CMSEXPORT cmsCreateLab4Profile(cmsContext ContextID, const cmsCIExyY
     cmsSetColorSpace(ContextID, hProfile,  cmsSigLabData);
     cmsSetPCS(ContextID, hProfile,         cmsSigLabData);
 
-    if (!cmsWriteTag(hProfile, cmsSigMediaWhitePointTag, &xyz)) goto Error;
+    if (!cmsWriteTag(ContextID, hProfile, cmsSigMediaWhitePointTag, &xyz)) goto Error;
     if (!SetTextTags(ContextID, hProfile, L"Lab identity built-in")) goto Error;
 
     // An empty LUTs is all we need
@@ -880,10 +880,10 @@ cmsHPROFILE CMSEXPORT cmsCreateBCHSWabstractProfile(cmsContext ContextID,
     if (!SetTextTags(ContextID, hICC, L"BCHS built-in"))
         goto Error;
 
-    if (!cmsWriteTag(hICC, cmsSigMediaWhitePointTag, (void*)cmsD50_XYZ()))
+    if (!cmsWriteTag(ContextID, hICC, cmsSigMediaWhitePointTag, (void*)cmsD50_XYZ(ContextID)))
         goto Error;
 
-    if (!cmsWriteTag(hICC, cmsSigAToB0Tag, (void*)Pipeline))
+    if (!cmsWriteTag(ContextID, hICC, cmsSigAToB0Tag, (void*)Pipeline))
         goto Error;
 
     // Pipeline is already on virtual profile
