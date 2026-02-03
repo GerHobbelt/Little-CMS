@@ -88,6 +88,10 @@
 // COPY_EXTRAS(TRANS,FROM,TO) to do so.
 // If none of these are defined, we call cmsHandleExtraChannels.
 
+
+#include "lcms2_internal.h"
+
+
 #ifndef CMPBYTES
 #ifdef NUMINCHANNELS
 #ifdef XFORM_FLOAT
@@ -298,6 +302,8 @@ void FUNCTION_NAME(cmsContext ContextID,
 #else
     int numoutchannels = T_CHANNELS(p->OutputFormat);
 #endif
+// fix warning C4574: 'NUMEXTRAS' is defined to be '0': did you mean to use '#if NUMEXTRAS'?
+#pragma warning(disable : 4574)
 #ifdef NUMEXTRAS
     int numextras = NUMEXTRAS;
 #else
