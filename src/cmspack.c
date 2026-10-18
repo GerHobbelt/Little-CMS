@@ -4058,7 +4058,7 @@ cmsUInt32Number CMSEXPORT cmsFormatterForPCSOfProfile(cmsContext ContextID, cmsH
     cmsColorSpaceSignature ColorSpace = cmsGetPCS(ContextID, hProfile);
 
     cmsUInt32Number ColorSpaceBits = (cmsUInt32Number)_cmsLCMScolorSpace(ContextID, ColorSpace);
-    cmsInt32Number  nOutputChans = cmsChannelsOfColorSpace(ContextID, ColorSpace);
+    cmsInt32Number nOutputChans = cmsChannelsOfColorSpace(ContextID, ColorSpace);
     cmsUInt32Number Float = lIsFloat ? 1U : 0;
 
     // Unsupported color space?

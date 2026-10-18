@@ -105,7 +105,7 @@ extern "C" {
 
 // We expect any LCMS2MT release to fall within the
 // following range.
-#define LCMS2MT_VERSION_MIN (0)
+#define LCMS2MT_VERSION_MIN (90)
 #define LCMS2MT_VERSION_MAX (999)
 
 // I will give the chance of redefining basic types for compilers that are not fully C99 compliant
@@ -1555,6 +1555,7 @@ CMSAPI void              CMSEXPORT cmsGetHeaderProfileID(cmsContext ContextID, c
 CMSAPI cmsBool           CMSEXPORT cmsGetHeaderCreationDateTime(cmsContext ContextID, cmsHPROFILE hProfile, struct tm *Dest);
 CMSAPI cmsUInt32Number   CMSEXPORT cmsGetHeaderRenderingIntent(cmsContext ContextID, cmsHPROFILE hProfile);
 CMSAPI cmsUInt32Number   CMSEXPORT cmsGetHeaderCMM(cmsContext ContextID, cmsHPROFILE hProfile);
+CMSAPI void              CMSEXPORT _cmsSetHeaderCMM(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number CMM);
 
 CMSAPI void              CMSEXPORT cmsSetHeaderFlags(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number Flags);
 CMSAPI cmsUInt32Number   CMSEXPORT cmsGetHeaderManufacturer(cmsContext ContextID, cmsHPROFILE hProfile);
