@@ -23,7 +23,7 @@
 //
 //---------------------------------------------------------------------------------
 //
-// Version 2.19
+// Version 2.20rc1
 //
 
 #ifndef _lcms2mt_H
@@ -101,7 +101,7 @@ extern "C" {
 // use OUR numbers with a mainline LCMS to fail, so
 // we have to go under 2000-2100. Let's subtract
 // 2000 from the mainline release.
-#define LCMS_VERSION              (2190 - 2000)
+#define LCMS_VERSION              (2200 - 2000)
 
 // We expect any LCMS2MT release to fall within the
 // following range.
