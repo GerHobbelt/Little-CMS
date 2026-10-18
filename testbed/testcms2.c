@@ -2065,6 +2065,45 @@ cmsInt32Number Check4Dinterp(cmsContext ContextID)
 
 
 static
+cmsInt32Number Check4DinterpResampled(cmsContext ContextID)
+{
+    cmsPipeline* lut;
+    cmsStage* mpe;
+    cmsUInt32Number InputFormat = TYPE_CMYK_16;
+    cmsUInt32Number OutputFormat = TYPE_RGB_16;
+    cmsUInt32Number Flags = cmsFLAGS_FORCE_CLUT | cmsFLAGS_GRIDPOINTS(9);
+    cmsInt32Number rc = 0;
+
+    lut = cmsPipelineAlloc(DbgThread(), 4, 3);
+    mpe = cmsStageAllocCLut16bit(DbgThread(), 9, 4, 3, NULL);
+    cmsStageSampleCLut16bit(mpe, Sampler4D, NULL, 0);
+    cmsPipelineInsertStage(lut, cmsAT_BEGIN, mpe);
+
+    // Exercise the optimized evaluator without pre/post-linearization curves.
+    // Its callback must remain valid when checked by the function sanitizer.
+    if (!_cmsOptimizePipeline(lut ->ContextID, &lut, INTENT_RELATIVE_COLORIMETRIC,
+                              &InputFormat, &OutputFormat, &Flags)) {
+        Fail("Cannot resample 4D CLUT");
+        goto Error;
+    }
+
+    if (!CheckOne4D(lut, 0, 0, 0, 0)) goto Error;
+    if (!CheckOne4D(lut, 0xffff, 0xffff, 0xffff, 0xffff)) goto Error;
+    if (!CheckOne4D(lut, 0x8080, 0x8080, 0x8080, 0x8080)) goto Error;
+    if (!CheckOne4D(lut, 0x0000, 0xFE00, 0x80FF, 0x8888)) goto Error;
+    if (!CheckOne4D(lut, 0x1111, 0x2222, 0x3333, 0x4444)) goto Error;
+    if (!CheckOne4D(lut, 0x0000, 0x0012, 0x0013, 0x0014)) goto Error;
+    if (!CheckOne4D(lut, 0x3141, 0x1415, 0x1592, 0x9261)) goto Error;
+    if (!CheckOne4D(lut, 0xFF00, 0xFF01, 0xFF12, 0xFF13)) goto Error;
+
+    rc = 1;
+Error:
+    cmsPipelineFree(lut);
+    return rc;
+}
+
+
+static
 cmsInt32Number Check4DinterpGranular(cmsContext ContextID)
 {
     cmsPipeline* lut;
@@ -8003,11 +8042,13 @@ cmsInt32Number CheckMeta(cmsContext ContextID)
     //ERROR: Bad dictionary Name/Value
     //ERROR: Corrupted tag 'meta'
     //test: test.c:59: main: Assertion `dict' failed.
+    rc = 1;
     dict = cmsReadTag(ContextID, p, cmsSigMetaTag);
-    if (dict == NULL) return 0;
-
+    if (dict == NULL) rc = 0;
+   
     cmsCloseProfile(ContextID, p);
-    return 1;
+    remove("new.icc");
+    return rc;
 }
 
 
@@ -9686,7 +9727,7 @@ int main(int argc, const char** argv)
     printf("Installing error logger ... ");
     cmsSetLogErrorHandler(NULL, FatalErrorQuit);
     printf("done.\n");
-           
+
     PrintSupportedIntents();
 
     Check(ctx, "Base types", CheckBaseTypes);
@@ -9743,6 +9784,7 @@ int main(int argc, const char** argv)
     Check(ctx, "3D interpolation", Check3Dinterp);
     Check(ctx, "3D interpolation with granularity", Check3DinterpGranular);
     Check(ctx, "4D interpolation", Check4Dinterp);
+    Check(ctx, "4D interpolation after resampling", Check4DinterpResampled);
     Check(ctx, "4D interpolation with granularity", Check4DinterpGranular);
     Check(ctx, "5D interpolation with granularity", Check5DinterpGranular);
     Check(ctx, "6D interpolation with granularity", Check6DinterpGranular);
@@ -9922,6 +9964,8 @@ int main(int argc, const char** argv)
         Check(ctx, "Full transform plugin",   CheckTransformPlugin);
         Check(ctx, "Mutex plugin",            CheckMutexPlugin);
         Check(ctx, "Double from float",       CheckMethodPackDoublesFromFloat);
+        Check(ctx, "Header plugin",           CheckHeaderPlugin);
+        Check(ctx, "Profile user data",       CheckProfileUserData);
     }
 
 

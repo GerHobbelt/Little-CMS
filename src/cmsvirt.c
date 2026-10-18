@@ -450,8 +450,14 @@ cmsHPROFILE CMSEXPORT cmsCreateLab2Profile(cmsContext ContextID, const cmsCIExyY
 {
     cmsHPROFILE hProfile;
     cmsPipeline* LUT = NULL;
+    cmsCIEXYZ xyz;
 
-    hProfile = cmsCreateRGBProfile(ContextID, WhitePoint == NULL ? cmsD50_xyY(ContextID) : WhitePoint, NULL, NULL);
+    if (WhitePoint == NULL)
+        xyz = *cmsD50_XYZ();
+    else
+        cmsxyY2XYZ(&xyz, WhitePoint);
+
+    hProfile = cmsCreateRGBProfileTHR(ContextID, NULL, NULL, NULL);
     if (hProfile == NULL) return NULL;
 
     cmsSetProfileVersion(ContextID, hProfile, 2.1);
@@ -460,8 +466,8 @@ cmsHPROFILE CMSEXPORT cmsCreateLab2Profile(cmsContext ContextID, const cmsCIExyY
     cmsSetColorSpace(ContextID, hProfile,  cmsSigLabData);
     cmsSetPCS(ContextID, hProfile,         cmsSigLabData);
 
-    if (!SetTextTags(ContextID, hProfile, L"Lab identity built-in"))
-		goto Error;
+    if (!cmsWriteTag(ContextID, hProfile, cmsSigMediaWhitePointTag, &xyz)) goto Error;
+    if (!SetTextTags(ContextID, hProfile, L"Lab identity built-in")) goto Error;
 
     // An identity LUT is all we need
     LUT = cmsPipelineAlloc(ContextID, 3, 3);
@@ -471,8 +477,7 @@ cmsHPROFILE CMSEXPORT cmsCreateLab2Profile(cmsContext ContextID, const cmsCIExyY
     if (!cmsPipelineInsertStage(ContextID, LUT, cmsAT_BEGIN, _cmsStageAllocIdentityCLut(ContextID, 3)))
         goto Error;
 
-    if (!cmsWriteTag(ContextID, hProfile, cmsSigAToB0Tag, LUT))
-		goto Error;
+    if (!cmsWriteTag(ContextID, hProfile, cmsSigAToB0Tag, LUT)) goto Error;
     cmsPipelineFree(ContextID, LUT);
 
     return hProfile;

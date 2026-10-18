@@ -85,7 +85,8 @@ cmsInt32Number CheckIntentPlugin(cmsContext ContextID);
 cmsInt32Number CheckTransformPlugin(cmsContext ContextID);
 cmsInt32Number CheckMutexPlugin(cmsContext ContextID);
 cmsInt32Number CheckMethodPackDoublesFromFloat(cmsContext ContextID);
-
+cmsInt32Number CheckHeaderPlugin(cmsContext ContextID);
+cmsInt32Number CheckProfileUserData(cmsContext ContextID);
 
 // Zoo
 void CheckProfileZOO(cmsContext ContextID);

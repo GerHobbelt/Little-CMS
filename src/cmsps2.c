@@ -817,7 +817,7 @@ int EmitCIEBasedDEF(cmsContext ContextID, cmsIOHANDLER* m, cmsPipeline* Pipeline
         mpe = mpe ->Next;
     }
 
-    if (cmsStageType(ContextID, mpe) == cmsSigCLutElemType) {
+    if (mpe != NULL && cmsStageType(ContextID, mpe) == cmsSigCLutElemType) {
             _cmsIOPrintf(ContextID, m, "/Table ");
             WriteCLUT(ContextID, m, mpe, PreMaj, PostMaj, PreMin, PostMin, FALSE, (cmsColorSpaceSignature) 0);
             _cmsIOPrintf(ContextID, m, "]\n");

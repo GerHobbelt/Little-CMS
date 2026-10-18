@@ -127,8 +127,25 @@ cmsBool _cmsWriteWCharArray(cmsContext ContextID, cmsIOHANDLER* io, cmsUInt32Num
     _cmsAssert(io != NULL);
     _cmsAssert(!(Array == NULL && n > 0));
 
-    for (i=0; i < n; i++) {
-        if (!_cmsWriteUInt16Number(ContextID, io, (cmsUInt16Number) Array[i])) return FALSE;
+    for (i = 0; i < n; i++) {
+
+        wchar_t v = Array[i];
+        cmsUInt16Number out;
+        
+        #if (WCHAR_MAX > 0xFFFF)     // WCHAR_MAX support is required for C99
+                // UTF-32 wchar_t platforms
+                if (v <= 0xFFFF && !(v >= 0xD800 && v <= 0xDFFF))
+                    out = (cmsUInt16Number)v;
+                else
+                    out = (cmsUInt16Number)'?';
+        #else
+                // UTF-16 wchar_t platforms:
+                // preserve code units exactly, including surrogates.
+                out = (cmsUInt16Number)v;
+        #endif
+
+        if (!_cmsWriteUInt16Number(ContextID, io, out))
+            return FALSE;
     }
 
     return TRUE;

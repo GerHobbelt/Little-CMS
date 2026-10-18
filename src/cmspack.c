@@ -1898,7 +1898,7 @@ cmsUInt8Number* PackPlanarWords(cmsContext ContextID, CMSREGISTER _cmsTRANSFORM*
     else
     {
         if (Premul && Extra)
-            alpha_factor = _cmsToFixedDomain(((cmsUInt16Number*)output)[nChan * Stride]);
+            alpha_factor = _cmsToFixedDomain(*(cmsUInt16Number*) (&output[nChan * Stride]));
     }
 
     for (i=0; i < nChan; i++) {

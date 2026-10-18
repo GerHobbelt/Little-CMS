@@ -859,6 +859,60 @@ cmsBool validDeviceClass(cmsProfileClassSignature cl)
 
 }
 
+// Return the maximum version handled by the core or by the installed header plug-in.
+static
+cmsUInt32Number SupportedICCVersion(cmsContext ContextID)
+{
+    _cmsHeaderPluginChunkType* PluginChunk = (_cmsHeaderPluginChunkType*) _cmsContextGetClientChunk(ContextID, HeaderPlugin);
+
+    if (PluginChunk == NULL) 
+        return 0x04400000;
+    else
+        return PluginChunk->ICCVersion;        
+}
+
+// Invoke a profile-header read plug-in, preserving the caller's I/O position.
+static
+cmsBool ReadHeaderPlugin(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsIOHANDLER* io)
+{
+    _cmsHeaderPluginChunkType* PluginChunk;
+    cmsUInt32Number CurrentPos;
+    cmsBool rc;
+
+    PluginChunk = (_cmsHeaderPluginChunkType*) _cmsContextGetClientChunk(Icc->ContextID, HeaderPlugin);
+    if (PluginChunk == NULL || PluginChunk->ReadPtr == NULL)
+        return TRUE;
+
+    CurrentPos = io->Tell(io);
+    rc = PluginChunk->ReadPtr(Icc->ContextID, (cmsHPROFILE)Icc, io);
+
+    if (!io->Seek(io, CurrentPos))
+        return FALSE;
+
+    return rc;
+}
+
+// Invoke a profile-header write plug-in, preserving the caller's I/O position.
+static
+cmsBool WriteHeaderPlugin(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsIOHANDLER* io)
+{
+    _cmsHeaderPluginChunkType* PluginChunk;
+    cmsUInt32Number CurrentPos;
+    cmsBool rc;
+
+    PluginChunk = (_cmsHeaderPluginChunkType*) _cmsContextGetClientChunk(Icc->ContextID, HeaderPlugin);
+    if (PluginChunk == NULL || PluginChunk->WritePtr == NULL)
+        return TRUE;
+
+    CurrentPos = io->Tell(io);
+    rc = PluginChunk->WritePtr(Icc->ContextID, (cmsHPROFILE)Icc, io);
+
+    if (!io->Seek(io, CurrentPos))
+        return FALSE;
+
+    return rc;
+}
+
 // Read profile header and validate it
 cmsBool _cmsReadHeader(cmsContext ContextID, _cmsICCPROFILE* Icc)
 {
@@ -898,7 +952,7 @@ cmsBool _cmsReadHeader(cmsContext ContextID, _cmsICCPROFILE* Icc)
     _cmsAdjustEndianess64(&Icc -> attributes, &Header.attributes);
     Icc -> Version         = _cmsAdjustEndianess32(_validatedVersion(Header.version));
 
-    if (Icc->Version > 0x5000000) {
+    if (Icc->Version > SupportedICCVersion(ContextID)) {
         cmsSignalError(ContextID, cmsERROR_UNKNOWN_EXTENSION, "Unsupported profile version '0x%x'", Icc->Version);
         return FALSE;
     }
@@ -921,6 +975,8 @@ cmsBool _cmsReadHeader(cmsContext ContextID, _cmsICCPROFILE* Icc)
     // The profile ID are 32 raw bytes
     memmove(Icc ->ProfileID.ID32, Header.profileID.ID32, 16);
 
+    if (!ReadHeaderPlugin(Icc, io))
+        return FALSE;
 
     // Read tag directory
     if (!_cmsReadUInt32Number(ContextID, io, &TagCount)) return FALSE;
@@ -1001,6 +1057,11 @@ cmsBool _cmsWriteHeader(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsUInt32Numb
     cmsTagEntry Tag;
     cmsUInt32Number Count;
 
+    if (Icc->Version > SupportedICCVersion(Icc->ContextID)) {
+        cmsSignalError(Icc->ContextID, cmsERROR_UNKNOWN_EXTENSION, "Unsupported profile version '0x%x'", Icc->Version);
+        return FALSE;
+    }
+
     Header.size        = _cmsAdjustEndianess32(UsedSpace);
     Header.cmmId       = _cmsAdjustEndianess32(Icc ->CMM);
     Header.version     = _cmsAdjustEndianess32(Icc ->Version);
@@ -1039,6 +1100,9 @@ cmsBool _cmsWriteHeader(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsUInt32Numb
 
     // Dump the header
     if (!Icc -> IOhandler->Write(ContextID, Icc->IOhandler, sizeof(cmsICCHeader), &Header)) return FALSE;
+
+    if (!WriteHeaderPlugin(ContextID, Icc, Icc->IOhandler))
+        return FALSE;
 
     // Saves Tag directory
 
@@ -1405,7 +1469,31 @@ Error:
     return NULL;
 }
 
+// Set/Get user data for profiles
+void CMSEXPORT _cmsSetProfileUserData(cmsContext ContextID, cmsHPROFILE hProfile, void* Data, _cmsFreeUserDataFn FreeData)
+{
+    _cmsICCPROFILE* Icc = (_cmsICCPROFILE*)hProfile;
 
+    _cmsAssert(Icc != NULL);
+    
+    if (Icc->UsrData != NULL) 
+    {
+        if (Icc->FreeUsrData != NULL)
+            Icc->FreeUsrData(Icc->ContextID, Icc->UsrData);
+    }
+
+    Icc->UsrData     = Data;
+    Icc->FreeUsrData = FreeData;
+}
+
+void* CMSEXPORT _cmsGetProfileUserData(cmsHPROFILE hProfile)
+{
+    _cmsICCPROFILE* Icc = (_cmsICCPROFILE*)hProfile;
+
+    _cmsAssert(Icc != NULL);
+
+    return Icc->UsrData;
+}
 
 // Dump tag contents. If the profile is being modified, untouched tags are copied from FileOrig
 static
@@ -1710,6 +1798,9 @@ cmsBool CMSEXPORT cmsCloseProfile(cmsContext ContextID, cmsHPROFILE hProfile)
     if (Icc ->IOhandler != NULL) {
         rc &= cmsCloseIOhandler(ContextID, Icc->IOhandler);
     }
+
+    if (Icc->UsrData != NULL && Icc->FreeUsrData != NULL)
+        Icc->FreeUsrData(Icc->ContextID, Icc->UsrData);
 
     _cmsDestroyMutex(ContextID, Icc->UsrMutex);
 
