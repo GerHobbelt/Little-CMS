@@ -99,7 +99,7 @@ typedef struct {
 
 // This is a fake thread descriptor used to check thread integrity.
 // Basically it returns a different threadID each time it is called.
-// Then the memory management replacement functions does check if each
+// Then the memory management replacement functions do check if each
 // free() is being called with same ContextID used on malloc()
 static
 cmsContext DbgThread(void)
@@ -2074,31 +2074,31 @@ cmsInt32Number Check4DinterpResampled(cmsContext ContextID)
     cmsUInt32Number Flags = cmsFLAGS_FORCE_CLUT | cmsFLAGS_GRIDPOINTS(9);
     cmsInt32Number rc = 0;
 
-    lut = cmsPipelineAlloc(DbgThread(), 4, 3);
-    mpe = cmsStageAllocCLut16bit(DbgThread(), 9, 4, 3, NULL);
-    cmsStageSampleCLut16bit(mpe, Sampler4D, NULL, 0);
-    cmsPipelineInsertStage(lut, cmsAT_BEGIN, mpe);
+    lut = cmsPipelineAlloc(ContextID, 4, 3);
+    mpe = cmsStageAllocCLut16bit(ContextID, 9, 4, 3, NULL);
+    cmsStageSampleCLut16bit(ContextID, mpe, Sampler4D, NULL, 0);
+    cmsPipelineInsertStage(ContextID, lut, cmsAT_BEGIN, mpe);
 
     // Exercise the optimized evaluator without pre/post-linearization curves.
     // Its callback must remain valid when checked by the function sanitizer.
-    if (!_cmsOptimizePipeline(lut ->ContextID, &lut, INTENT_RELATIVE_COLORIMETRIC,
+    if (!_cmsOptimizePipeline(ContextID, &lut, INTENT_RELATIVE_COLORIMETRIC,
                               &InputFormat, &OutputFormat, &Flags)) {
         Fail("Cannot resample 4D CLUT");
         goto Error;
     }
 
-    if (!CheckOne4D(lut, 0, 0, 0, 0)) goto Error;
-    if (!CheckOne4D(lut, 0xffff, 0xffff, 0xffff, 0xffff)) goto Error;
-    if (!CheckOne4D(lut, 0x8080, 0x8080, 0x8080, 0x8080)) goto Error;
-    if (!CheckOne4D(lut, 0x0000, 0xFE00, 0x80FF, 0x8888)) goto Error;
-    if (!CheckOne4D(lut, 0x1111, 0x2222, 0x3333, 0x4444)) goto Error;
-    if (!CheckOne4D(lut, 0x0000, 0x0012, 0x0013, 0x0014)) goto Error;
-    if (!CheckOne4D(lut, 0x3141, 0x1415, 0x1592, 0x9261)) goto Error;
-    if (!CheckOne4D(lut, 0xFF00, 0xFF01, 0xFF12, 0xFF13)) goto Error;
+    if (!CheckOne4D(ContextID, lut, 0, 0, 0, 0)) goto Error;
+    if (!CheckOne4D(ContextID, lut, 0xffff, 0xffff, 0xffff, 0xffff)) goto Error;
+    if (!CheckOne4D(ContextID, lut, 0x8080, 0x8080, 0x8080, 0x8080)) goto Error;
+    if (!CheckOne4D(ContextID, lut, 0x0000, 0xFE00, 0x80FF, 0x8888)) goto Error;
+    if (!CheckOne4D(ContextID, lut, 0x1111, 0x2222, 0x3333, 0x4444)) goto Error;
+    if (!CheckOne4D(ContextID, lut, 0x0000, 0x0012, 0x0013, 0x0014)) goto Error;
+    if (!CheckOne4D(ContextID, lut, 0x3141, 0x1415, 0x1592, 0x9261)) goto Error;
+    if (!CheckOne4D(ContextID, lut, 0xFF00, 0xFF01, 0xFF12, 0xFF13)) goto Error;
 
     rc = 1;
 Error:
-    cmsPipelineFree(lut);
+    cmsPipelineFree(ContextID, lut);
     return rc;
 }
 
@@ -9980,7 +9980,7 @@ int main(int argc, const char** argv)
 
     DebugMemPrintTotals();
 
-    cmsUnregisterPlugins(NULL);
+    cmsUnregisterPlugins(ctx);
 
     // Cleanup
     if (DoCheckTests || DoSpeedTests)

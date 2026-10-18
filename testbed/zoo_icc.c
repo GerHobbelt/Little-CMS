@@ -248,6 +248,15 @@ int count_stats(cmsContext ContextID, const char* Profile)
     case cmsSigAbstractClass     : abst++; break;
     case cmsSigColorSpaceClass   : color++; break;
     case cmsSigNamedColorClass   : named++; break;
+	// warning C4062 : enumerator 'cmsSigColorEncodingSpaceClass' in switch of enum 'cmsProfileClassSignature' is not handled
+	// warning C4062 : enumerator 'cmsSigMultiplexIdentificationClass' in switch of enum 'cmsProfileClassSignature' is not handled
+	// warning C4062 : enumerator 'cmsSigMultiplexLinkClass' in switch of enum 'cmsProfileClassSignature' is not handled
+	// warning C4062 : enumerator 'cmsSigMultiplexVisualizationClass' in switch of enum 'cmsProfileClassSignature' is not handled
+	case cmsSigColorEncodingSpaceClass:
+	case cmsSigMultiplexIdentificationClass:
+	case cmsSigMultiplexLinkClass:
+	case cmsSigMultiplexVisualizationClass:
+		break;
 	}
 
 

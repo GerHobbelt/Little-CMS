@@ -1577,15 +1577,15 @@ cmsBool ReadHeaderPluginSample(cmsContext ContextID, cmsHPROFILE hProfile, cmsIO
     HeaderPluginReadCount++;
 
     if (ContextID != HeaderPluginContext || hProfile == NULL || io == NULL ||
-        io->Tell(io) != sizeof(cmsICCHeader)) {
+        io->Tell(ContextID, io) != sizeof(cmsICCHeader)) {
         HeaderPluginBadParameters = TRUE;
         return FALSE;
     }
 
-    if (!io->Seek(io, HEADER_PLUGIN_TEST_OFFSET))
+    if (!io->Seek(ContextID, io, HEADER_PLUGIN_TEST_OFFSET))
         return FALSE;
 
-    if (io->Read(io, Marker, sizeof(Marker), 1) != 1)
+    if (io->Read(ContextID, io, Marker, sizeof(Marker), 1) != 1)
         return FALSE;
 
     // Deliberately leave the cursor displaced. LittleCMS must restore it.
@@ -1598,16 +1598,16 @@ cmsBool WriteHeaderPluginSample(cmsContext ContextID, cmsHPROFILE hProfile, cmsI
     HeaderPluginWriteCount++;
 
     if (ContextID != HeaderPluginContext || hProfile == NULL || io == NULL ||
-        io->Tell(io) != sizeof(cmsICCHeader)) {
+        io->Tell(ContextID, io) != sizeof(cmsICCHeader)) {
         HeaderPluginBadParameters = TRUE;
         return FALSE;
     }
 
-    if (!io->Seek(io, HEADER_PLUGIN_TEST_OFFSET))
+    if (!io->Seek(ContextID, io, HEADER_PLUGIN_TEST_OFFSET))
         return FALSE;
 
     // Deliberately leave the cursor displaced. LittleCMS must restore it.
-    return io->Write(io, sizeof(HeaderPluginMarker), HeaderPluginMarker);
+    return io->Write(ContextID, io, sizeof(HeaderPluginMarker), HeaderPluginMarker);
 }
 
 static cmsPluginHeader HeaderPluginSample = {
@@ -1641,43 +1641,43 @@ cmsInt32Number CheckHeaderPlugin(cmsContext ContextID)
 
     IncompletePlugin = HeaderPluginSample;
     IncompletePlugin.ReadPtr = NULL;
-    if (cmsPluginTHR(ctx, &IncompletePlugin)) {
+    if (cmsPlugin(ctx, &IncompletePlugin)) {
         Fail("Header plug-in without read callback was accepted");
         goto Error;
     }
 
     IncompletePlugin = HeaderPluginSample;
     IncompletePlugin.WritePtr = NULL;
-    if (cmsPluginTHR(ctx, &IncompletePlugin)) {
+    if (cmsPlugin(ctx, &IncompletePlugin)) {
         Fail("Header plug-in without write callback was accepted");
         goto Error;
     }
 
-    if (!cmsPluginTHR(ctx, &HeaderPluginSample)) {
+    if (!cmsPlugin(ctx, &HeaderPluginSample)) {
         Fail("Cannot install header plug-in");
         goto Error;
     }
 
-    Profile = cmsCreate_sRGBProfileTHR(ctx);
+    Profile = cmsCreate_sRGBProfile(ctx);
     if (Profile == NULL) {
         Fail("Cannot create profile for header plug-in test");
         goto Error;
     }
 
     // ICC 5.0 is accepted because the header plug-in declares responsibility for it.
-    cmsSetEncodedICCversion(Profile, 0x05000000);
+    cmsSetEncodedICCversion(ctx, Profile, 0x05000000);
 
     // The plug-in ceiling is inclusive. ICC 5.1 must still be rejected.
-    cmsSetEncodedICCversion(Profile, 0x05100000);
-    cmsSetLogErrorHandlerTHR(ctx, NULL);
-    if (cmsSaveProfileToMem(Profile, NULL, &BytesNeeded)) {
+    cmsSetEncodedICCversion(ctx, Profile, 0x05100000);
+    cmsSetLogErrorHandler(ctx, NULL);
+    if (cmsSaveProfileToMem(ctx, Profile, NULL, &BytesNeeded)) {
         Fail("Header plug-in accepted a profile above its declared version");
         goto Error;
     }
-    cmsSetEncodedICCversion(Profile, 0x05000000);
+    cmsSetEncodedICCversion(ctx, Profile, 0x05000000);
     BytesNeeded = 0;
 
-    if (!cmsSaveProfileToMem(Profile, NULL, &BytesNeeded) || BytesNeeded == 0) {
+    if (!cmsSaveProfileToMem(ctx, Profile, NULL, &BytesNeeded) || BytesNeeded == 0) {
         Fail("Cannot calculate profile size with header plug-in");
         goto Error;
     }
@@ -1693,7 +1693,7 @@ cmsInt32Number CheckHeaderPlugin(cmsContext ContextID)
         goto Error;
 
     SecondSize = BytesNeeded;
-    if (!cmsSaveProfileToMem(Profile, Data1, &SecondSize)) {
+    if (!cmsSaveProfileToMem(ctx, Profile, Data1, &SecondSize)) {
         Fail("Cannot serialize profile with header plug-in");
         goto Error;
     }
@@ -1704,7 +1704,7 @@ cmsInt32Number CheckHeaderPlugin(cmsContext ContextID)
     }
 
     SecondSize = BytesNeeded;
-    if (!cmsSaveProfileToMem(Profile, Data2, &SecondSize)) {
+    if (!cmsSaveProfileToMem(ctx, Profile, Data2, &SecondSize)) {
         Fail("Cannot repeat profile serialization with header plug-in");
         goto Error;
     }
@@ -1722,39 +1722,39 @@ cmsInt32Number CheckHeaderPlugin(cmsContext ContextID)
     }
 
     // Without a header plug-in the core must reject versions newer than ICC 4.4.
-    cmsSetLogErrorHandler(NULL);
-    WithoutPlugin = cmsOpenProfileFromMem(Data1, BytesNeeded);
+    cmsSetLogErrorHandler(ctx, NULL);
+    WithoutPlugin = cmsOpenProfileFromMem(ctx, Data1, BytesNeeded);
     if (WithoutPlugin != NULL) {
         Fail("Core accepted an ICC 5.0 profile without a header plug-in");
         goto Error;
     }
-    ResetFatalError();
+    ResetFatalError(ctx);
 
-    WithoutPlugin = cmsCreate_sRGBProfile();
+    WithoutPlugin = cmsCreate_sRGBProfile(ctx);
     if (WithoutPlugin == NULL) {
         Fail("Cannot create profile for default version limit test");
         goto Error;
     }
 
-    cmsSetEncodedICCversion(WithoutPlugin, 0x04400000);
+    cmsSetEncodedICCversion(ctx, WithoutPlugin, 0x04400000);
     SecondSize = 0;
-    if (!cmsSaveProfileToMem(WithoutPlugin, NULL, &SecondSize)) {
+    if (!cmsSaveProfileToMem(ctx, WithoutPlugin, NULL, &SecondSize)) {
         Fail("Core rejected an ICC 4.4 profile without a header plug-in");
         goto Error;
     }
 
-    cmsSetEncodedICCversion(WithoutPlugin, 0x04500000);
+    cmsSetEncodedICCversion(ctx, WithoutPlugin, 0x04500000);
     SecondSize = 0;
-    cmsSetLogErrorHandler(NULL);
-    if (cmsSaveProfileToMem(WithoutPlugin, NULL, &SecondSize)) {
+    cmsSetLogErrorHandler(ctx, NULL);
+    if (cmsSaveProfileToMem(ctx, WithoutPlugin, NULL, &SecondSize)) {
         Fail("Core accepted an ICC 4.5 profile without a header plug-in");
         goto Error;
     }
-    ResetFatalError();
-    cmsCloseProfile(WithoutPlugin);
+    ResetFatalError(ctx);
+    cmsCloseProfile(ctx, WithoutPlugin);
     WithoutPlugin = NULL;
 
-    RoundTrip = cmsOpenProfileFromMemTHR(ctx, Data1, BytesNeeded);
+    RoundTrip = cmsOpenProfileFromMem(ctx, Data1, BytesNeeded);
     if (RoundTrip == NULL || HeaderPluginReadCount != 1) {
         Fail("Header read plug-in failed");
         goto Error;
@@ -1765,8 +1765,8 @@ cmsInt32Number CheckHeaderPlugin(cmsContext ContextID)
         goto Error;
     }
 
-    cmsCloseProfile(RoundTrip);
-    cmsCloseProfile(Profile);
+    cmsCloseProfile(ctx, RoundTrip);
+    cmsCloseProfile(ctx, Profile);
     free(Data1);
     free(Data2);
     cmsDeleteContext(ctx);
@@ -1774,9 +1774,9 @@ cmsInt32Number CheckHeaderPlugin(cmsContext ContextID)
     return 1;
 
 Error:
-    if (WithoutPlugin != NULL) cmsCloseProfile(WithoutPlugin);
-    if (RoundTrip != NULL) cmsCloseProfile(RoundTrip);
-    if (Profile != NULL) cmsCloseProfile(Profile);
+    if (WithoutPlugin != NULL) cmsCloseProfile(ctx, WithoutPlugin);
+    if (RoundTrip != NULL) cmsCloseProfile(ctx, RoundTrip);
+    if (Profile != NULL) cmsCloseProfile(ctx, Profile);
     if (Data1 != NULL) free(Data1);
     if (Data2 != NULL) free(Data2);
     if (ctx != NULL) cmsDeleteContext(ctx);
@@ -1807,8 +1807,8 @@ cmsInt32Number CheckProfileUserData(cmsContext ContextID)
 
     ProfileUserDataFreeCount = 0;
 
-    p1 = cmsCreateProfilePlaceholder(NULL);
-    p2 = cmsCreateProfilePlaceholder(NULL);
+    p1 = cmsCreateProfilePlaceholder(ContextID);
+    p2 = cmsCreateProfilePlaceholder(ContextID);
 
     if (p1 == NULL || p2 == NULL) {
         Fail("Cannot create profile placeholders");
@@ -1828,7 +1828,7 @@ cmsInt32Number CheckProfileUserData(cmsContext ContextID)
 
     *Data1 = 1;
 
-    _cmsSetProfileUserData(Icc1, Data1, FreeProfileUserData);
+    _cmsSetProfileUserData(ContextID, Icc1, Data1, FreeProfileUserData);
     Data1 = NULL;
 
     if (_cmsGetProfileUserData(Icc1) == NULL ||
@@ -1842,7 +1842,7 @@ cmsInt32Number CheckProfileUserData(cmsContext ContextID)
 
     *Data2 = 2;
 
-    _cmsSetProfileUserData(Icc1, Data2, FreeProfileUserData);
+    _cmsSetProfileUserData(ContextID, Icc1, Data2, FreeProfileUserData);
     Data2 = NULL;
 
     if (ProfileUserDataFreeCount != 1) {
@@ -1860,7 +1860,7 @@ cmsInt32Number CheckProfileUserData(cmsContext ContextID)
 
     *Data3 = 3;
 
-    _cmsSetProfileUserData(Icc2, Data3, FreeProfileUserData);
+    _cmsSetProfileUserData(ContextID, Icc2, Data3, FreeProfileUserData);
     Data3 = NULL;
 
     if (_cmsGetProfileUserData(Icc2) == _cmsGetProfileUserData(Icc1)) {
@@ -1868,7 +1868,7 @@ cmsInt32Number CheckProfileUserData(cmsContext ContextID)
         goto Error;
     }
 
-    _cmsSetProfileUserData(Icc1, NULL, NULL);
+    _cmsSetProfileUserData(ContextID, Icc1, NULL, NULL);
 
     if (ProfileUserDataFreeCount != 2 ||
         _cmsGetProfileUserData(Icc1) != NULL) {
@@ -1876,7 +1876,7 @@ cmsInt32Number CheckProfileUserData(cmsContext ContextID)
         goto Error;
     }
 
-    cmsCloseProfile(p1);
+    cmsCloseProfile(ContextID, p1);
     p1 = NULL;
 
     if (ProfileUserDataFreeCount != 2) {
@@ -1884,7 +1884,7 @@ cmsInt32Number CheckProfileUserData(cmsContext ContextID)
         goto Error;
     }
 
-    cmsCloseProfile(p2);
+    cmsCloseProfile(ContextID, p2);
     p2 = NULL;
 
     if (ProfileUserDataFreeCount != 3) {
@@ -1892,7 +1892,7 @@ cmsInt32Number CheckProfileUserData(cmsContext ContextID)
         return 0;
     }
 
-    p2 = cmsCreateProfilePlaceholder(NULL);
+    p2 = cmsCreateProfilePlaceholder(ContextID);
     if (p2 == NULL) {
         Fail("Cannot create profile placeholder");
         goto Error;
@@ -1908,25 +1908,25 @@ cmsInt32Number CheckProfileUserData(cmsContext ContextID)
 
     *Data4 = 4;
 
-    _cmsSetProfileUserData(Icc2, Data4, NULL);
+    _cmsSetProfileUserData(ContextID, Icc2, Data4, NULL);
 
-    cmsCloseProfile(p2);
+    cmsCloseProfile(ContextID, p2);
     p2 = NULL;
 
-    _cmsFree(NULL, Data4);
+    _cmsFree(ContextID, Data4);
     Data4 = NULL;
 
     return 1;
 
 Error:
 
-    if (Data1 != NULL) _cmsFree(NULL, Data1);
-    if (Data2 != NULL) _cmsFree(NULL, Data2);
-    if (Data3 != NULL) _cmsFree(NULL, Data3);
-    if (Data4 != NULL) _cmsFree(NULL, Data4);
+    if (Data1 != NULL) _cmsFree(ContextID, Data1);
+    if (Data2 != NULL) _cmsFree(ContextID, Data2);
+    if (Data3 != NULL) _cmsFree(ContextID, Data3);
+    if (Data4 != NULL) _cmsFree(ContextID, Data4);
 
-    if (p1 != NULL) cmsCloseProfile(p1);
-    if (p2 != NULL) cmsCloseProfile(p2);
+    if (p1 != NULL) cmsCloseProfile(ContextID, p1);
+    if (p2 != NULL) cmsCloseProfile(ContextID, p2);
 
     return 0;
 }

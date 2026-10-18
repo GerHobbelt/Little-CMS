@@ -879,14 +879,14 @@ cmsBool ReadHeaderPlugin(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsIOHANDLER
     cmsUInt32Number CurrentPos;
     cmsBool rc;
 
-    PluginChunk = (_cmsHeaderPluginChunkType*) _cmsContextGetClientChunk(Icc->ContextID, HeaderPlugin);
+    PluginChunk = (_cmsHeaderPluginChunkType*) _cmsContextGetClientChunk(ContextID, HeaderPlugin);
     if (PluginChunk == NULL || PluginChunk->ReadPtr == NULL)
         return TRUE;
 
-    CurrentPos = io->Tell(io);
-    rc = PluginChunk->ReadPtr(Icc->ContextID, (cmsHPROFILE)Icc, io);
+    CurrentPos = io->Tell(ContextID, io);
+    rc = PluginChunk->ReadPtr(ContextID, (cmsHPROFILE)Icc, io);
 
-    if (!io->Seek(io, CurrentPos))
+    if (!io->Seek(ContextID, io, CurrentPos))
         return FALSE;
 
     return rc;
@@ -900,14 +900,14 @@ cmsBool WriteHeaderPlugin(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsIOHANDLE
     cmsUInt32Number CurrentPos;
     cmsBool rc;
 
-    PluginChunk = (_cmsHeaderPluginChunkType*) _cmsContextGetClientChunk(Icc->ContextID, HeaderPlugin);
+    PluginChunk = (_cmsHeaderPluginChunkType*) _cmsContextGetClientChunk(ContextID, HeaderPlugin);
     if (PluginChunk == NULL || PluginChunk->WritePtr == NULL)
         return TRUE;
 
-    CurrentPos = io->Tell(io);
-    rc = PluginChunk->WritePtr(Icc->ContextID, (cmsHPROFILE)Icc, io);
+    CurrentPos = io->Tell(ContextID, io);
+    rc = PluginChunk->WritePtr(ContextID, (cmsHPROFILE)Icc, io);
 
-    if (!io->Seek(io, CurrentPos))
+    if (!io->Seek(ContextID, io, CurrentPos))
         return FALSE;
 
     return rc;
@@ -975,7 +975,7 @@ cmsBool _cmsReadHeader(cmsContext ContextID, _cmsICCPROFILE* Icc)
     // The profile ID are 32 raw bytes
     memmove(Icc ->ProfileID.ID32, Header.profileID.ID32, 16);
 
-    if (!ReadHeaderPlugin(Icc, io))
+    if (!ReadHeaderPlugin(ContextID, Icc, io))
         return FALSE;
 
     // Read tag directory
@@ -1057,8 +1057,8 @@ cmsBool _cmsWriteHeader(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsUInt32Numb
     cmsTagEntry Tag;
     cmsUInt32Number Count;
 
-    if (Icc->Version > SupportedICCVersion(Icc->ContextID)) {
-        cmsSignalError(Icc->ContextID, cmsERROR_UNKNOWN_EXTENSION, "Unsupported profile version '0x%x'", Icc->Version);
+    if (Icc->Version > SupportedICCVersion(ContextID)) {
+        cmsSignalError(ContextID, cmsERROR_UNKNOWN_EXTENSION, "Unsupported profile version '0x%x'", Icc->Version);
         return FALSE;
     }
 
@@ -1479,7 +1479,7 @@ void CMSEXPORT _cmsSetProfileUserData(cmsContext ContextID, cmsHPROFILE hProfile
     if (Icc->UsrData != NULL) 
     {
         if (Icc->FreeUsrData != NULL)
-            Icc->FreeUsrData(Icc->ContextID, Icc->UsrData);
+            Icc->FreeUsrData(ContextID, Icc->UsrData);
     }
 
     Icc->UsrData     = Data;
@@ -1800,7 +1800,7 @@ cmsBool CMSEXPORT cmsCloseProfile(cmsContext ContextID, cmsHPROFILE hProfile)
     }
 
     if (Icc->UsrData != NULL && Icc->FreeUsrData != NULL)
-        Icc->FreeUsrData(Icc->ContextID, Icc->UsrData);
+        Icc->FreeUsrData(ContextID, Icc->UsrData);
 
     _cmsDestroyMutex(ContextID, Icc->UsrMutex);
 

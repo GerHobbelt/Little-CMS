@@ -696,7 +696,7 @@ typedef struct {
 //----------------------------------------------------------------------------------------------------------
 // Header
 
-CMSAPI void   CMSEXPORT _cmsSetProfileUserData(cmsHPROFILE hProfile, void* Data, _cmsFreeUserDataFn FreeData);
+CMSAPI void   CMSEXPORT _cmsSetProfileUserData(cmsContext ContextID, cmsHPROFILE hProfile, void* Data, _cmsFreeUserDataFn FreeData);
 CMSAPI void*  CMSEXPORT _cmsGetProfileUserData(cmsHPROFILE hProfile);
 
 // The plug-in may use the I/O handler freely, but must not close it.

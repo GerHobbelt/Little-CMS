@@ -3182,7 +3182,7 @@ cmsBool ParseCube(cmsContext ContextID, cmsIT8* cube, cmsStage** Shaper, cmsStag
                     cmsFloat64Number nums[3];
 
                     if (!ReadNumbers(ContextID, cube, 3, nums)) {
-                        _cmsFree(cube->ContextID, shapers);                        
+                        _cmsFree(ContextID, shapers);                        
                         return FALSE;
                     }
 
@@ -3225,7 +3225,7 @@ cmsBool ParseCube(cmsContext ContextID, cmsIT8* cube, cmsStage** Shaper, cmsStag
                     cmsFloat64Number nums[3];
 
                     if (!ReadNumbers(ContextID, cube, 3, nums)) {
-                        _cmsFree(cube->ContextID, lut_table);
+                        _cmsFree(ContextID, lut_table);
                         return FALSE;
                     }
 
@@ -3315,10 +3315,10 @@ cmsHPROFILE CMSEXPORT cmsCreateDeviceLinkFromCubeFile(cmsContext ContextID, cons
 Done:
 
     if (CLUT != NULL)
-        cmsStageFree(CLUT);
+        cmsStageFree(ContextID, CLUT);
     
     if (Shaper != NULL)
-        cmsStageFree(Shaper);
+        cmsStageFree(ContextID, Shaper);
     
     if (cube->FileStack[0]->Stream != NULL)
         fclose(cube->FileStack[0]->Stream);

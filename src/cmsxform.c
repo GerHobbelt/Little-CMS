@@ -3199,9 +3199,9 @@ cmsHTRANSFORM CMSEXPORT cmsCreateExtendedTransform(cmsContext ContextID,
                                                         AdaptationStates,
                                                         nGamutPCSposition,
                                                         hGamutProfile);
-        if (xform->GamutCheck == NULL) {
+        if (xform->core->GamutCheck == NULL) {
             cmsSignalError(ContextID, cmsERROR_NULL, "Could't create gamut check on transform");
-            cmsDeleteTransform(xform);
+            cmsDeleteTransform(ContextID, xform);
             return NULL;
         }
         

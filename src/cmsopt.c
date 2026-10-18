@@ -631,11 +631,11 @@ cmsBool FixWhiteMisalignment(cmsContext ContextID, cmsPipeline* Lut, cmsColorSpa
 
 // Adapt the interpolation callback to the pipeline evaluator signature.
 static
-void CLUTEval16(const cmsUInt16Number In[], cmsUInt16Number Out[], const void* D)
+void CLUTEval16(cmsContext ContextID, const cmsUInt16Number In[], cmsUInt16Number Out[], const void* D)
 {
     const cmsInterpParams* p = (const cmsInterpParams*) D;
 
-    p ->Interpolation.Lerp16(In, Out, p);
+    p ->Interpolation.Lerp16(ContextID, In, Out, p);
 }
 
 

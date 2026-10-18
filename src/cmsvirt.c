@@ -453,11 +453,11 @@ cmsHPROFILE CMSEXPORT cmsCreateLab2Profile(cmsContext ContextID, const cmsCIExyY
     cmsCIEXYZ xyz;
 
     if (WhitePoint == NULL)
-        xyz = *cmsD50_XYZ();
+        xyz = *cmsD50_XYZ(ContextID);
     else
-        cmsxyY2XYZ(&xyz, WhitePoint);
+        cmsxyY2XYZ(ContextID, &xyz, WhitePoint);
 
-    hProfile = cmsCreateRGBProfileTHR(ContextID, NULL, NULL, NULL);
+    hProfile = cmsCreateRGBProfile(ContextID, NULL, NULL, NULL);
     if (hProfile == NULL) return NULL;
 
     cmsSetProfileVersion(ContextID, hProfile, 2.1);
